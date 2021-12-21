@@ -12,7 +12,7 @@ LinkedIn: [linkedin.com/in/SamirPaul](https://www.linkedin.com/in/samirpaul)
 
 Instagram: [instagram.com/SamirPaulb](https://www.instagram.com/SamirPaulb)
 
-Twitter: [facebook.com/SamirPaulb](https://www.facebook.com/SamirPaulb)
+Twitter: [twitter.com/SamirPaulb](https://twitter.com/SamirPaulb)
 
 Facebook: [facebook.com/SamirPaulb](https://www.facebook.com/SamirPaulb)
 
