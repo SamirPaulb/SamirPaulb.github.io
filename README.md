@@ -24,7 +24,7 @@ LeetCode: [leetcode.com/SamirPaul1](https://leetcode.com/SamirPaul1)
 
 CodeChef: [codechef.com/users/SamirPaul1](https://www.codechef.com/users/SamirPaul1)
 
-HackerRank: [hackerrank.com/SamirPaul1](https://www.hackerrank.com/SamirPaul1)
+HackerRank: [hackerrank.com/SamirPaul1](https://www.hackerrank.com/samirpaul1)
 
 GeeksForGeeks: [auth.geeksforgeeks.org/user/SamirPaul1](https://auth.geeksforgeeks.org/user/SamirPaul1/practice/)
 
