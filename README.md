@@ -27,4 +27,4 @@ CodeChef: [codechef.com/users/SamirPaul1](https://www.codechef.com/users/SamirPa
 
 HackerRank: [hackerrank.com/SamirPaul1](https://www.hackerrank.com/SamirPaul1)
 
-GeeksForGeeks: [auth.geeksforgeeks.org/user/SamirPaul1](https://auth.geeksforgeeks.org/user/samirpaul1/practice/)
+GeeksForGeeks: [auth.geeksforgeeks.org/user/SamirPaul1](https://auth.geeksforgeeks.org/user/SamirPaul1/practice/)
