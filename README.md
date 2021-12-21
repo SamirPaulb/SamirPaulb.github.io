@@ -32,3 +32,5 @@ GeeksForGeeks: [auth.geeksforgeeks.org/user/SamirPaul1](https://auth.geeksforgee
 Medium: [samirpaul1.medium.com](https://samirpaul1.medium.com/)
 
 Devfolio: [devfolio.co/@SamirPaul1](https://devfolio.co/@SamirPaul1)
+
+Replit: [replit.com/@SamirPaul1](https://replit.com/@SamirPaul1)
