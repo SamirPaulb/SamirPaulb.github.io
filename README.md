@@ -9,20 +9,22 @@ Familiar: ​JavaScript, Java, Docker, C++, Linux, ReactJS, Electronics Circuit 
 
 Please feel free to get in touch with me,
 
-LinkedIn: https://www.linkedin.com/in/samirpaul
+LinkedIn: [linkedin.com/in/SamirPaul](https://www.linkedin.com/in/samirpaul)
 
-Instagram: https://www.instagram.com/SamirPaulb
+Instagram: [instagram.com/SamirPaulb](https://www.instagram.com/SamirPaulb)
 
-Twitter: https://www.facebook.com/SamirPaulb
+Twitter: [facebook.com/SamirPaulb](https://www.facebook.com/SamirPaulb)
 
-Facebook: https://www.facebook.com/SamirPaulb
+Facebook: [facebook.com/SamirPaulb](https://www.facebook.com/SamirPaulb)
 
-Personal Website: https://samirpaul1.github.io
+Personal Website: [samirpaul1.github.io](https://samirpaul1.github.io)
 
-GitHub: https://github.com/SamirPaul1
+GitHub: [github.com/SamirPaul1](https://github.com/SamirPaul1)
 
-LeetCode: https://leetcode.com/SamirPaul1
+LeetCode: [leetcode.com/SamirPaul1](https://leetcode.com/SamirPaul1)
 
-CodeChef: https://www.codechef.com/users/SamirPaul1
+CodeChef: [codechef.com/users/SamirPaul1](https://www.codechef.com/users/SamirPaul1)
 
-HackerRank: https://www.hackerrank.com/SamirPaul1
+HackerRank: [hackerrank.com/SamirPaul1](https://www.hackerrank.com/SamirPaul1)
+
+GeeksForGeeks: [auth.geeksforgeeks.org/user/SamirPaul1](https://auth.geeksforgeeks.org/user/samirpaul1/practice/)
