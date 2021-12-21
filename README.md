@@ -1,6 +1,5 @@
 I am an aspiring Software Developer with strong technical skills and pursuing B.Tech at NIT Durgapur.
 I excel at learning new concepts. My knowledge base is developed by continuously challenging myself, stepping outside of my comfort zone and digging into complex programs.
-
 I prioritize clean and reusable code, emphasizing readability to fully engage in a collaborative environment. I love solving questions on LeetCode and doing competitive coding at CodeChef and HackerRank.
 
 Proficient: ​Python3, MySQL, Git, Data Structures and Algorithms, HTML5, CSS, C
