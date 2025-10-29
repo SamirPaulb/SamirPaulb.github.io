@@ -570,8 +570,8 @@ defaultContentLanguage = "en"
         #  Enhance third-party library config
         [params.page.library.js.instantclick]
           src = "/js/instantclick.min.js"
-          defer = false
-          async = false
+          defer = true
+          async = true
           attr = "data-no-instant"
         [params.page.library.js.workbox-sw]
           src = "/js/sw.js"
