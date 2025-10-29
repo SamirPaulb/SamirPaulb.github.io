@@ -6,22 +6,40 @@ git clone git@github.com:SamirPaulb/SamirPaulb.github.io.git
 # Branch = samir.pages.dev -> Cloudflare Pages 
 git checkout main
 
-# Remove existing working trees (if present)
-rm -rf content themes/DoIt
+# from the repo root
+set -euo pipefail
 
-# Clean stale submodule config entries (if any)
+# 1) Remove submodules cleanly from index and working tree
+git rm -f themes/DoIt || true
+git rm -f content || true
+
+# 2) Remove leftover module metadata
+rm -rf .git/modules/themes/DoIt || true
+rm -rf .git/modules/content || true
+
+# 3) Ensure .gitmodules does not contain stale sections
 git config -f .gitmodules --remove-section submodule.themes/DoIt || true
 git config -f .gitmodules --remove-section submodule.content || true
 
-# Re-add submodules with correct URLs
-# Public theme via HTTPS (no auth needed)
+# 4) Commit the removal (submodule pointers and .gitmodules changes)
+git add -A
+git commit -m "Remove stale submodules DoIt and content" || true
+
+# 5) Re-add submodules with correct literal URLs
 git submodule add https://github.com/SamirPaulb/DoIt.git themes/DoIt
-# Private content via SSH (deploy key or user key required)
 git submodule add git@github.com:SamirPaulb/content.git content
 
-# Sync config and update all submodules
+# 6) Sync submodule URLs into .git/config and materialize working trees
 git submodule sync --recursive
-git submodule update --init --remote --recursive
+git submodule update --init --recursive
+
+# 7) Optionally advance to latest tracked branches (if you intend to follow branches)
+# git submodule update --remote --recursive
+
+# 8) Commit the new submodule pointers and .gitmodules
+git add -A
+git commit -m "Re-add DoIt and content submodules with correct URLs"
+
 ```
 
 - Hugo Theme: https://github.com/SamirPaulb/DoIt
