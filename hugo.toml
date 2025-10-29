@@ -133,7 +133,54 @@ defaultContentLanguage = "en"
   [params.footer]
     enable = true
     #  Custom content (HTML format is supported)
-    custom = '<span> <a href="/contact">Contact</a> · <a href="/sitemap.xml">Sitemap</a> · <a href="/privacy">Privacy</a> · <a href="/disclaimer">Disclaimer</a></span>'
+    custom = '''
+      <span>
+        <a href="/contact">Contact</a> · 
+        <a href="/sitemap.xml">Sitemap</a> · 
+        <a href="/privacy">Privacy</a> · 
+        <a href="/disclaimer">Disclaimer</a>
+      </span>
+      <!-- Register Service Worker for PWA (loads after page fully loaded) -->
+      <script defer loading="lazy">
+        window.addEventListener('load', function() {
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js', { scope: '/' })
+              .then(function(reg) {
+                console.log('Service Worker registered:', reg.scope);
+              })
+              .catch(function(err) {
+                console.error('Service Worker registration failed:', err);
+              });
+          }
+        });
+      </script>
+      <!-- InstantClick (loads dynamically after idle time for zero performance impact) -->
+      <script defer loading="lazy">
+        window.addEventListener('load', function() {
+          var loadInstantClick = function() {
+            var script = document.createElement('script');
+            script.src = '/instantclick.min.js';
+            script.async = true;
+            script.onload = function() {
+              if (typeof InstantClick !== 'undefined') {
+                InstantClick.init();
+                console.log('InstantClick initialized');
+              }
+            };
+            script.onerror = function() {
+              console.error('Failed to load InstantClick');
+            };
+            document.head.appendChild(script);
+          };
+          // Use requestIdleCallback for better performance, fallback to setTimeout
+          if ('requestIdleCallback' in window) {
+            requestIdleCallback(loadInstantClick, { timeout: 2000 });
+          } else {
+            setTimeout(loadInstantClick, 100);
+          }
+        });
+      </script>
+    '''
     #  whether to show Hugo and theme info
     hugo = false
     #  Hosted on (HTML format is supported)
@@ -568,16 +615,16 @@ defaultContentLanguage = "en"
       [params.page.library.js]
         #  someJavaScript = "instantclick"
         #  Enhance third-party library config
-        [params.page.library.js.instantclick]
-          src = "/js/instantclick.min.js"
-          defer = true
-          async = true
-          attr = "data-no-instant"
-        [params.page.library.js.workbox-sw]
-          src = "/js/sw.js"
-          defer = true
-          async = true
-          attr = "sw"
+        # [params.page.library.js.instantclick]
+        #   src = "/instantclick.min.js"
+        #   defer = true
+        #   async = true
+        #   attr = "data-no-instant"
+        # [params.page.library.js.workbox-sw]
+        #   src = "/sw.js"
+        #   defer = true
+        #   async = true
+        #   attr = "sw"
         # located in "assets/js/"
         # Or
         # someJavaScript = "https://cdn.example.com/some.js"
