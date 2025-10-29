@@ -1,0 +1,46 @@
+{{- if .Parent -}}
+    {{- if .Parent.Name | ne "aplayer" -}}
+        {{- errorf "The audio shortcode must be placed inside an aplayer shortcode: %s" .Position -}}
+    {{- else -}}
+
+    {{- if .IsNamedParams -}}    
+    {{- else -}}
+        {{- errorf "Only named params is supported: %s" .Position -}}
+    {{- end -}}
+
+    {{- $options := dict -}}
+    {{- with .Get "name" -}}{{- $options = dict "name" . | merge $options -}}{{- end -}}
+    {{- with .Get "artist" -}}{{- $options = dict "artist" . | merge $options -}}{{- end -}}
+    {{- with .Get "url" -}}
+        {{- $url := . -}}
+        {{- with dict "Path" $url | partial "function/resource.html" -}}
+            {{- $url = .RelPermalink -}}
+        {{- end -}}
+        {{- $options = dict "url" $url | merge $options -}}
+    {{- end -}}
+    {{- with .Get "cover" -}}
+        {{- $cover := . -}}
+        {{- with dict "Path" $cover | partial "function/resource.html" -}}
+            {{- $cover = .RelPermalink -}}
+        {{- end -}}
+        {{- $options = dict "cover" $cover | merge $options -}}
+    {{- end -}}
+    {{- with .Get "lrc" -}}
+        {{- $lrc := . -}}
+        {{- with dict "Path" $lrc | partial "function/resource.html" -}}
+            {{- $lrc = .RelPermalink -}}
+        {{- end -}}
+        {{- $options = dict "lrc" $lrc | merge $options -}}
+    {{- end -}}
+    {{- with .Inner -}}{{- $options = dict "lrc" . | merge $options -}}{{- end -}}
+    {{- with .Get "theme" -}}{{- $options = dict "theme" . | merge $options -}}{{- end -}}
+    {{- with .Get "type" -}}{{- $options = dict "type" . | merge $options -}}{{- end -}}
+
+    {{- $options | jsonify -}}
+
+    {{- end -}}
+{{- else -}}
+    {{- errorf "The audio shortcode must be placed inside an aplayer shortcode: %s" .Position -}}
+{{- end -}}
+
+

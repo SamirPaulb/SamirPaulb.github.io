@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /Samir_Paul_resume.pdf
+Disallow: /resume

@@ -1,0 +1,7 @@
+[submodule "content"]
+	path = content
+	url = git@github.com:SamirPaulb/content.git
+
+[submodule "themes/DoIt"]
+	path = themes/DoIt
+	url = https://github.com/SamirPaulb/DoIt.git

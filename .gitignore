@@ -1,0 +1,6 @@
+public/
+resources/
+.hugo_build.lock
+.claude/
+.vscode/
+.idea/

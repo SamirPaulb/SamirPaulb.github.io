@@ -1,0 +1,2 @@
+{{- $scriptArr := .Page.Scratch.Get "scriptArr" | default slice -}}
+{{- $scriptArr | append (trim .Inner "\n") | .Page.Scratch.Set "scriptArr" -}}

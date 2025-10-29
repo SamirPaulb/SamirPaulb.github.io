@@ -1,0 +1,4 @@
+baseURL = ''
+languageCode = 'en-us'
+title = "Samir's Blog"
+theme = 'DoIt'
