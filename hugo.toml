@@ -814,7 +814,7 @@ timeZone = "Asia/Kolkata"
 
 # Options for taxonomies
 [taxonomies]
-author = "authors"
+author = ""
 category = "categories"
 tag = "tags"
-series = "series"
+series = ""
