@@ -1,10 +1,64 @@
 theme = "DoIt"
+title = "Samir's Blog"
 baseURL = "https://samirpaulb.github.io/"
 languageCode = "en"
+languageName = "English"
 defaultContentLanguage = "en"
 timeZone = "Asia/Kolkata"
 
-# Menu configuration
+# Disable unnecessary language processing for better performance
+hasCJKLanguage = false
+
+# Enable Git info for lastmod dates
+enableGitInfo = false
+
+# Performance: Disable unused taxonomy pages
+disableKinds = []
+
+# ============================================================================
+# BUILD & MINIFICATION CONFIGURATION (Performance Optimization)
+# ============================================================================
+
+[build]
+  writeStats = true
+  noJSConfigInAssets = true
+  useResourceCacheWhen = "fallback"
+
+[minify]
+  disableCSS = false
+  disableHTML = false
+  disableJS = false
+  disableJSON = false
+  disableSVG = true
+  disableXML = false
+  minifyOutput = true
+  [minify.tdewolff]
+    [minify.tdewolff.css]
+      decimals = -1
+      keepCSS2 = true
+    [minify.tdewolff.html]
+      keepComments = false
+      keepConditionalComments = true
+      keepDefaultAttrVals = true
+      keepDocumentTags = true
+      keepEndTags = true
+      keepQuotes = false
+      keepWhitespace = false
+    [minify.tdewolff.js]
+      keepVarNames = false
+      precision = 0
+    [minify.tdewolff.json]
+      precision = 0
+    [minify.tdewolff.svg]
+      precision = 2
+      # Preserve viewBox attributes to prevent icon distortion
+      keepComments = false
+    [minify.tdewolff.xml]
+      keepWhitespace = false
+
+# ============================================================================
+# MENU CONFIGURATION
+# ============================================================================
 [menu]
   [[menu.main]]
     identifier = "posts"
@@ -21,6 +75,10 @@ timeZone = "Asia/Kolkata"
     name = "Categories"
     url = "/categories/"
     weight = 3
+
+# ============================================================================
+# SITE PARAMETERS
+# ============================================================================
 
 [params]
   #  DoIt theme version
@@ -54,14 +112,18 @@ timeZone = "Asia/Kolkata"
   srcsetLargeResizeMethod = "2000x webp Lanczos q75"
   #  License information
   license = '<a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>'
-  # Author config
+  # ----------------------------------------------------------------------------
+  # Author Configuration
+  # ----------------------------------------------------------------------------
   [params.author]
     name = "Samir P."
     email = "www.netproxy@gmail.com"
     link = ""
     avatar = "/avatar.jpg"
     gravatarEmail = ""
-  #  App icon config
+  # ----------------------------------------------------------------------------
+  # App Icon Configuration (PWA)
+  # ----------------------------------------------------------------------------
   [params.app]
     # optional site title override for the app when added to an iOS home screen or Android launcher
     title = "Samir's Blog"
@@ -74,7 +136,9 @@ timeZone = "Asia/Kolkata"
     # Windows v8-10 tile color
     tileColor = "#da532c"
 
-  #  Search config
+  # ----------------------------------------------------------------------------
+  # Search Configuration (Fuse.js - Client-side)
+  # ----------------------------------------------------------------------------
   [params.search]
     enable = true
     # type of search engine ("algolia", "fuse")
@@ -107,12 +171,16 @@ timeZone = "Asia/Kolkata"
       useExtendedSearch = false
       ignoreFieldNorm = false
 
+  # ----------------------------------------------------------------------------
+  # Image Optimization Configuration (Performance)
+  # ----------------------------------------------------------------------------
   [params.image]
-    # cache remote images for better optimisations
     cacheRemote = true
-    # Image resizing and optimisation
     optimise = true
-  # Header config
+
+  # ----------------------------------------------------------------------------
+  # Header Configuration
+  # ----------------------------------------------------------------------------
   [params.header]
     #  Theme change mode
     # theme change mode ("switch", "select")
@@ -120,17 +188,19 @@ timeZone = "Asia/Kolkata"
     #  Header title config
     [params.header.title]
       # URL of the LOGO
-      logo = "/logo.png"
+      logo = ""
       # title name
-      name = "Samir's Blog"
+      name = "Samir's blog"
       # you can add extra information before the name (HTML format is supported), such as icons
       pre = ""
       # you can add extra information after the name (HTML format is supported), such as icons
-      post = "✨"
+      post = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M172.2 226.8c-14.6-2.9-28.2 8.9-28.2 23.8V301c0 10.2 7.1 18.4 16.7 22 18.2 6.8 31.3 24.4 31.3 45 0 26.5-21.5 48-48 48s-48-21.5-48-48V120c0-13.3-10.7-24-24-24H24c-13.3 0-24 10.7-24 24v248c0 89.5 82.1 160.2 175 140.7 54.4-11.4 98.3-55.4 109.7-109.7 17.4-82.9-37-157.2-112.5-172.2zM209 0c-9.2-.5-17 6.8-17 16v31.6c0 8.5 6.6 15.5 15 15.9 129.4 7 233.4 112 240.9 241.5.5 8.4 7.5 15 15.9 15h32.1c9.2 0 16.5-7.8 16-17C503.4 139.8 372.2 8.6 209 0zm.3 96c-9.3-.7-17.3 6.7-17.3 16.1v32.1c0 8.4 6.5 15.3 14.8 15.9 76.8 6.3 138 68.2 144.9 145.2.8 8.3 7.6 14.7 15.9 14.7h32.2c9.3 0 16.8-8 16.1-17.3-8.4-110.1-96.5-198.2-206.6-206.7z"/></svg>'
       #  whether to use typeit animation for title name
       typeit = false
 
-  # Footer config
+  # ----------------------------------------------------------------------------
+  # Footer Configuration
+  # ----------------------------------------------------------------------------
   [params.footer]
     enable = true
     #  Custom content (HTML format is supported)
@@ -141,44 +211,30 @@ timeZone = "Asia/Kolkata"
         <a href="/privacy">Privacy</a> · 
         <a href="/disclaimer">Disclaimer</a>
       </span>
-      <!-- Register Service Worker for PWA (loads after page fully loaded) -->
-      <script defer loading="lazy">
+      <!-- Service Worker Registration (excluded from InstantClick) -->
+      <script defer data-no-instant>
         window.addEventListener('load', function() {
           if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js', { scope: '/' })
-              .then(function(reg) {
-                console.log('Service Worker registered:', reg.scope);
-              })
-              .catch(function(err) {
-                console.error('Service Worker registration failed:', err);
-              });
+              .then(function(reg) { console.log('SW registered:', reg.scope); })
+              .catch(function(err) { console.error('SW failed:', err); });
           }
         });
       </script>
-      <!-- InstantClick (loads dynamically after idle time for zero performance impact) -->
-      <script defer loading="lazy">
+      <!-- InstantClick - Lazy loaded for optimal performance -->
+      <script defer data-no-instant>
         window.addEventListener('load', function() {
-          var loadInstantClick = function() {
-            var script = document.createElement('script');
-            script.src = '/instantclick.min.js';
-            script.async = true;
-            script.onload = function() {
-              if (typeof InstantClick !== 'undefined') {
-                InstantClick.init();
-                console.log('InstantClick initialized');
-              }
-            };
-            script.onerror = function() {
-              console.error('Failed to load InstantClick');
-            };
-            document.head.appendChild(script);
+          var script = document.createElement('script');
+          script.src = '/instantclick.min.js';
+          script.async = true;
+          script.setAttribute('data-no-instant', '');
+          script.onload = function() {
+            if (typeof InstantClick !== 'undefined') {
+              InstantClick.init(50);
+              console.log('InstantClick ready (50ms preload)');
+            }
           };
-          // Use requestIdleCallback for better performance, fallback to setTimeout
-          if ('requestIdleCallback' in window) {
-            requestIdleCallback(loadInstantClick, { timeout: 2000 });
-          } else {
-            setTimeout(loadInstantClick, 100);
-          }
+          document.head.appendChild(script);
         });
       </script>
     '''
@@ -198,7 +254,9 @@ timeZone = "Asia/Kolkata"
     # license info (HTML format is supported)
     license = '<a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>'
 
-  #  Section (all posts) page config
+  # ----------------------------------------------------------------------------
+  # Section (All Posts) Page Configuration
+  # ----------------------------------------------------------------------------
   [params.section]
     # special amount of posts in each section page
     paginate = 20
@@ -213,7 +271,9 @@ timeZone = "Asia/Kolkata"
       days = 30
       maxCount = 10
 
-  #  List (category or tag) page config
+  # ----------------------------------------------------------------------------
+  # List (Category or Tag) Page Configuration
+  # ----------------------------------------------------------------------------
   [params.list]
     # special amount of posts in each list page
     paginate = 20
@@ -222,7 +282,9 @@ timeZone = "Asia/Kolkata"
     # amount of RSS pages
     rss = 5000
 
-  # Home page config
+  # ----------------------------------------------------------------------------
+  # Home Page Configuration
+  # ----------------------------------------------------------------------------
   [params.home]
     #  amount of RSS pages
     rss = 10
@@ -256,7 +318,9 @@ timeZone = "Asia/Kolkata"
       # default behavior when you don't set "hiddenFromHomePage" in front matter
       defaultHiddenFromHomePage = false
 
-  # Social config about the author
+  # ----------------------------------------------------------------------------
+  # Social Media Links (Author Profile)
+  # ----------------------------------------------------------------------------
   [params.social]
     GitHub = "SamirPaulb"
     Linkedin = "samirpaul"
@@ -330,7 +394,9 @@ timeZone = "Asia/Kolkata"
     Email = "www.netproxy@gmail.com"
     RSS = true # 
 
-  #  Page config
+  # ----------------------------------------------------------------------------
+  # Page Configuration (Default Settings for All Pages)
+  # ----------------------------------------------------------------------------
   [params.page]
     #  whether to hide a page from home page
     hiddenFromHomePage = false
@@ -357,6 +423,8 @@ timeZone = "Asia/Kolkata"
     #  configure the link to report issue for the post
     linkToReport = false
     # "https://github.com/user/repo/issues/new?title=[bug]%20{title}&body=|Field|Value|%0A|-|-|%0A|Title|{title}|%0A|Url|{url}|%0A|Filename|https://github.com/user/repo/blob/main/{path}|"
+    # Hint search engines to index the page
+    robots = "index, follow"
     #  whether to show the full text content in RSS
     rssFullText = true
     #  whether to enable series navigation
@@ -379,12 +447,12 @@ timeZone = "Asia/Kolkata"
       # whether to enable the table of the contents
       enable = true
       #  whether to keep the static table of the contents in front of the post
-      keepStatic = true
+      keepStatic = false
       # whether to make the table of the contents in the sidebar automatically collapsed
       auto = true
     #  KaTeX mathematical formulas
     [params.page.math]
-      enable = true
+      enable = false
       # default block delimiter is $$ ... $$ and \\[ ... \\]
       blockLeftDelimiter = ""
       blockRightDelimiter = ""
@@ -399,8 +467,9 @@ timeZone = "Asia/Kolkata"
       mathjax = false
     #  Code config
     [params.page.code]
+      copy = true
       # the maximum number of lines of displayed code by default
-      maxShownLines = 10
+      maxShownLines = 30
       # whether to enable line numbers in the code block
       lineNos = true
       # whether to enable line wrapping in the code block
@@ -427,37 +496,40 @@ timeZone = "Asia/Kolkata"
       scale = true
       # whether to add FullscreenControl
       fullscreen = true
-    #  social share links in post page
+    #  social share links in post page (TOP 7 MOST POPULAR - OPTIMIZED FOR PERFORMANCE)
     [params.page.share]
       enable = true
+      # Top 7 most popular social networks (ENABLED for maximum reach with minimal overhead)
       Twitter = true
       Facebook = true
       Linkedin = true
+      Reddit = true
       Whatsapp = true
       Pinterest = true
-      Tumblr = true
       HackerNews = true
-      Reddit = true
-      VK = true
+      # Secondary networks (DISABLED to improve page load performance)
+      Line = false
+      Weibo = false
+      Mastodon = false
+      Tumblr = false
+      VK = false
+      Baidu = false
+      Evernote = false
+      Myspace = false
+      Blogger = false
+      # Other platforms (DISABLED - minimal usage)
       Buffer = false
       Xing = false
-      Line = true
-      Instapaper = false
       Pocket = false
+      Instapaper = false
+      Flipboard = false
       Digg = false
       Stumbleupon = false
-      Flipboard = false
-      Weibo = true
       Renren = false
-      Myspace = true
-      Blogger = true
-      Baidu = true
       Odnoklassniki = false
-      Evernote = true
       Skype = false
       Trello = false
       Mix = false
-      Mastodon = true
     # server for PlantUML online rendering
     [params.page.plantuml]
       server = "https://www.plantuml.com/plantuml"
@@ -639,18 +711,22 @@ timeZone = "Asia/Kolkata"
         logoUrl = "/logo.png"
     #  Related content config
       [params.page.related]
-        enable = true
+        enable = false
         count = 5
 
 
-  #  Sponsor config
+  # ----------------------------------------------------------------------------
+  # Sponsor Configuration
+  # ----------------------------------------------------------------------------
   [params.sponsor]
     enable = false
     bio = "If you find this post helpful, please consider sponsoring."
     link = "https://www.buymeacoffee.com" # The link to your sponsor page
     custom = "" # Custom HTML button
 
-  #  TypeIt config
+  # ----------------------------------------------------------------------------
+  # TypeIt Animation Configuration
+  # ----------------------------------------------------------------------------
   [params.typeit]
     # typing speed between each step (measured in milliseconds)
     speed = 100
@@ -661,7 +737,9 @@ timeZone = "Asia/Kolkata"
     # cursor duration after typing finishing (measured in milliseconds, "-1" means unlimited)
     duration = -1
 
-  # Site verification code config for Google/Bing/Yandex/Pinterest/Baidu
+  # ----------------------------------------------------------------------------
+  # Search Engine Verification Codes (SEO)
+  # ----------------------------------------------------------------------------
   [params.verification]
     google = "vJAOBxbJTCK2vXG-hLFeGsoC9hXgFlCpuJJ8AcJLROQ"
     bing = "1A92FC2EC113F8616A21D76DA684A133"
@@ -671,7 +749,9 @@ timeZone = "Asia/Kolkata"
     so = "" # 360 search
     sogou = ""
 
-  #  Site SEO config
+  # ----------------------------------------------------------------------------
+  # Site SEO Configuration (Schema.org)
+  # ----------------------------------------------------------------------------
   [params.seo]
     # image URL
     image = "/og-image.png"
@@ -681,7 +761,9 @@ timeZone = "Asia/Kolkata"
     # alternate site name in Google search result
     alternateName = ["Samir's TechBlog"]
 
-  #  Analytics config
+  # ----------------------------------------------------------------------------
+  # Analytics Configuration (DISABLED for Privacy & Performance)
+  # ----------------------------------------------------------------------------
   [params.analytics]
     enable = false
     # Google Analytics
@@ -711,7 +793,9 @@ timeZone = "Asia/Kolkata"
     [params.analytics.cloudflare]
       token = ""
 
-  #  Cookie consent config
+  # ----------------------------------------------------------------------------
+  # Cookie Consent Configuration (DISABLED)
+  # ----------------------------------------------------------------------------
   [params.cookieconsent]
     enable = false
     # text strings used for Cookie consent banner
@@ -720,7 +804,9 @@ timeZone = "Asia/Kolkata"
       dismiss = "Got it!"
       link = "Learn more about our Privacy Policy"
 
-  #  CDN config for third-party library files
+  # ----------------------------------------------------------------------------
+  # CDN Configuration (Third-party Libraries)
+  # ----------------------------------------------------------------------------
   [params.cdn]
     # CDN data file name, disabled by default
     # ("jsdelivr.yml")
@@ -729,13 +815,19 @@ timeZone = "Asia/Kolkata"
     # "assets/data/cdn/"
     data = ""
 
-  #  Compatibility config
+  # ----------------------------------------------------------------------------
+  # Browser Compatibility Configuration
+  # ----------------------------------------------------------------------------
   [params.compatibility]
     # whether to use Polyfill.io on cdnjs to be compatible with older browsers
     # https://blog.cloudflare.com/polyfill-io-now-available-on-cdnjs-reduce-your-supply-chain-risk
     polyfill = false
 
-# Markup related config in Hugo
+
+# ============================================================================
+# MARKUP CONFIGURATION (Syntax Highlighting & Goldmark)
+# ============================================================================
+
 [markup]
   # Syntax Highlighting
   [markup.highlight]
@@ -764,18 +856,30 @@ timeZone = "Asia/Kolkata"
     startLevel = 2
     endLevel = 6
 
-# Sitemap config
+
+# ============================================================================
+# SITEMAP CONFIGURATION (SEO)
+# ============================================================================
+
 [sitemap]
   changefreq = "weekly"
   filename = "sitemap.xml"
   priority = 0.5
 
-# Permalinks config
+
+# ============================================================================
+# PERMALINKS CONFIGURATION (URL Structure)
+# ============================================================================
+
 [Permalinks]
   # posts = ":year/:month/:contentbasename"
   posts = "posts/:contentbasename"
 
-# Privacy config
+
+# ============================================================================
+# PRIVACY CONFIGURATION (GDPR Compliance)
+# ============================================================================
+
 [privacy]
   #  privacy of the Google Analytics (replaced by params.analytics.google)
   [privacy.googleAnalytics]
@@ -784,6 +888,11 @@ timeZone = "Asia/Kolkata"
     enableDNT = true
   [privacy.youtube]
     privacyEnhanced = true
+
+
+# ============================================================================
+# OUTPUT FORMATS CONFIGURATION
+# ============================================================================
 
 # Options to make output .md files
 [mediaTypes]
@@ -812,9 +921,11 @@ timeZone = "Asia/Kolkata"
   taxonomy = ["HTML", "RSS"]
   term = ["HTML", "RSS"]
 
-# Options for taxonomies
+
+# ============================================================================
+# TAXONOMIES CONFIGURATION
+# ============================================================================
+
 [taxonomies]
-author = ""
 category = "categories"
 tag = "tags"
-series = ""

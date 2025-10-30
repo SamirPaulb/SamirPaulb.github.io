@@ -59,6 +59,7 @@ jobs:
         run: |
           hugo \
             --minify \
+            --gc \
             --baseURL "${{ steps.pages.outputs.base_url }}"
 
       - name: Upload artifact
