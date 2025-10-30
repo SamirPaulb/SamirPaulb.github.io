@@ -2,6 +2,7 @@ theme = "DoIt"
 baseURL = "https://samirpaulb.github.io/"
 languageCode = "en"
 defaultContentLanguage = "en"
+timeZone: Asia/Kolkata
 
 # Menu configuration
 [menu]
@@ -250,7 +251,7 @@ defaultContentLanguage = "en"
     [params.home.posts]
       enable = true
       # special amount of posts in each home posts page
-      paginate = 6
+      paginate = 7
       #  replaced with hiddenFromHomePage in params.page
       # default behavior when you don't set "hiddenFromHomePage" in front matter
       defaultHiddenFromHomePage = false
@@ -813,7 +814,7 @@ defaultContentLanguage = "en"
 
 # Options for taxonomies
 [taxonomies]
-author = ""
+author = "authors"
 category = "categories"
 tag = "tags"
-series = ""
+series = "series"

@@ -34,7 +34,7 @@ git submodule sync --recursive
 git submodule update --init --recursive
 
 # 7) Optionally advance to latest tracked branches (if you intend to follow branches)
-# git submodule update --remote --recursive
+git submodule update --remote --recursive
 
 # 8) Commit the new submodule pointers and .gitmodules
 git add -A
