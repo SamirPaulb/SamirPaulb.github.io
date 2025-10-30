@@ -2,7 +2,7 @@ theme = "DoIt"
 baseURL = "https://samirpaulb.github.io/"
 languageCode = "en"
 defaultContentLanguage = "en"
-timeZone: Asia/Kolkata
+timeZone = "Asia/Kolkata"
 
 # Menu configuration
 [menu]
