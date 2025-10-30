@@ -33,7 +33,7 @@ git submodule add git@github.com:SamirPaulb/content.git content
 git submodule sync --recursive
 git submodule update --init --recursive
 
-# 7) Optionally advance to latest tracked branches (if you intend to follow branches)
+# 7) Optionally advance to latest tracked branches -> use for updating all submodules with remote
 git submodule update --remote --recursive
 
 # 8) Commit the new submodule pointers and .gitmodules
