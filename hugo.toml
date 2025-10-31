@@ -211,6 +211,14 @@ disableKinds = []
         <a href="/privacy">Privacy</a> ·
         <a href="/disclaimer">Disclaimer</a>
       </span>
+      <!-- Register Service Workers -->
+      <script defer loading="lazy">
+      document.addEventListener('DOMContentLoaded', function() { 
+      if (navigator && navigator.serviceWorker) {
+          navigator.serviceWorker.register("/sw.js", { scope: '/' });
+      }
+      });
+      </script>
     '''
     #  whether to show Hugo and theme info
     hugo = false
