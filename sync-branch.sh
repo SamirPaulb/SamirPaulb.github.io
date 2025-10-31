@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Branches/remotes
 BRANCH="samir.pages.dev"
 REMOTE="origin"
 
-# Files and replacements
+# Files to update (add more paths as needed)
 FILES=(
   "hugo.toml"
   "static/robots.txt"
 )
+
+# Replacement values
 FROM="samirpaulb.github.io"
 TO="samir.pages.dev"
 
@@ -22,21 +25,25 @@ git switch "$BRANCH"
 git reset --hard "${REMOTE}/main"
 
 # 4) Replace domains in listed files (in-place)
+changed=0
 for f in "${FILES[@]}"; do
   if [[ -f "$f" ]]; then
-    # Replace all occurrences safely using a non-slash delimiter
-    sed -i "s|${FROM}|${TO}|g" "$f"
+    # Only run sed if the FROM string exists to avoid dirtying timestamps unnecessarily
+    if grep -q "${FROM}" "$f"; then
+      sed -i "s|${FROM}|${TO}|g" "$f"
+      changed=1
+    fi
   fi
 done
 
 # 5) Stage and commit only if there are changes
-if ! git diff --quiet; then
+if [[ "$changed" -eq 1 ]] && ! git diff --quiet; then
   git add "${FILES[@]}"
-  git commit -m "chore: replace ${FROM} with ${TO} in listed files"
+  git commit -m "chore: replace ${FROM} with ${TO} in configured files"
 fi
 
 # 6) Push with safety
 git push --force-with-lease "$REMOTE" "$BRANCH"
 
-# 7) Return to main (or previous branch with: git switch -)
+# 7) Return to main (or use `git switch -` to go back to previous branch)
 git switch main
