@@ -119,7 +119,7 @@ disableKinds = []
     name = "Samir P."
     email = "www.netproxy@gmail.com"
     link = ""
-    avatar = "/avatar.jpg"
+    avatar = "/avatar.webp"
     gravatarEmail = ""
   # ----------------------------------------------------------------------------
   # App Icon Configuration (PWA)
@@ -206,35 +206,19 @@ disableKinds = []
     #  Custom content (HTML format is supported)
     custom = '''
       <span>
-        <a href="/contact">Contact</a> · 
-        <a href="/sitemap.xml">Sitemap</a> · 
-        <a href="/privacy">Privacy</a> · 
+        <a href="/contact">Contact</a> ·
+        <a href="/sitemap.xml">Sitemap</a> ·
+        <a href="/privacy">Privacy</a> ·
         <a href="/disclaimer">Disclaimer</a>
       </span>
-      <!-- Service Worker Registration (excluded from InstantClick) -->
-      <script defer data-no-instant>
+      <!-- Service Worker Registration -->
+      <script defer>
         window.addEventListener('load', function() {
           if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js', { scope: '/' })
               .then(function(reg) { console.log('SW registered:', reg.scope); })
               .catch(function(err) { console.error('SW failed:', err); });
           }
-        });
-      </script>
-      <!-- InstantClick - Lazy loaded for optimal performance -->
-      <script defer data-no-instant>
-        window.addEventListener('load', function() {
-          var script = document.createElement('script');
-          script.src = '/instantclick.min.js';
-          script.async = true;
-          script.setAttribute('data-no-instant', '');
-          script.onload = function() {
-            if (typeof InstantClick !== 'undefined') {
-              InstantClick.init(50);
-              console.log('InstantClick ready (50ms preload)');
-            }
-          };
-          document.head.appendChild(script);
         });
       </script>
     '''
@@ -312,6 +296,8 @@ disableKinds = []
     # Home page posts
     [params.home.posts]
       enable = true
+      # hide the featuredImagePreview in home page only
+      imagePreview = false
       # special amount of posts in each home posts page
       paginate = 7
       #  replaced with hiddenFromHomePage in params.page
@@ -534,9 +520,9 @@ disableKinds = []
     [params.page.plantuml]
       server = "https://www.plantuml.com/plantuml"
 
-    # instant.page config (disabled in favor of InstantClick)
+    # instant.page config - Preloads pages on hover for faster navigation
     [params.page.instantpage]
-      enable = false
+      enable = true
 
     #  Comment config
     [params.page.comment]
