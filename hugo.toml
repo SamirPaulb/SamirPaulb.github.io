@@ -211,15 +211,13 @@ disableKinds = []
         <a href="/privacy">Privacy</a> ·
         <a href="/disclaimer">Disclaimer</a>
       </span>
-      <!-- Service Worker Registration -->
-      <script defer>
-        window.addEventListener('load', function() {
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js', { scope: '/' })
-              .then(function(reg) { console.log('SW registered:', reg.scope); })
-              .catch(function(err) { console.error('SW failed:', err); });
-          }
-        });
+      <!-- Register Service Workers -->
+      <script defer loading="lazy">
+      document.addEventListener('DOMContentLoaded', function() { 
+      if (navigator && navigator.serviceWorker) {
+          navigator.serviceWorker.register("/sw.js", { scope: '/' });
+      }
+      });
       </script>
     '''
     #  whether to show Hugo and theme info
