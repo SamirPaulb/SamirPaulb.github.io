@@ -3,11 +3,14 @@ set -euo pipefail
 
 BRANCH="samir.pages.dev"
 REMOTE="origin"
-HUGO_TOML="hugo.toml"
 
-# URLs to swap in hugo.toml
-FROM_URL='baseURL = "https://samirpaulb.github.io/"'
-TO_URL='baseURL = "https://samir.pages.dev/"'
+# Files and replacements
+FILES=(
+  "hugo.toml"
+  "static/robots.txt"
+)
+FROM="samirpaulb.github.io"
+TO="samir.pages.dev"
 
 # 1) Ensure up-to-date remote refs
 git fetch "$REMOTE"
@@ -18,23 +21,22 @@ git switch "$BRANCH"
 # 3) Reset branch to match origin/main exactly (discard local changes)
 git reset --hard "${REMOTE}/main"
 
-# 4) Update baseURL in hugo.toml in place
-if grep -q '^baseURL\s*=\s*"https://samirpaulb.github.io/"' "$HUGO_TOML"; then
-  sed -i 's|^baseURL\s*=\s*"https://samirpaulb.github.io/"|baseURL = "https://samir.pages.dev/"|' "$HUGO_TOML"
-else
-  printf '\nbaseURL = "https://samir.pages.dev/"\n' >> "$HUGO_TOML"
-fi
+# 4) Replace domains in listed files (in-place)
+for f in "${FILES[@]}"; do
+  if [[ -f "$f" ]]; then
+    # Replace all occurrences safely using a non-slash delimiter
+    sed -i "s|${FROM}|${TO}|g" "$f"
+  fi
+done
 
-# 5) Commit the config change if there is one
+# 5) Stage and commit only if there are changes
 if ! git diff --quiet; then
-  git add "$HUGO_TOML"
-  git commit -m "chore: set Hugo baseURL to https://samir.pages.dev/"
+  git add "${FILES[@]}"
+  git commit -m "chore: replace ${FROM} with ${TO} in listed files"
 fi
 
 # 6) Push with safety
 git push --force-with-lease "$REMOTE" "$BRANCH"
 
-# 7) Return to main
+# 7) Return to main (or previous branch with: git switch -)
 git switch main
-# or to return to the previously checked-out branch regardless of name:
-# git switch -
