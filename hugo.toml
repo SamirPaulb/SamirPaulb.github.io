@@ -101,7 +101,7 @@ disableKinds = []
   # website images for Open Graph and Twitter Cards
   images = ["/screenshot.png"]
   #  enable PWA support
-  enablePWA = false
+  enablePWA = true
   # [Experimental] cache remote images in markdown, more info: https://github.com/HEIGE-PCloud/DoIt/pull/860#issue-1574342372
   cacheRemoteImages = true
   # [Experimental] generate image srcset attribute with hugo image processing feature.
@@ -211,14 +211,6 @@ disableKinds = []
         <a href="/privacy">Privacy</a> ·
         <a href="/disclaimer">Disclaimer</a>
       </span>
-      <!-- Register Service Workers -->
-      <script defer loading="lazy">
-      document.addEventListener('DOMContentLoaded', function() { 
-      if (navigator && navigator.serviceWorker) {
-          navigator.serviceWorker.register("/sw.min.js", { scope: '/' });
-      }
-      });
-      </script>
     '''
     #  whether to show Hugo and theme info
     hugo = false
