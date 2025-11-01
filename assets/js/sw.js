@@ -1,4 +1,4 @@
-// Service Worker with Workbox 7.3.0 (Local) — Instant navigations + fast revalidation + prefetch capture (performance-optimized)
+// Service Worker with Workbox 7.3.0 (Local) — Instant navigations + fast revalidation + image fallback + aggressive caching
 
 importScripts('/workbox/workbox-sw.js');
 
@@ -14,7 +14,9 @@ const { StaleWhileRevalidate, CacheFirst } = workbox.strategies;
 const { precacheAndRoute, getCacheKeyForURL } = workbox.precaching;
 const { ExpirationPlugin } = workbox.expiration;
 const { CacheableResponsePlugin } = workbox.cacheableResponse;
-const CACHE_VERSION = 'v4'; // bump on changes
+
+// Bump when changing caching behavior
+const CACHE_VERSION = 'v5';
 
 // Normalize a URL/pathname (remove trailing slash except for root)
 const normalizePath = (pathOrUrl) => {
@@ -28,15 +30,15 @@ const OFFLINE_PATHS = ['/offline', '/offline/index.html'];
 const OFFLINE_NORMALIZED = new Set(OFFLINE_PATHS.map(normalizePath));
 const isOfflinePath = (urlLike) => OFFLINE_NORMALIZED.has(normalizePath(urlLike));
 
-// ----- Precache critical assets early (served cache-first by precaching) -----
+// ----- Precache critical assets early (cache-first by precaching) -----
 precacheAndRoute([
   { url: '/offline/index.html', revision: CACHE_VERSION },
   { url: '/manifest.json', revision: CACHE_VERSION },
   { url: '/site.webmanifest', revision: CACHE_VERSION }
-]); // Precached URLs are served cache-first by Workbox’s precaching route [web:55]
+]); // Precached URLs are served cache-first by Workbox's precaching route [web:55]
 
-// NOTE: Navigation Preload is intentionally disabled here for max “instant” feel with SWR.
-// It primarily benefits NetworkFirst and otherwise introduces unnecessary work for cached navigations. [web:9]
+// NOTE: Navigation Preload is disabled for max “instant” feel with SWR navigations.
+// It primarily helps NetworkFirst, not SWR, and can add overhead when a cached page exists. [web:9]
 
 // ----- Navigations: Stale-While-Revalidate (instant cache, background refresh) -----
 workbox.routing.registerRoute(
@@ -45,15 +47,15 @@ workbox.routing.registerRoute(
     cacheName: `pages-cache-${CACHE_VERSION}`,
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
-      // TTL + size limit for pages
+      // Larger TTL and entry cap for pages to maximize “instant back/forward” and repeat visits
       new ExpirationPlugin({
-        maxEntries: 800,                 // adjust as needed
-        maxAgeSeconds: 60 * 24 * 60 * 60, // 60 days
+        maxEntries: 2000,                    // cache more pages
+        maxAgeSeconds: 120 * 24 * 60 * 60,   // 120 days
         purgeOnQuotaError: true
       })
     ]
   })
-); // SWR returns cached HTML immediately and revalidates without blocking navigation [web:16]
+); // SWR returns cached HTML immediately and refreshes in background for next visit [web:16][web:18]
 
 // ----- Capture <link rel=prefetch> HTML and persist to pages cache -----
 workbox.routing.registerRoute(
@@ -67,7 +69,6 @@ workbox.routing.registerRoute(
     return isSameOrigin && isGET && acceptsHTML && isPrefetchHeader && !isOfflinePath(url);
   },
   async ({ event, request }) => {
-    // Store prefetched pages for instant future navigations
     try {
       const response = await fetch(request);
       if (response && response.ok && response.status === 200) {
@@ -84,7 +85,7 @@ workbox.routing.registerRoute(
   }
 ); // Extends speculative loads into SW cache for real instant clicks later [web:21]
 
-// ----- CSS — Cache-First (fastest repeat loads) -----
+// ----- CSS — Cache-First (fastest repeat paints) -----
 workbox.routing.registerRoute(
   ({ request }) => request.destination === 'style',
   new CacheFirst({
@@ -92,15 +93,15 @@ workbox.routing.registerRoute(
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({
-        maxEntries: 400,
-        maxAgeSeconds: 180 * 24 * 60 * 60,
+        maxEntries: 800,
+        maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
         purgeOnQuotaError: true
       })
     ]
   })
-); // Cache-first gives the quickest repeat paints for styles on static sites [web:16]
+); // Cache-first gives the quickest repeat renders for static CSS [web:16]
 
-// ----- JavaScript — Cache-First (fastest repeat loads) -----
+// ----- JavaScript — Cache-First (fastest TTI on repeat visits) -----
 workbox.routing.registerRoute(
   ({ request }) => request.destination === 'script',
   new CacheFirst({
@@ -108,15 +109,15 @@ workbox.routing.registerRoute(
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({
-        maxEntries: 400,
-        maxAgeSeconds: 180 * 24 * 60 * 60,
+        maxEntries: 800,
+        maxAgeSeconds: 365 * 24 * 60 * 60,
         purgeOnQuotaError: true
       })
     ]
   })
-); // Cache-first avoids blocking on network for JS on repeat visits [web:16]
+); // Cache-first avoids network dependency for JS on subsequent loads [web:16]
 
-// ----- Images — Cache-First (instant) -----
+// ----- Images — Cache-First (instant) with generous limits -----
 workbox.routing.registerRoute(
   ({ request }) => request.destination === 'image',
   new CacheFirst({
@@ -124,13 +125,13 @@ workbox.routing.registerRoute(
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({
-        maxEntries: 1500,
-        maxAgeSeconds: 365 * 24 * 60 * 60,
+        maxEntries: 5000,                    // cache more images
+        maxAgeSeconds: 365 * 24 * 60 * 60,   // 1 year
         purgeOnQuotaError: true
       })
     ]
   })
-); // Ideal for static image assets where freshness is not critical [web:16]
+); // Ideal for static images where freshness is not critical [web:16]
 
 // ----- Fonts — Cache-First -----
 workbox.routing.registerRoute(
@@ -140,7 +141,7 @@ workbox.routing.registerRoute(
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({
-        maxEntries: 300,
+        maxEntries: 800,
         maxAgeSeconds: 365 * 24 * 60 * 60,
         purgeOnQuotaError: true
       })
@@ -157,13 +158,13 @@ workbox.routing.registerRoute(
       new CacheableResponsePlugin({ statuses: [0, 200, 206] }),
       new workbox.rangeRequests.RangeRequestsPlugin(),
       new ExpirationPlugin({
-        maxEntries: 300,
-        maxAgeSeconds: 90 * 24 * 60 * 60,
+        maxEntries: 600,
+        maxAgeSeconds: 180 * 24 * 60 * 60, // 180 days
         purgeOnQuotaError: true
       })
     ]
   })
-); // Properly supports partial content for media while maximizing repeat performance [web:16]
+); // Properly supports partial content for media while maximizing repeat performance [web:16][web:101]
 
 // ----- Google Fonts — Cache-First -----
 workbox.routing.registerRoute(
@@ -175,7 +176,7 @@ workbox.routing.registerRoute(
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({
-        maxEntries: 300,
+        maxEntries: 800,
         maxAgeSeconds: 365 * 24 * 60 * 60,
         purgeOnQuotaError: true
       })
@@ -195,7 +196,7 @@ workbox.routing.registerRoute(
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({
-        maxEntries: 800,
+        maxEntries: 1500,
         maxAgeSeconds: 365 * 24 * 60 * 60,
         purgeOnQuotaError: true
       })
@@ -212,7 +213,7 @@ workbox.routing.registerRoute(
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({
-        maxEntries: 300,
+        maxEntries: 600,
         maxAgeSeconds: 10 * 60,
         purgeOnQuotaError: true
       })
@@ -228,17 +229,20 @@ workbox.routing.registerRoute(
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({
-        maxEntries: 800,
-        maxAgeSeconds: 60 * 24 * 60 * 60,
+        maxEntries: 1500,
+        maxAgeSeconds: 120 * 24 * 60 * 60, // 120 days
         purgeOnQuotaError: true
       })
     ]
   })
 ); // Covers other same-origin requests with instant responses plus background refresh [web:16]
 
-// ----- Offline fallback for navigations -----
+// ----- Offline fallback (documents + images placeholder) -----
 workbox.routing.setCatchHandler(async ({ event }) => {
-  if (event.request.destination === 'document' || event.request.mode === 'navigate') {
+  const dest = event.request.destination;
+
+  // Documents: return offline page
+  if (dest === 'document' || event.request.mode === 'navigate') {
     const offlineResponse =
       (await caches.match('/offline/index.html')) ||
       (await caches.match(getCacheKeyForURL('/offline/index.html')));
@@ -257,8 +261,18 @@ workbox.routing.setCatchHandler(async ({ event }) => {
       headers: { 'Content-Type': 'text/plain' }
     });
   }
+
+  // Images: SVG placeholder so layout doesn’t break when offline
+  if (dest === 'image') {
+    return new Response(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect fill="#f3f4f6" width="400" height="300"/><text x="50%" y="50%" font-family="Arial,sans-serif" font-size="16" text-anchor="middle" dy=".3em" fill="#9ca3af">Offline</text></svg>',
+      { headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'no-store' } }
+    );
+  }
+
+  // Other types: error
   return Response.error();
-}); // Standard offline fallback pattern for navigations with precached HTML [web:155]
+}); // Recommended pattern for offline fallbacks, including image placeholder [web:155][web:175]
 
 // ----- Messaging: optional manual warmup/clear -----
 self.addEventListener('message', (event) => {
@@ -288,6 +302,6 @@ self.addEventListener('activate', (event) => {
   // eslint-disable-next-line no-console
   console.log('Service Worker activated with version:', CACHE_VERSION);
   event.waitUntil(self.clients.claim());
-}); // Keep activate fast; rely on ExpirationPlugin for TTL and size limits [web:21]
+});
 
-console.log('Service Worker loaded — Instant navigations + fast revalidation + prefetch capture (performance-optimized)');
+console.log('Service Worker loaded — Instant navigations + fast revalidation + image fallback + aggressive caching');
