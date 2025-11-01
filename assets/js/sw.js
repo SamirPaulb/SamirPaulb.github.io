@@ -11,21 +11,20 @@ workbox.core.clientsClaim();
 
 // ----- Define modules and constants first -----
 const { StaleWhileRevalidate, CacheFirst } = workbox.strategies;
-const { precacheAndRoute } = workbox.precaching;
+const { precacheAndRoute, getCacheKeyForURL } = workbox.precaching;
 const { ExpirationPlugin } = workbox.expiration;
 const { CacheableResponsePlugin } = workbox.cacheableResponse;
 const CACHE_VERSION = 'v3';
 
 // ----- Precache critical assets early (served cache-first by precaching) -----
 precacheAndRoute([
-  { url: '/', revision: CACHE_VERSION },
-  { url: '/offline/index.html', revision: CACHE_VERSION },
-  { url: '/manifest.json', revision: CACHE_VERSION },
-  { url: '/site.webmanifest', revision: CACHE_VERSION }
-]);
+  { url: '/offline/index.html', revision: CACHE_VERSION },  // Offline fallback
+  { url: '/manifest.json', revision: CACHE_VERSION },       // PWA manifest
+  { url: '/site.webmanifest', revision: CACHE_VERSION }     // Alternative manifest
+]); // Precached URLs get deterministic cache-first responses and versioning control
 
 // ----- Enable Navigation Preload for navigations -----
-workbox.navigationPreload.enable();
+workbox.navigationPreload.enable(); // Provides event.preloadResponse for navigations to speed up revalidation
 
 // ----- Navigations: instant cache + background update via preload -----
 workbox.routing.registerRoute(
@@ -35,55 +34,65 @@ workbox.routing.registerRoute(
     const cached = await cache.match(request);
 
     // Preload nav response if available, else fall back to network
-    const preloadPromise = event.preloadResponse;
-    const networkPromise = fetch(request);
+    const preloadPromise = event.preloadResponse; // Promise<Response|null>
+    const networkPromise = fetch(request); // Parallel fallback for when preload is null
 
     if (cached) {
       // Return instantly; refresh in background using preload or network
       event.waitUntil((async () => {
-        const fresh = (await preloadPromise) || (await networkPromise);
-        if (fresh) await cache.put(request, fresh.clone());
-      })());
-      return cached;
+        try {
+          const fresh = (await preloadPromise) || (await networkPromise);
+          if (fresh && fresh.ok) await cache.put(request, fresh.clone());
+        } catch (e) {
+          // Network failed during background revalidation, keep using cache
+        }
+      })()); // Await in waitUntil to avoid preload cancellation warning
+      return cached; // Near‑0ms repeat navs from cache
     }
 
     // First visit or cache miss: prefer preload, else network, then cache it
-    const response = (await preloadPromise) || (await networkPromise);
-    if (response) {
-      event.waitUntil(cache.put(request, response.clone()));
-      return response;
+    try {
+      const response = (await preloadPromise) || (await networkPromise);
+      if (response && response.ok) {
+        event.waitUntil(cache.put(request, response.clone())); // Persist for future instant navs
+        return response;
+      }
+      // Non-OK response, throw to trigger offline fallback
+      throw new Error('Network response not ok');
+    } catch (error) {
+      // Network failed, throw to let catch handler serve offline page
+      throw error;
     }
-    return Response.error();
   }
-);
+); // Custom handler preserves SWR semantics with explicit preload consumption
 
 // ----- Capture <link rel=prefetch> navigation prefetches and persist to pages cache -----
 workbox.routing.registerRoute(
   ({ url, request }) => {
-    // Same-origin GET prefetches signaled by Purpose/Sec-Purpose: prefetch header
+    // Same-origin GET prefetches signaled by Purpose/Sec-Purpose: prefetch and empty destination
     const isSameOrigin = url.origin === self.location.origin;
     const isGET = request.method === 'GET';
     const isPrefetchHeader =
       request.headers.get('Sec-Purpose') === 'prefetch' ||
       request.headers.get('Purpose') === 'prefetch';
-    const isLowPriority = request.priority === 'low';
+    const isLowPriority = request.priority === 'low'; // Additional signal for prefetch
     const acceptsHTML = (request.headers.get('Accept') || '').includes('text/html');
     
     return isSameOrigin && isGET && acceptsHTML && (isPrefetchHeader || isLowPriority);
   },
   async ({ event, request }) => {
     // Pass through response but also persist it for instant future navigations
-    const responsePromise = fetch(request);
+    const responsePromise = fetch(request); // Low-priority prefetch stays off the main path
     event.waitUntil((async () => {
       const res = await responsePromise;
       if (res && res.ok) {
         const cache = await caches.open(`pages-cache-${CACHE_VERSION}`);
         await cache.put(request, res.clone());
       }
-    })());
+    })()); // Store prefetched docs for instant future clicks
     return responsePromise;
   }
-);
+); // Extends lifetime of browser prefetches by storing in SW cache
 
 // ----- CSS — Stale-While-Revalidate -----
 workbox.routing.registerRoute(
@@ -257,21 +266,28 @@ workbox.routing.registerRoute(
 
 // ----- Offline fallback -----
 workbox.routing.setCatchHandler(async ({ event }) => {
-  switch (event.request.destination) {
-    case 'document':
-    case '':
-      return (await caches.match(event.request)) ||
-             (await caches.match('/offline/index.html')) ||
-             (await caches.match('/')) ||
-             Response.error();
-    case 'image':
-      return new Response(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect fill="#f0f0f0" width="200" height="200"/><text x="50%" y="50%" font-family="Arial,sans-serif" font-size="14" text-anchor="middle" dy=".3em" fill="#999">Offline</text></svg>',
-        { headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'no-store' } }
-      );
-    default:
-      return Response.error();
+  // Handle navigation requests (document pages)
+  if (event.request.destination === 'document' || event.request.mode === 'navigate') {
+    // Try to return the precached offline page
+    return (await caches.match('/offline/index.html')) ||
+           (await caches.match(getCacheKeyForURL('/offline/index.html'))) ||
+           new Response('Offline - No cached version available', {
+             status: 503,
+             statusText: 'Service Unavailable',
+             headers: { 'Content-Type': 'text/plain' }
+           }); // Graceful offline handling for documents
   }
+  
+  // Handle images with a placeholder SVG
+  if (event.request.destination === 'image') {
+    return new Response(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect fill="#f0f0f0" width="200" height="200"/><text x="50%" y="50%" font-family="Arial,sans-serif" font-size="14" text-anchor="middle" dy=".3em" fill="#999">Offline</text></svg>',
+      { headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'no-store' } }
+    );
+  }
+  
+  // For all other requests, return error
+  return Response.error();
 });
 
 // ----- Messaging: manual cache control + bulk prefetch hook -----
@@ -285,6 +301,7 @@ self.addEventListener('message', (event) => {
   }
 
   if (event.data?.type === 'PREFETCH_URLS' && Array.isArray(event.data.urls)) {
+    // Optional: window -> SW prefetch channel to warm caches in background
     event.waitUntil((async () => {
       const cache = await caches.open(`pages-cache-${CACHE_VERSION}`);
       await Promise.all(event.data.urls.map(async (u) => {
@@ -293,7 +310,7 @@ self.addEventListener('message', (event) => {
           if (res && res.ok) await cache.put(u, res.clone());
         } catch (_) {}
       }));
-    })());
+    })()); // Background-only; doesn't block UI
   }
 
   if (event.data?.type === 'CLEAR_CACHE') {
