@@ -16,19 +16,148 @@ const { ExpirationPlugin } = workbox.expiration;
 const { CacheableResponsePlugin } = workbox.cacheableResponse;
 const CACHE_VERSION = 'v3';
 
+// Superior offline page detection with multiple fallbacks
+const OFFLINE_PAGE_URLS = [
+  '/offline/',
+  '/offline/index.html',
+  '/offline'
+];
+
+// Cache for offline page detection results to avoid repeated content parsing
+const offlineDetectionCache = new Map();
+
+function isOfflinePageByURL(url) {
+  const urlString = typeof url === 'string' ? url : url.href || url.url || '';
+  return OFFLINE_PAGE_URLS.some(offlineUrl => 
+    urlString.includes(offlineUrl) || 
+    new URL(urlString, self.location.origin).pathname === offlineUrl
+  );
+}
+
+async function isOfflinePageByContent(response) {
+  if (!response) return false;
+  
+  // Check cache first for performance
+  const cacheKey = response.url;
+  if (offlineDetectionCache.has(cacheKey)) {
+    return offlineDetectionCache.get(cacheKey);
+  }
+  
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('text/html')) {
+    offlineDetectionCache.set(cacheKey, false);
+    return false;
+  }
+  
+  try {
+    // Clone response to avoid consuming the body
+    const text = await response.clone().text();
+    // Multiple content markers for maximum reliability
+    const isOffline = text.includes('id="offline-page"') || 
+                     text.includes('You\'re offline') ||
+                     text.includes('offline-page');
+    
+    // Cache the result for this URL (short TTL)
+    offlineDetectionCache.set(cacheKey, isOffline);
+    setTimeout(() => offlineDetectionCache.delete(cacheKey), 30000); // Clear after 30s
+    
+    return isOffline;
+  } catch (e) {
+    offlineDetectionCache.set(cacheKey, false);
+    return false;
+  }
+}
+
+// Superior offline page detection - tries URL first, then content as fallback
+async function isOfflinePage(response) {
+  if (!response) return false;
+  
+  // Fast path: URL-based detection
+  if (isOfflinePageByURL(response.url)) {
+    return true;
+  }
+  
+  // Fallback: Content-based detection for cases where offline page was cached under wrong URL
+  return await isOfflinePageByContent(response);
+}
+
 // ----- Precache critical assets early (served cache-first by precaching) -----
 precacheAndRoute([
   { url: '/offline/index.html', revision: CACHE_VERSION },  // Offline fallback
   { url: '/manifest.json', revision: CACHE_VERSION },       // PWA manifest
   { url: '/site.webmanifest', revision: CACHE_VERSION }     // Alternative manifest
-]); // Precached URLs get deterministic cache-first responses and versioning control
+]);
 
 // ----- Enable Navigation Preload for navigations -----
-workbox.navigationPreload.enable(); // Provides event.preloadResponse for navigations to speed up revalidation
+workbox.navigationPreload.enable();
 
-// ----- Navigations: instant cache + background update via preload -----
+// CRITICAL: Route ordering matters - specific routes first, generic last
+// Register specific routes for problematic pages to ensure they get proper handling
+const specialPaths = new Set([
+  '/about', '/about/', 
+  '/contact', '/contact/', 
+  '/disclaimer', '/disclaimer/', 
+  '/privacy', '/privacy/', 
+  '/feed', '/feed/', 
+  '/offline', '/offline/'
+]);
+
 workbox.routing.registerRoute(
-  ({ request, url }) => request.mode === 'navigate' && url.pathname !== '/offline/index.html',
+  ({ url }) => specialPaths.has(url.pathname),
+  async ({ event, request, url }) => {
+    console.log('Specific route handling for:', url.pathname);
+    const cache = await caches.open(`pages-cache-${CACHE_VERSION}`);
+    
+    // For these specific pages, always try network first
+    try {
+      const preloadPromise = event.preloadResponse;
+      const networkPromise = fetch(request);
+      const response = (await preloadPromise) || (await networkPromise);
+      
+      if (response) {
+        // Cache successful responses that aren't offline pages
+        if (response.ok && response.status === 200 && !(await isOfflinePage(response))) {
+          event.waitUntil(cache.put(request, response.clone()));
+        }
+        // Return the response as-is, even if it's a 404/500
+        return response;
+      }
+    } catch (error) {
+      console.log('Network failed for specific page:', url.pathname, error);
+      // Fall through to cache/offline handling
+    }
+    
+    // Fallback to cache if available and not offline page
+    const cached = await cache.match(request);
+    if (cached && !(await isOfflinePage(cached))) {
+      return cached;
+    }
+    
+    // Final fallback to offline page - only for actual network failures
+    const offlineResponse = await caches.match('/offline/index.html') || 
+                           await caches.match(getCacheKeyForURL('/offline/index.html'));
+    
+    if (offlineResponse) {
+      // Add no-cache headers to prevent storing offline responses
+      const headers = new Headers(offlineResponse.headers);
+      headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+      headers.set('Expires', '0');
+      
+      return new Response(offlineResponse.body, {
+        status: offlineResponse.status,
+        statusText: offlineResponse.statusText,
+        headers: headers
+      });
+    }
+    
+    return new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+  },
+  'GET'
+);
+
+// ----- Main Navigations: instant cache + background update via preload -----
+workbox.routing.registerRoute(
+  ({ request, url }) => request.mode === 'navigate' && !isOfflinePageByURL(url),
   async ({ event, request }) => {
     const cache = await caches.open(`pages-cache-${CACHE_VERSION}`);
     const cached = await cache.match(request);
@@ -38,32 +167,20 @@ workbox.routing.registerRoute(
     const networkPromise = fetch(request);
 
     if (cached) {
-      // Better offline page detection - check response URL and specific ID
-      const responseUrl = cached.url;
-      const contentType = cached.headers.get('content-type') || '';
-      
-      // More reliable offline page detection
-      let isLikelyOfflinePage = responseUrl.includes('/offline/');
-      
-      // Check for the specific offline page ID in HTML content
-      if (contentType.includes('text/html') && !isLikelyOfflinePage) {
-        try {
-          const text = await cached.clone().text();
-          isLikelyOfflinePage = text.includes('id="offline-page"');
-        } catch (e) {
-          // If we can't read the text, assume it's not an offline page
-          isLikelyOfflinePage = false;
-        }
-      }
+      // Superior offline page detection
+      const isCachedOfflinePage = await isOfflinePage(cached);
 
-      // If cached response is offline page AND we're online, fetch fresh
-      if (isLikelyOfflinePage && navigator.onLine) {
-        console.log('Found cached offline page while online, fetching fresh:', request.url);
+      // If cached response is offline page, try to fetch fresh
+      if (isCachedOfflinePage) {
+        console.log('Found cached offline page, attempting fresh fetch:', request.url);
         try {
           const fresh = (await preloadPromise) || (await networkPromise);
-          if (fresh && fresh.ok) {
-            await cache.put(request, fresh.clone());
-            return fresh;
+          if (fresh) {
+            // Only cache if it's not an offline page and is successful
+            if (fresh.ok && fresh.status === 200 && !(await isOfflinePage(fresh))) {
+              await cache.put(request, fresh.clone());
+            }
+            return fresh; // Return the fresh response (even 404/500)
           }
         } catch (error) {
           // If network fails, still return the cached offline page
@@ -76,20 +193,7 @@ workbox.routing.registerRoute(
             const fresh = (await preloadPromise) || (await networkPromise);
             if (fresh && fresh.ok && fresh.status === 200) {
               // Only update cache if we get a valid non-offline response
-              const freshUrl = fresh.url;
-              const freshContentType = fresh.headers.get('content-type') || '';
-              
-              let isFreshOfflinePage = freshUrl.includes('/offline/');
-              if (freshContentType.includes('text/html') && !isFreshOfflinePage) {
-                try {
-                  const freshText = await fresh.clone().text();
-                  isFreshOfflinePage = freshText.includes('id="offline-page"');
-                } catch (e) {
-                  isFreshOfflinePage = false;
-                }
-              }
-              
-              if (!isFreshOfflinePage) {
+              if (!(await isOfflinePage(fresh))) {
                 await cache.put(request, fresh.clone());
               }
             }
@@ -105,35 +209,33 @@ workbox.routing.registerRoute(
     // First visit or cache miss: try network first
     try {
       const response = (await preloadPromise) || (await networkPromise);
-      if (response && response.ok) {
-        // Only cache if it's not an offline page
-        const responseUrl = response.url;
-        const responseContentType = response.headers.get('content-type') || '';
-        
-        let isResponseOfflinePage = responseUrl.includes('/offline/');
-        if (responseContentType.includes('text/html') && !isResponseOfflinePage) {
-          try {
-            const responseText = await response.clone().text();
-            isResponseOfflinePage = responseText.includes('id="offline-page"');
-          } catch (e) {
-            isResponseOfflinePage = false;
-          }
-        }
-        
-        if (!isResponseOfflinePage) {
+      
+      // Always return the actual response, even if 404/500
+      if (response) {
+        // Only cache successful responses that aren't offline pages
+        if (response.ok && response.status === 200 && !(await isOfflinePage(response))) {
           event.waitUntil(cache.put(request, response.clone()));
         }
-        return response;
+        return response; // Don't force offline for HTTP errors
       }
-      throw new Error(`Network response not ok: ${response?.status}`);
+      throw new Error('No response received'); // Will trigger offline fallback
     } catch (error) {
       console.log('Network failed, serving offline page for:', request.url);
-      // Network failed - serve offline page but DON'T cache this response
+      // Only reach here on actual network failure => serve offline fallback
       const offlineResponse = await caches.match('/offline/index.html') || 
                              await caches.match(getCacheKeyForURL('/offline/index.html'));
       
       if (offlineResponse) {
-        return offlineResponse;
+        // Add no-cache headers to prevent storing offline responses
+        const headers = new Headers(offlineResponse.headers);
+        headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+        headers.set('Expires', '0');
+        
+        return new Response(offlineResponse.body, {
+          status: offlineResponse.status,
+          statusText: offlineResponse.statusText,
+          headers: headers
+        });
       }
       
       // Ultimate fallback
@@ -142,7 +244,8 @@ workbox.routing.registerRoute(
         headers: { 'Content-Type': 'text/plain' }
       });
     }
-  }
+  },
+  'GET'
 );
 
 // ----- Capture <link rel=prefetch> navigation prefetches and persist to pages cache -----
@@ -157,28 +260,15 @@ workbox.routing.registerRoute(
     const isLowPriority = request.priority === 'low'; // Additional signal for prefetch
     const acceptsHTML = (request.headers.get('Accept') || '').includes('text/html');
     
-    return isSameOrigin && isGET && acceptsHTML && (isPrefetchHeader || isLowPriority);
+    return isSameOrigin && isGET && acceptsHTML && (isPrefetchHeader || isLowPriority) && !isOfflinePageByURL(url);
   },
   async ({ event, request }) => {
     // Pass through response but also persist it for instant future navigations
     try {
-      const response = await fetch(request); // Low-priority prefetch stays off the main path
+      const response = await fetch(request);
       if (response && response.ok && response.status === 200) {
         // Verify it's not the offline page before caching
-        const responseUrl = response.url;
-        const responseContentType = response.headers.get('content-type') || '';
-        
-        let isOfflinePage = responseUrl.includes('/offline/');
-        if (responseContentType.includes('text/html') && !isOfflinePage) {
-          try {
-            const responseText = await response.clone().text();
-            isOfflinePage = responseText.includes('id="offline-page"');
-          } catch (e) {
-            isOfflinePage = false;
-          }
-        }
-        
-        if (!isOfflinePage) {
+        if (!(await isOfflinePage(response))) {
           event.waitUntil((async () => {
             const cache = await caches.open(`pages-cache-${CACHE_VERSION}`);
             await cache.put(request, response.clone());
@@ -187,11 +277,11 @@ workbox.routing.registerRoute(
       }
       return response;
     } catch (e) {
-      // Prefetch failed, return the error
       return fetch(request);
     }
-  }
-); // Extends lifetime of browser prefetches by storing in SW cache
+  },
+  'GET'
+);
 
 // ----- CSS — Stale-While-Revalidate -----
 workbox.routing.registerRoute(
@@ -347,7 +437,7 @@ workbox.routing.registerRoute(
 
 // ----- Same-origin catch-all (no destination) — SWR -----
 workbox.routing.registerRoute(
-  ({ url, request }) => url.origin === self.location.origin && !request.destination,
+  ({ url, request }) => url.origin === self.location.origin && !request.destination && !isOfflinePageByURL(url),
   new StaleWhileRevalidate({
     cacheName: `misc-cache-${CACHE_VERSION}`,
     plugins: [
@@ -394,7 +484,7 @@ workbox.routing.setCatchHandler(async ({ event }) => {
         'Pragma': 'no-cache',
         'Expires': '0'
       }
-    }); // Graceful offline handling for documents
+    });
   }
   
   // Handle images with a placeholder SVG
@@ -420,72 +510,45 @@ self.addEventListener('message', (event) => {
 
   if (event.data?.type === 'CACHE_URLS') {
     event.waitUntil(
-      caches.open(`runtime-cache-${CACHE_VERSION}`).then((cache) => cache.addAll(event.data.payload))
+      caches.open(`runtime-cache-${CACHE_VERSION}`).then((cache) => 
+        cache.addAll(event.data.payload.filter(url => !isOfflinePageByURL(url)))
+      )
     );
   }
 
   if (event.data?.type === 'PREFETCH_URLS' && Array.isArray(event.data.urls)) {
-    // Optional: window -> SW prefetch channel to warm caches in background
     event.waitUntil((async () => {
       const cache = await caches.open(`pages-cache-${CACHE_VERSION}`);
-      await Promise.all(event.data.urls.map(async (u) => {
-        try {
-          const res = await fetch(u, { credentials: 'same-origin' });
-          if (res && res.ok) {
-            // Check if it's not an offline page before caching
-            const resUrl = res.url;
-            const resContentType = res.headers.get('content-type') || '';
-            
-            let isOfflinePage = resUrl.includes('/offline/');
-            if (resContentType.includes('text/html') && !isOfflinePage) {
-              try {
-                const resText = await res.clone().text();
-                isOfflinePage = resText.includes('id="offline-page"');
-              } catch (e) {
-                isOfflinePage = false;
-              }
-            }
-            
-            if (!isOfflinePage) {
+      await Promise.all(event.data.urls
+        .filter(url => !isOfflinePageByURL(url))
+        .map(async (u) => {
+          try {
+            const res = await fetch(u, { credentials: 'same-origin' });
+            if (res && res.ok && !(await isOfflinePage(res))) {
               await cache.put(u, res.clone());
             }
-          }
-        } catch (_) {}
-      }));
-    })()); // Background-only; doesn't block UI
+          } catch (_) {}
+        })
+      );
+    })());
   }
 
   if (event.data?.type === 'CLEAR_CACHE') {
     event.waitUntil(caches.keys().then((names) => Promise.all(names.map((n) => caches.delete(n)))));
   }
   
-  // New: Clear specific bad cached entries
+  // Enhanced: Clear offline pages from cache with superior detection
   if (event.data?.type === 'CLEAR_BAD_CACHE') {
     event.waitUntil((async () => {
-      const cache = await caches.open(`pages-cache-${CACHE_VERSION}`);
-      const keys = await cache.keys();
-      for (const request of keys) {
-        const response = await cache.match(request);
-        if (response) {
-          const responseUrl = response.url;
-          // Only remove if URL explicitly points to offline page
-          if (responseUrl.includes('/offline/')) {
+      const cacheNames = await caches.keys();
+      for (const cacheName of cacheNames) {
+        const cache = await caches.open(cacheName);
+        const keys = await cache.keys();
+        for (const request of keys) {
+          const response = await cache.match(request);
+          if (response && (await isOfflinePage(response))) {
             await cache.delete(request);
-            console.log('Cleared bad cached entry:', request.url);
-          } else {
-            // Also check content for offline page marker
-            const contentType = response.headers.get('content-type') || '';
-            if (contentType.includes('text/html')) {
-              try {
-                const text = await response.text();
-                if (text.includes('id="offline-page"')) {
-                  await cache.delete(request);
-                  console.log('Cleared offline page from cache:', request.url);
-                }
-              } catch (e) {
-                // Skip if we can't read the content
-              }
-            }
+            console.log('Cleared offline page from cache:', cacheName, request.url);
           }
         }
       }
@@ -493,38 +556,23 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// ----- Activation: claim clients only (ExpirationPlugin handles expiration) -----
+// ----- Activation: claim clients + comprehensive cleanup -----
 self.addEventListener('activate', (event) => {
   console.log('Service Worker activated with version:', CACHE_VERSION);
   event.waitUntil(
     Promise.all([
       self.clients.claim(),
-      // Conservative cleanup - only remove obvious offline pages
+      // Comprehensive cleanup across all caches
       (async () => {
-        const cache = await caches.open(`pages-cache-${CACHE_VERSION}`);
-        const keys = await cache.keys();
-        for (const request of keys) {
-          const response = await cache.match(request);
-          if (response) {
-            const responseUrl = response.url;
-            // Only remove if URL explicitly points to offline page
-            if (responseUrl.includes('/offline/')) {
+        const cacheNames = await caches.keys();
+        for (const cacheName of cacheNames) {
+          const cache = await caches.open(cacheName);
+          const keys = await cache.keys();
+          for (const request of keys) {
+            const response = await cache.match(request);
+            if (response && (await isOfflinePage(response))) {
               await cache.delete(request);
-              console.log('Cleaned offline page from cache on activation:', request.url);
-            } else {
-              // Also check content for offline page marker
-              const contentType = response.headers.get('content-type') || '';
-              if (contentType.includes('text/html')) {
-                try {
-                  const text = await response.text();
-                  if (text.includes('id="offline-page"')) {
-                    await cache.delete(request);
-                    console.log('Cleaned offline page from cache on activation:', request.url);
-                  }
-                } catch (e) {
-                  // Skip if we can't read the content
-                }
-              }
+              console.log('Cleaned offline page from cache on activation:', cacheName, request.url);
             }
           }
         }
@@ -533,4 +581,4 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-console.log('Service Worker loaded — Instant navigations + fast revalidation + prefetch capture');
+console.log('Service Worker loaded — Enhanced offline detection + Route prioritization');
