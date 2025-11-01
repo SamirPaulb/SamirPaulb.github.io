@@ -15,6 +15,23 @@ workbox.core.clientsClaim();
 // Enable navigation preload for faster page loads
 workbox.navigationPreload.enable();
 
+// Use NetworkFirst for navigations
+workbox.routing.registerRoute(
+  ({ request }) => request.mode === 'navigate' || request.destination === 'document',
+  new NetworkFirst({
+    cacheName: `pages-cache-${CACHE_VERSION}`,
+    networkTimeoutSeconds: 3, // fallback fast to cache on slow networks
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
+      new ExpirationPlugin({
+        maxEntries: 150,
+        maxAgeSeconds: 60 * 24 * 60 * 60,
+        purgeOnQuotaError: true
+      })
+    ]
+  })
+);
+
 const { StaleWhileRevalidate, CacheFirst, NetworkFirst } = workbox.strategies;
 const { precacheAndRoute } = workbox.precaching;
 const { ExpirationPlugin } = workbox.expiration;
