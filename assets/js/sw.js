@@ -16,7 +16,7 @@ const { ExpirationPlugin } = workbox.expiration;
 const { CacheableResponsePlugin } = workbox.cacheableResponse;
 
 // Bump when changing caching behavior
-const CACHE_VERSION = 'v6';
+const CACHE_VERSION = 'v1';
 
 // Sitemap warm-up settings
 const SITEMAP_CANDIDATES = [
