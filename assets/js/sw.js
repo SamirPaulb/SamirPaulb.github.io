@@ -1,4 +1,4 @@
-// Service Worker with Workbox 7.3.0 (Local) — Instant navigations + fast revalidation + image fallback + aggressive caching
+// Service Worker with Workbox 7.3.0 (Local) — Instant navigations + background sitemap warming + image fallback + aggressive caching
 
 importScripts('/workbox/workbox-sw.js');
 
@@ -16,7 +16,16 @@ const { ExpirationPlugin } = workbox.expiration;
 const { CacheableResponsePlugin } = workbox.cacheableResponse;
 
 // Bump when changing caching behavior
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
+
+// Sitemap warm-up settings
+const SITEMAP_CANDIDATES = [
+  '/sitemap.xml',
+  'index.xml'
+];
+const SITEMAP_WARM_LIMIT = 1500;     // total pages to warm per session
+const SITEMAP_CONCURRENCY = 8;       // parallel fetches during warm
+let SITEMAP_WARMED = false;          // guard to run once per SW life
 
 // Normalize a URL/pathname (remove trailing slash except for root)
 const normalizePath = (pathOrUrl) => {
@@ -39,6 +48,100 @@ precacheAndRoute([
 
 // NOTE: Navigation Preload is disabled for max “instant” feel with SWR navigations.
 
+// ----- Helper: background sitemap warm-up (pages only) -----
+async function fetchText(url) {
+  const res = await fetch(url, { credentials: 'same-origin' });
+  if (!res.ok) throw new Error(`Failed ${res.status} for ${url}`);
+  return await res.text();
+}
+
+function extractLocsFromSitemap(xml) {
+  const locs = [];
+  const re = /<loc>([^<]+)<\/loc>/gi;
+  let m;
+  while ((m = re.exec(xml)) !== null) {
+    locs.push(m[1].trim());
+  }
+  return locs;
+}
+
+async function resolveSitemapUrls() {
+  // Try main candidates, follow index to sub-sitemaps if present
+  const visited = new Set();
+  const queue = [...SITEMAP_CANDIDATES.map((u) => new URL(u, self.location.origin).href)];
+  const pageUrls = new Set();
+
+  while (queue.length && pageUrls.size < SITEMAP_WARM_LIMIT) {
+    const u = queue.shift();
+    if (visited.has(u)) continue;
+    visited.add(u);
+
+    try {
+      const xml = await fetchText(u);
+      const locs = extractLocsFromSitemap(xml);
+      // Heuristic: if the XML contains <sitemap>, treat locs as sub-sitemaps; otherwise treat as page URLs
+      const isIndex = /<sitemapindex/i.test(xml) || /<sitemap>/i.test(xml);
+      for (const loc of locs) {
+        const href = new URL(loc, self.location.origin).href;
+        if (new URL(href).origin !== self.location.origin) continue; // same-origin only
+        if (isIndex) {
+          queue.push(href);
+        } else {
+          pageUrls.add(href);
+          if (pageUrls.size >= SITEMAP_WARM_LIMIT) break;
+        }
+      }
+    } catch {
+      // Ignore broken sitemap URL and continue
+    }
+  }
+  return Array.from(pageUrls);
+}
+
+async function warmPages(urls, concurrency = SITEMAP_CONCURRENCY) {
+  const cache = await caches.open(`pages-cache-${CACHE_VERSION}`);
+  let i = 0;
+  const workers = Array.from({ length: concurrency }, () => (async function run() {
+    while (i < urls.length) {
+      const idx = i++;
+      const u = urls[idx];
+      try {
+        const req = new Request(u, { credentials: 'same-origin' });
+        const already = await cache.match(req);
+        if (already) continue; // skip if present
+        const res = await fetch(req);
+        const ct = res.headers.get('Content-Type') || '';
+        if (res.ok && ct.includes('text/html')) {
+          await cache.put(req, res.clone());
+        }
+      } catch {
+        // Ignore failures during warming
+      }
+    }
+  })());
+  await Promise.all(workers);
+}
+
+async function warmSitemapOnce() {
+  if (SITEMAP_WARMED) return;
+  SITEMAP_WARMED = true;
+  try {
+    const urls = await resolveSitemapUrls();
+    if (urls.length) await warmPages(urls);
+  } catch {
+    // Ignore errors; warming is best-effort
+  }
+}
+
+// Trigger warming after first controlled navigation without blocking response
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.mode === 'navigate') {
+    // Fire-and-forget; do not block navigation
+    event.waitUntil(warmSitemapOnce());
+  }
+});
+
 // ----- Navigations: Stale-While-Revalidate (instant cache, background refresh) -----
 workbox.routing.registerRoute(
   ({ request, url }) => request.mode === 'navigate' && !isOfflinePath(url),
@@ -47,8 +150,8 @@ workbox.routing.registerRoute(
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({
-        maxEntries: 2000,
-        maxAgeSeconds: 120 * 24 * 60 * 60,
+        maxEntries: 3000,                    // cache even more pages
+        maxAgeSeconds: 180 * 24 * 60 * 60,   // 180 days
         purgeOnQuotaError: true
       })
     ]
@@ -90,7 +193,7 @@ workbox.routing.registerRoute(
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({
-        maxEntries: 800,
+        maxEntries: 1500,
         maxAgeSeconds: 365 * 24 * 60 * 60,
         purgeOnQuotaError: true
       })
@@ -106,7 +209,7 @@ workbox.routing.registerRoute(
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({
-        maxEntries: 800,
+        maxEntries: 1500,
         maxAgeSeconds: 365 * 24 * 60 * 60,
         purgeOnQuotaError: true
       })
@@ -122,7 +225,7 @@ workbox.routing.registerRoute(
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({
-        maxEntries: 5000,
+        maxEntries: 8000,
         maxAgeSeconds: 365 * 24 * 60 * 60,
         purgeOnQuotaError: true
       })
@@ -138,7 +241,7 @@ workbox.routing.registerRoute(
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({
-        maxEntries: 800,
+        maxEntries: 1500,
         maxAgeSeconds: 365 * 24 * 60 * 60,
         purgeOnQuotaError: true
       })
@@ -155,26 +258,8 @@ workbox.routing.registerRoute(
       new CacheableResponsePlugin({ statuses: [0, 200, 206] }),
       new workbox.rangeRequests.RangeRequestsPlugin(),
       new ExpirationPlugin({
-        maxEntries: 600,
+        maxEntries: 1000,
         maxAgeSeconds: 180 * 24 * 60 * 60,
-        purgeOnQuotaError: true
-      })
-    ]
-  })
-);
-
-// ----- Google Fonts — Cache-First -----
-workbox.routing.registerRoute(
-  ({ url }) =>
-    url.origin === 'https://fonts.googleapis.com' ||
-    url.origin === 'https://fonts.gstatic.com',
-  new CacheFirst({
-    cacheName: `google-fonts-${CACHE_VERSION}`,
-    plugins: [
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
-      new ExpirationPlugin({
-        maxEntries: 800,
-        maxAgeSeconds: 365 * 24 * 60 * 60,
         purgeOnQuotaError: true
       })
     ]
@@ -193,7 +278,7 @@ workbox.routing.registerRoute(
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({
-        maxEntries: 1500,
+        maxEntries: 3000,
         maxAgeSeconds: 365 * 24 * 60 * 60,
         purgeOnQuotaError: true
       })
@@ -210,7 +295,7 @@ workbox.routing.registerRoute(
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({
-        maxEntries: 600,
+        maxEntries: 800,
         maxAgeSeconds: 10 * 60,
         purgeOnQuotaError: true
       })
@@ -226,8 +311,8 @@ workbox.routing.registerRoute(
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({
-        maxEntries: 1500,
-        maxAgeSeconds: 120 * 24 * 60 * 60,
+        maxEntries: 3000,
+        maxAgeSeconds: 180 * 24 * 60 * 60,
         purgeOnQuotaError: true
       })
     ]
@@ -271,7 +356,7 @@ workbox.routing.setCatchHandler(async ({ event }) => {
   return Response.error();
 });
 
-// ----- Messaging: optional manual warmup/clear -----
+// ----- Messaging: manual warmup/clear (optional from page) -----
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 
@@ -281,12 +366,18 @@ self.addEventListener('message', (event) => {
       await Promise.all(
         event.data.urls.map(async (u) => {
           try {
-            const res = await fetch(u, { credentials: 'same-origin' });
-            if (res && res.ok) await cache.put(u, res.clone());
+            const req = new Request(u, { credentials: 'same-origin' });
+            const res = await fetch(req);
+            const ct = res.headers.get('Content-Type') || '';
+            if (res && res.ok && ct.includes('text/html')) await cache.put(req, res.clone());
           } catch {}
         })
       );
     })());
+  }
+
+  if (event.data?.type === 'WARM_SITEMAP_NOW') {
+    event.waitUntil(warmSitemapOnce());
   }
 
   if (event.data?.type === 'CLEAR_ALL_CACHES') {
@@ -300,4 +391,4 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-console.log('Service Worker loaded — Instant navigations + fast revalidation + image fallback + aggressive caching');
+console.log('Service Worker loaded — Instant navigations + background sitemap warming + image fallback + aggressive caching');
