@@ -215,7 +215,7 @@ disableKinds = []
       <script defer loading="lazy">
       document.addEventListener('DOMContentLoaded', function() { 
       if (navigator && navigator.serviceWorker) {
-          navigator.serviceWorker.register("/sw.js", { scope: '/' });
+          navigator.serviceWorker.register("/sw.min.js", { scope: '/' });
       }
       });
       </script>
