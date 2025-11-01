@@ -50,17 +50,18 @@ workbox.routing.registerRoute(
       return cached; // Near‑0ms repeat navs from cache
     }
 
-    // First visit or cache miss: prefer preload, else network, then cache it
+    // First visit or cache miss: ALWAYS try network first, fallback to offline page
     try {
       const response = (await preloadPromise) || (await networkPromise);
       if (response && response.ok) {
         event.waitUntil(cache.put(request, response.clone())); // Persist for future instant navs
         return response;
       }
-      // Non-OK response, throw to trigger offline fallback
-      throw new Error('Network response not ok');
+      // Non-OK response (404, 500, etc), throw to trigger offline fallback
+      throw new Error('Network response not ok: ' + response.status);
     } catch (error) {
-      // Network failed, throw to let catch handler serve offline page
+      // Network failed completely, throw to let catch handler serve offline page
+      // Important: Don't cache the error or offline response
       throw error;
     }
   }
@@ -84,10 +85,14 @@ workbox.routing.registerRoute(
     // Pass through response but also persist it for instant future navigations
     const responsePromise = fetch(request); // Low-priority prefetch stays off the main path
     event.waitUntil((async () => {
-      const res = await responsePromise;
-      if (res && res.ok) {
-        const cache = await caches.open(`pages-cache-${CACHE_VERSION}`);
-        await cache.put(request, res.clone());
+      try {
+        const res = await responsePromise;
+        if (res && res.ok) {
+          const cache = await caches.open(`pages-cache-${CACHE_VERSION}`);
+          await cache.put(request, res.clone());
+        }
+      } catch (e) {
+        // Prefetch failed, don't cache anything
       }
     })()); // Store prefetched docs for instant future clicks
     return responsePromise;
@@ -268,21 +273,46 @@ workbox.routing.registerRoute(
 workbox.routing.setCatchHandler(async ({ event }) => {
   // Handle navigation requests (document pages)
   if (event.request.destination === 'document' || event.request.mode === 'navigate') {
-    // Try to return the precached offline page
-    return (await caches.match('/offline/index.html')) ||
-           (await caches.match(getCacheKeyForURL('/offline/index.html'))) ||
-           new Response('Offline - No cached version available', {
-             status: 503,
-             statusText: 'Service Unavailable',
-             headers: { 'Content-Type': 'text/plain' }
-           }); // Graceful offline handling for documents
+    // Try to return the precached offline page with proper no-cache headers
+    const offlineResponse = (await caches.match('/offline/index.html')) ||
+                           (await caches.match(getCacheKeyForURL('/offline/index.html')));
+    
+    if (offlineResponse) {
+      // Clone and add no-cache headers to prevent caching the offline response
+      const headers = new Headers(offlineResponse.headers);
+      headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+      headers.set('Expires', '0');
+      
+      return new Response(offlineResponse.body, {
+        status: offlineResponse.status,
+        statusText: offlineResponse.statusText,
+        headers: headers
+      });
+    }
+    
+    // Fallback plain text response with strict no-cache headers
+    return new Response('Offline - No cached version available', {
+      status: 503,
+      statusText: 'Service Unavailable',
+      headers: { 
+        'Content-Type': 'text/plain',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    }); // Graceful offline handling for documents
   }
   
   // Handle images with a placeholder SVG
   if (event.request.destination === 'image') {
     return new Response(
       '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect fill="#f0f0f0" width="200" height="200"/><text x="50%" y="50%" font-family="Arial,sans-serif" font-size="14" text-anchor="middle" dy=".3em" fill="#999">Offline</text></svg>',
-      { headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'no-store' } }
+      { 
+        headers: { 
+          'Content-Type': 'image/svg+xml', 
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+        } 
+      }
     );
   }
   
