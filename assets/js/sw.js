@@ -35,10 +35,9 @@ precacheAndRoute([
   { url: '/offline/index.html', revision: CACHE_VERSION },
   { url: '/manifest.json', revision: CACHE_VERSION },
   { url: '/site.webmanifest', revision: CACHE_VERSION }
-]); // Precached URLs are served cache-first by Workbox's precaching route [web:55]
+]);
 
 // NOTE: Navigation Preload is disabled for max “instant” feel with SWR navigations.
-// It primarily helps NetworkFirst, not SWR, and can add overhead when a cached page exists. [web:9]
 
 // ----- Navigations: Stale-While-Revalidate (instant cache, background refresh) -----
 workbox.routing.registerRoute(
@@ -47,15 +46,14 @@ workbox.routing.registerRoute(
     cacheName: `pages-cache-${CACHE_VERSION}`,
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
-      // Larger TTL and entry cap for pages to maximize “instant back/forward” and repeat visits
       new ExpirationPlugin({
-        maxEntries: 2000,                    // cache more pages
-        maxAgeSeconds: 120 * 24 * 60 * 60,   // 120 days
+        maxEntries: 2000,
+        maxAgeSeconds: 120 * 24 * 60 * 60,
         purgeOnQuotaError: true
       })
     ]
   })
-); // SWR returns cached HTML immediately and refreshes in background for next visit [web:16][web:18]
+);
 
 // ----- Capture <link rel=prefetch> HTML and persist to pages cache -----
 workbox.routing.registerRoute(
@@ -79,11 +77,10 @@ workbox.routing.registerRoute(
       }
       return response;
     } catch {
-      // Prefetch failures are non-critical; ignore
       return fetch(request);
     }
   }
-); // Extends speculative loads into SW cache for real instant clicks later [web:21]
+);
 
 // ----- CSS — Cache-First (fastest repeat paints) -----
 workbox.routing.registerRoute(
@@ -94,12 +91,12 @@ workbox.routing.registerRoute(
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({
         maxEntries: 800,
-        maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
+        maxAgeSeconds: 365 * 24 * 60 * 60,
         purgeOnQuotaError: true
       })
     ]
   })
-); // Cache-first gives the quickest repeat renders for static CSS [web:16]
+);
 
 // ----- JavaScript — Cache-First (fastest TTI on repeat visits) -----
 workbox.routing.registerRoute(
@@ -115,7 +112,7 @@ workbox.routing.registerRoute(
       })
     ]
   })
-); // Cache-first avoids network dependency for JS on subsequent loads [web:16]
+);
 
 // ----- Images — Cache-First (instant) with generous limits -----
 workbox.routing.registerRoute(
@@ -125,13 +122,13 @@ workbox.routing.registerRoute(
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({
-        maxEntries: 5000,                    // cache more images
-        maxAgeSeconds: 365 * 24 * 60 * 60,   // 1 year
+        maxEntries: 5000,
+        maxAgeSeconds: 365 * 24 * 60 * 60,
         purgeOnQuotaError: true
       })
     ]
   })
-); // Ideal for static images where freshness is not critical [web:16]
+);
 
 // ----- Fonts — Cache-First -----
 workbox.routing.registerRoute(
@@ -147,7 +144,7 @@ workbox.routing.registerRoute(
       })
     ]
   })
-); // Fonts rarely change; cache-first minimizes FOIT/FOUC on repeat loads [web:16]
+);
 
 // ----- Audio/Video — Cache-First + Range Requests -----
 workbox.routing.registerRoute(
@@ -159,12 +156,12 @@ workbox.routing.registerRoute(
       new workbox.rangeRequests.RangeRequestsPlugin(),
       new ExpirationPlugin({
         maxEntries: 600,
-        maxAgeSeconds: 180 * 24 * 60 * 60, // 180 days
+        maxAgeSeconds: 180 * 24 * 60 * 60,
         purgeOnQuotaError: true
       })
     ]
   })
-); // Properly supports partial content for media while maximizing repeat performance [web:16][web:101]
+);
 
 // ----- Google Fonts — Cache-First -----
 workbox.routing.registerRoute(
@@ -182,7 +179,7 @@ workbox.routing.registerRoute(
       })
     ]
   })
-); // CDN fonts are ideal for cache-first with long TTLs on static sites [web:16]
+);
 
 // ----- Popular CDNs — Stale-While-Revalidate -----
 workbox.routing.registerRoute(
@@ -202,7 +199,7 @@ workbox.routing.registerRoute(
       })
     ]
   })
-); // SWR keeps CDN assets fresh while serving instantly from cache [web:16]
+);
 
 // ----- API — Network-First (short TTL) -----
 workbox.routing.registerRoute(
@@ -219,7 +216,7 @@ workbox.routing.registerRoute(
       })
     ]
   })
-); // Network-first is appropriate for APIs with short-lived cache for resilience [web:16]
+);
 
 // ----- Same-origin catch-all (no destination) — SWR -----
 workbox.routing.registerRoute(
@@ -230,12 +227,12 @@ workbox.routing.registerRoute(
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({
         maxEntries: 1500,
-        maxAgeSeconds: 120 * 24 * 60 * 60, // 120 days
+        maxAgeSeconds: 120 * 24 * 60 * 60,
         purgeOnQuotaError: true
       })
     ]
   })
-); // Covers other same-origin requests with instant responses plus background refresh [web:16]
+);
 
 // ----- Offline fallback (documents + images placeholder) -----
 workbox.routing.setCatchHandler(async ({ event }) => {
@@ -272,7 +269,7 @@ workbox.routing.setCatchHandler(async ({ event }) => {
 
   // Other types: error
   return Response.error();
-}); // Recommended pattern for offline fallbacks, including image placeholder [web:155][web:175]
+});
 
 // ----- Messaging: optional manual warmup/clear -----
 self.addEventListener('message', (event) => {
@@ -299,7 +296,6 @@ self.addEventListener('message', (event) => {
 
 // ----- Activation: claim clients only (let ExpirationPlugin handle TTL) -----
 self.addEventListener('activate', (event) => {
-  // eslint-disable-next-line no-console
   console.log('Service Worker activated with version:', CACHE_VERSION);
   event.waitUntil(self.clients.claim());
 });
