@@ -1,6 +1,7 @@
 public/
 resources/
-.hugo_build.lock
 .claude/
 .vscode/
 .idea/
+.hugo_build.lock
+hugo_stats.json
