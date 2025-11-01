@@ -81,6 +81,39 @@ async function isOfflinePage(response) {
   return await isOfflinePageByContent(response);
 }
 
+// Helper function to serve offline page with proper headers
+async function serveOfflinePage() {
+  const offlineResponse = await workbox.precaching.matchPrecache('/offline/index.html') ||
+                         await caches.match('/offline/index.html') ||
+                         await caches.match(getCacheKeyForURL('/offline/index.html'));
+  
+  if (offlineResponse) {
+    // Clone and add no-cache headers to prevent caching the offline response
+    const headers = new Headers(offlineResponse.headers);
+    headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    headers.set('Expires', '0');
+    headers.set('X-Offline-Fallback', '1'); // Add custom header for easy detection
+    
+    return new Response(offlineResponse.body, {
+      status: offlineResponse.status,
+      statusText: offlineResponse.statusText,
+      headers: headers
+    });
+  }
+  
+  // Ultimate fallback - this should rarely happen since we precache offline page
+  return new Response(
+    '<html><body><h1>Offline</h1><p>Please check your internet connection.</p></body></html>',
+    { 
+      status: 503,
+      headers: { 
+        'Content-Type': 'text/html',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+      }
+    }
+  );
+}
+
 // ----- Precache critical assets early (served cache-first by precaching) -----
 precacheAndRoute([
   { url: '/offline/index.html', revision: CACHE_VERSION },  // Offline fallback
@@ -134,23 +167,7 @@ workbox.routing.registerRoute(
     }
     
     // Final fallback to offline page - only for actual network failures
-    const offlineResponse = await caches.match('/offline/index.html') || 
-                           await caches.match(getCacheKeyForURL('/offline/index.html'));
-    
-    if (offlineResponse) {
-      // Add no-cache headers to prevent storing offline responses
-      const headers = new Headers(offlineResponse.headers);
-      headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-      headers.set('Expires', '0');
-      
-      return new Response(offlineResponse.body, {
-        status: offlineResponse.status,
-        statusText: offlineResponse.statusText,
-        headers: headers
-      });
-    }
-    
-    return new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+    return serveOfflinePage();
   },
   'GET'
 );
@@ -222,27 +239,7 @@ workbox.routing.registerRoute(
     } catch (error) {
       console.log('Network failed, serving offline page for:', request.url);
       // Only reach here on actual network failure => serve offline fallback
-      const offlineResponse = await caches.match('/offline/index.html') || 
-                             await caches.match(getCacheKeyForURL('/offline/index.html'));
-      
-      if (offlineResponse) {
-        // Add no-cache headers to prevent storing offline responses
-        const headers = new Headers(offlineResponse.headers);
-        headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-        headers.set('Expires', '0');
-        
-        return new Response(offlineResponse.body, {
-          status: offlineResponse.status,
-          statusText: offlineResponse.statusText,
-          headers: headers
-        });
-      }
-      
-      // Ultimate fallback
-      return new Response('Offline - No cached version available', {
-        status: 503,
-        headers: { 'Content-Type': 'text/plain' }
-      });
+      return serveOfflinePage();
     }
   },
   'GET'
@@ -457,34 +454,7 @@ workbox.routing.registerRoute(
 workbox.routing.setCatchHandler(async ({ event }) => {
   // Handle navigation requests (document pages)
   if (event.request.destination === 'document' || event.request.mode === 'navigate') {
-    // Try to return the precached offline page with proper no-cache headers
-    const offlineResponse = (await caches.match('/offline/index.html')) ||
-                           (await caches.match(getCacheKeyForURL('/offline/index.html')));
-    
-    if (offlineResponse) {
-      // Clone and add no-cache headers to prevent caching the offline response
-      const headers = new Headers(offlineResponse.headers);
-      headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-      headers.set('Expires', '0');
-      
-      return new Response(offlineResponse.body, {
-        status: offlineResponse.status,
-        statusText: offlineResponse.statusText,
-        headers: headers
-      });
-    }
-    
-    // Fallback plain text response with strict no-cache headers
-    return new Response('Offline - No cached version available', {
-      status: 503,
-      statusText: 'Service Unavailable',
-      headers: { 
-        'Content-Type': 'text/plain',
-        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      }
-    });
+    return serveOfflinePage();
   }
   
   // Handle images with a placeholder SVG
