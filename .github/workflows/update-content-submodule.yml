@@ -43,21 +43,28 @@ jobs:
       - name: Update content submodule
         id: check_updates
         run: |
+          # Get current commit in submodule
           cd content
           CONTENT_OLD=$(git rev-parse HEAD)
           cd ..
 
-          git submodule update --remote --merge content
-
+          # Fetch latest from remote
           cd content
-          CONTENT_NEW=$(git rev-parse HEAD)
+          git fetch origin main
+          CONTENT_NEW=$(git rev-parse origin/main)
           cd ..
 
+          # Check if there are updates
           if [ "$CONTENT_OLD" = "$CONTENT_NEW" ]; then
             echo "has_updates=false" >> $GITHUB_OUTPUT
             echo "No new content"
           else
             echo "has_updates=true" >> $GITHUB_OUTPUT
+
+            # Update submodule to point to latest commit
+            cd content
+            git checkout origin/main
+            cd ..
 
             # Create commit message with changelog
             echo "## Content Update" > summary.md
