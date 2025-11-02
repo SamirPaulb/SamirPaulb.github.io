@@ -1,0 +1,76 @@
+name: Sync Cloudflare Pages Branch
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+# Allow the workflow to push to protected branches
+permissions:
+  contents: write
+
+jobs:
+  sync-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for all branches
+          ref: main
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync samir.pages.dev branch
+        run: |
+          # Configuration
+          BRANCH="samir.pages.dev"
+          REMOTE="origin"
+          FROM="samirpaulb.github.io"
+          TO="samir.pages.dev"
+
+          # Files to update
+          FILES=("hugo.toml" "static/robots.txt")
+
+          # Fetch latest changes
+          git fetch "$REMOTE"
+
+          # Check if branch exists remotely
+          if git ls-remote --heads "$REMOTE" "$BRANCH" | grep -q "$BRANCH"; then
+            echo "Branch $BRANCH exists, checking out..."
+            git checkout "$BRANCH"
+          else
+            echo "Branch $BRANCH does not exist, creating..."
+            git checkout -b "$BRANCH"
+          fi
+
+          # Reset to match main exactly
+          git reset --hard "${REMOTE}/main"
+
+          # Replace domains in listed files
+          changed=0
+          for f in "${FILES[@]}"; do
+            if [[ -f "$f" ]]; then
+              if grep -q "${FROM}" "$f"; then
+                sed -i "s|${FROM}|${TO}|g" "$f"
+                changed=1
+                echo "Updated $f"
+              fi
+            fi
+          done
+
+          # Commit and push if there are changes
+          if [[ "$changed" -eq 1 ]] && ! git diff --quiet; then
+            git add "${FILES[@]}"
+            git commit -m "chore: replace ${FROM} with ${TO} in configured files"
+            echo "Changes committed"
+          else
+            echo "No changes to commit"
+          fi
+
+          # Push to remote
+          git push --force-with-lease "$REMOTE" "$BRANCH"
+          echo "Branch $BRANCH synced successfully"
