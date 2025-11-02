@@ -1,3 +1,5 @@
+# Creates samir.pages.dev branch synced from main (for Cloudflare Pages)
+# Updates baseURL and robots.txt with Cloudflare domain
 name: Sync Cloudflare Pages Branch
 
 on:
@@ -5,83 +7,70 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
-# Allow the workflow to push to protected branches
 permissions:
   contents: write
 
 jobs:
-  sync-branch:
+  sync-cloudflare:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      # Checkout main branch with all submodules
+      - name: Checkout main branch
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history for all branches
+          fetch-depth: 0
           ref: main
-          submodules: recursive  # Checkout submodules
-          ssh-key: ${{ secrets.CONTENT_SUBMODULE_SSH_PRIVATE_KEY }}  # SSH key for private submodule
+          submodules: recursive
+          ssh-key: ${{ secrets.CONTENT_SUBMODULE_SSH_PRIVATE_KEY }}
 
-      - name: Configure Git
+      # Configure git identity
+      - name: Setup git identity
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Reconfigure remote to use GITHUB_TOKEN for push
+      # Use HTTPS for pushing to allow writing
+      - name: Setup HTTPS push credentials
         run: |
-          # Change the remote URL to use HTTPS with GITHUB_TOKEN instead of SSH
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
 
+      # Create/sync cloudflare-pages branch with config updates
       - name: Sync cloudflare-pages branch
         run: |
-          # Configuration
           BRANCH="cloudflare-pages"
           REMOTE="origin"
           FROM="samirpaulb.github.io"
           TO="samir.pages.dev"
-
-          # Files to update
           FILES=("hugo.toml" "static/robots.txt")
 
-          # Fetch latest changes
           git fetch "$REMOTE"
 
-          # Check if branch exists remotely
+          # Create or checkout cloudflare-pages branch
           if git ls-remote --heads "$REMOTE" "$BRANCH" | grep -q "$BRANCH"; then
-            echo "Branch $BRANCH exists, checking out..."
             git checkout "$BRANCH"
           else
-            echo "Branch $BRANCH does not exist, creating..."
             git checkout -b "$BRANCH"
           fi
 
-          # Reset to match main exactly
+          # Sync with main branch
           git reset --hard "${REMOTE}/main"
-
-          # Update submodules to match main's submodule commits
-          echo "Updating submodules..."
           git submodule update --init --recursive --force
 
-          # Replace domains in listed files
+          # Replace GitHub Pages domain with Cloudflare domain
           changed=0
           for f in "${FILES[@]}"; do
-            if [[ -f "$f" ]]; then
-              if grep -q "${FROM}" "$f"; then
-                sed -i "s|${FROM}|${TO}|g" "$f"
-                changed=1
-                echo "Updated $f"
-              fi
+            if [[ -f "$f" ]] && grep -q "${FROM}" "$f"; then
+              sed -i "s|${FROM}|${TO}|g" "$f"
+              changed=1
             fi
           done
 
-          # Commit and push if there are changes
-          if [[ "$changed" -eq 1 ]] && ! git diff --quiet; then
+          # Commit domain changes if any
+          if [[ "$changed" -eq 1 ]]; then
             git add "${FILES[@]}"
-            git commit -m "chore: replace ${FROM} with ${TO} in configured files"
-            echo "Changes committed"
-          else
-            echo "No changes to commit"
+            git commit -m "Update domain from ${FROM} to ${TO}"
           fi
 
-          # Push to remote
+          # Push cloudflare-pages branch
           git push --force-with-lease "$REMOTE" "$BRANCH"
-          echo "Branch $BRANCH synced successfully"
+          echo "✅ Cloudflare Pages branch synced"

@@ -1,0 +1,93 @@
+# Automatically updates content submodule when content repo pushes changes
+# Triggered by content repo webhook, then pushes to main to trigger Hugo build & Cloudflare sync
+
+name: Update Content Submodule
+
+on:
+  repository_dispatch:
+    types:
+      - content-update
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-content:
+    runs-on: ubuntu-latest
+    steps:
+      # Log which repo triggered this update
+      - name: Log trigger source
+        run: |
+          echo "Triggered by: ${{ github.event_name }}"
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            echo "Repository: ${{ github.event.client_payload.repository }}"
+            echo "Commit: ${{ github.event.client_payload.sha }}"
+          fi
+
+      # Clone blog repo with submodules
+      - name: Checkout blog repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Configure git for committing
+      - name: Setup git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Setup SSH to access private content submodule
+      - name: Configure SSH for private content repo
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.CONTENT_SUBMODULE_SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          git config --global url."git@github.com:".insteadOf "https://github.com/"
+
+      # Fetch latest content from main branch and check for changes
+      - name: Update content submodule
+        id: check_updates
+        run: |
+          cd content
+          CONTENT_OLD=$(git rev-parse HEAD)
+          cd ..
+
+          git submodule update --remote --merge content
+
+          cd content
+          CONTENT_NEW=$(git rev-parse HEAD)
+          cd ..
+
+          if [ "$CONTENT_OLD" = "$CONTENT_NEW" ]; then
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+            echo "No new content"
+          else
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+
+            # Create commit message with changelog
+            echo "## Content Update" > summary.md
+            echo "Updated from \`${CONTENT_OLD:0:7}\` to \`${CONTENT_NEW:0:7}\`" >> summary.md
+            echo "" >> summary.md
+
+            cd content
+            git log --oneline ${CONTENT_OLD}..${CONTENT_NEW} | head -10 | sed 's/^/- /' >> ../summary.md
+            cd ..
+          fi
+
+      # Commit submodule update and push to main (triggers hugo.yml & sync-cloudflare-branch.yml)
+      - name: Push update to main branch
+        if: steps.check_updates.outputs.has_updates == 'true'
+        run: |
+          git add content
+          git commit -m "Update content submodule
+
+$(cat summary.md)"
+
+          git push origin main
+
+          echo "✅ Pushed to main - this triggers Hugo build & Cloudflare sync"

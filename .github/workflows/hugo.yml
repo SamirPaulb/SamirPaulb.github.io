@@ -1,5 +1,6 @@
-# Sample workflow for building and deploying a Hugo site to GitHub Pages
-name: Deploy Hugo site to Pages
+# Builds and deploys Hugo blog to GitHub Pages
+# Triggered when main branch is updated (either direct push or from content submodule update)
+name: Build & Deploy Hugo Site to GitHub Pages
 
 on:
   push:
@@ -23,12 +24,13 @@ defaults:
     shell: bash
 
 jobs:
-  # Build job
+  # Build Hugo site
   build:
     runs-on: ubuntu-latest
     env:
       HUGO_VERSION: 0.152.2
     steps:
+      # Setup Hugo environment
       - name: Install Hugo CLI
         run: |
           wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb \
@@ -37,7 +39,8 @@ jobs:
       - name: Install Dart Sass
         run: sudo snap install dart-sass
 
-      - name: Checkout
+      # Clone repo with content submodule (requires SSH key for private content repo)
+      - name: Checkout blog with submodules
         uses: actions/checkout@v4
         with:
           submodules: recursive
@@ -51,6 +54,7 @@ jobs:
       - name: Install Node.js dependencies
         run: "[[ -f package-lock.json || -f npm-shrinkwrap.json ]] && npm ci || true"
 
+      # Build static site
       - name: Build with Hugo
         env:
           HUGO_CACHEDIR: ${{ runner.temp }}/hugo_cache
@@ -62,12 +66,13 @@ jobs:
             --gc \
             --baseURL "${{ steps.pages.outputs.base_url }}"
 
+      # Upload build output for deployment
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./public
 
-  # Deployment job
+  # Deploy built site to GitHub Pages
   deploy:
     environment:
       name: github-pages
@@ -75,6 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
+      # Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
