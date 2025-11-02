@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.WORKFLOW_TOKEN }}
           ssh-key: ${{ secrets.CONTENT_SUBMODULE_SSH_PRIVATE_KEY }}
 
       # Configure git for committing
@@ -80,14 +80,12 @@ jobs:
       - name: Push update to main branch
         if: steps.check_updates.outputs.has_updates == 'true'
         run: |
-          # Reconfigure git to use HTTPS with token for pushing (SSH key is read-only)
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-
           git add content
 
           # Create commit with summary
           git commit -m "Update content submodule" -m "$(cat summary.md)"
 
+          # Push using PAT token (GITHUB_TOKEN doesn't trigger other workflows)
           git push origin main
 
           echo "✅ Pushed to main - this triggers Hugo build & Cloudflare sync"
