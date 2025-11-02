@@ -32,7 +32,7 @@ Content repo push → Webhook (repository_dispatch) → Update submodule → Pus
                                                                            ↓
                                                           ┌────────────────┴────────────────┐
                                                           ↓ (workflow_run)      ↓ (workflow_run)
-                                                  Hugo Build & Deploy    Cloudflare Sync
+                                                          Hugo Build & Deploy    Cloudflare Sync
 ```
 
 **Setup Required**:
