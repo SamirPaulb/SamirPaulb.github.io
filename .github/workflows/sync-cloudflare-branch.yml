@@ -18,6 +18,8 @@ jobs:
         with:
           fetch-depth: 0  # Fetch all history for all branches
           ref: main
+          submodules: recursive  # Checkout submodules
+          ssh-key: ${{ secrets.CONTENT_SUBMODULE_SSH_PRIVATE_KEY }}  # SSH key for private submodule
 
       - name: Configure Git
         run: |
@@ -49,6 +51,10 @@ jobs:
 
           # Reset to match main exactly
           git reset --hard "${REMOTE}/main"
+
+          # Update submodules to match main's submodule commits
+          echo "Updating submodules..."
+          git submodule update --init --recursive --force
 
           # Replace domains in listed files
           changed=0
