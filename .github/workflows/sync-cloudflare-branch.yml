@@ -26,6 +26,11 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Reconfigure remote to use GITHUB_TOKEN for push
+        run: |
+          # Change the remote URL to use HTTPS with GITHUB_TOKEN instead of SSH
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
       - name: Sync samir.pages.dev branch
         run: |
           # Configuration
