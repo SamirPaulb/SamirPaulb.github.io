@@ -44,6 +44,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      # Reconfigure remote to use HTTPS for pushing (SSH key is read-only)
+      - name: Setup HTTPS for push
+        run: |
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
       # Fetch latest content from main branch and check for changes
       - name: UPDATE_CONTENT_SUBMODULE
         id: check_updates
