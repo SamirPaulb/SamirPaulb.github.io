@@ -39,7 +39,7 @@ Content repo push → Webhook → Update submodule → Push to main
 1. Create fine-grained PAT: https://github.com/settings/tokens?type=beta
    - Repository access: Only `SamirPaulb.github.io`
    - Permissions: Contents (Read and write), Metadata (Read-only)
-2. Add as `PARENT_REPO_TOKEN` secret in content repo
+2. Add as `WORKFLOW_TOKEN` secret in content repo
 3. Add workflow to content repo (see `content/.github/workflows/update-content-submodule.yml`)
 
 ### 2. Hugo Build & Deploy (`hugo.yml`)
@@ -134,7 +134,7 @@ hugo --minify
 - `CONTENT_SUBMODULE_SSH_PRIVATE_KEY` - SSH key for accessing private content repo
 
 ### In Content Repository (content)
-- `PARENT_REPO_TOKEN` - Fine-grained PAT to trigger blog repo workflows
+- `WORKFLOW_TOKEN` - Fine-grained PAT to trigger blog repo workflows
 
 ## 📚 Resources
 

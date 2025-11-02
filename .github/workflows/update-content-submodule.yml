@@ -1,5 +1,9 @@
 # Automatically updates content submodule when content repo pushes changes
 # Triggered by content repo webhook, then pushes to main to trigger Hugo build & Cloudflare sync
+#
+# Required secrets:
+# - CONTENT_SUBMODULE_SSH_PRIVATE_KEY: SSH key to clone private content repo
+# - WORKFLOW_TOKEN: Fine-grained PAT to trigger other workflows (push must use PAT, not GITHUB_TOKEN)
 
 name: Update Content Submodule
 
@@ -25,12 +29,12 @@ jobs:
             echo "Commit: ${{ github.event.client_payload.sha }}"
           fi
 
-      # Clone blog repo with submodules (SSH key required for private content repo)
+      # Clone blog repo with submodules (SSH key for private content, GITHUB_TOKEN for checkout)
       - name: Checkout blog repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
-          token: ${{ secrets.WORKFLOW_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           ssh-key: ${{ secrets.CONTENT_SUBMODULE_SSH_PRIVATE_KEY }}
 
       # Configure git for committing
@@ -79,13 +83,18 @@ jobs:
       # Commit submodule update and push to main (triggers hugo.yml & sync-cloudflare-branch.yml)
       - name: Push update to main branch
         if: steps.check_updates.outputs.has_updates == 'true'
+        env:
+          WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
         run: |
+          # Reconfigure remote to use PAT (GITHUB_TOKEN doesn't trigger other workflows)
+          git remote set-url origin https://x-access-token:${WORKFLOW_TOKEN}@github.com/${{ github.repository }}.git
+
           git add content
 
           # Create commit with summary
           git commit -m "Update content submodule" -m "$(cat summary.md)"
 
-          # Push using PAT token (GITHUB_TOKEN doesn't trigger other workflows)
+          # Push using PAT to trigger hugo.yml and sync-cloudflare-branch.yml
           git push origin main
 
           echo "✅ Pushed to main - this triggers Hugo build & Cloudflare sync"
