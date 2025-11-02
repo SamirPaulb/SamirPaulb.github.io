@@ -42,12 +42,6 @@ git commit -m "Re-add DoIt and content submodules with correct URLs"
 
 ```
 
-### Sync other branch for Cloudflare pages
-```bash
-chmod +x sync-branch.sh
-./sync-branch.sh
-```
-
 
 - Hugo Theme: https://github.com/SamirPaulb/DoIt
 - Content: https://github.com/SamirPaulb/content
