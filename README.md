@@ -24,30 +24,31 @@ SamirPaulb.github.io/
 ## 🔄 Automated Workflows
 
 ### 1. Content Auto-Update (`update-content-submodule.yml`)
-**Trigger**: When content repo pushes to main
-**Action**: Updates content submodule → pushes to main → triggers builds
+**Trigger**: `repository_dispatch` event from content repo
+**Action**: Updates content submodule → pushes to main
 
 ```
-Content repo push → Webhook → Update submodule → Push to main
-                                                      ↓
-                                      ┌───────────────┴────────────────┐
-                                      ↓                                ↓
-                              Hugo Build & Deploy            Cloudflare Sync
+Content repo push → Webhook (repository_dispatch) → Update submodule → Push to main
+                                                                           ↓
+                                                          ┌────────────────┴────────────────┐
+                                                          ↓ (workflow_run)      ↓ (workflow_run)
+                                                  Hugo Build & Deploy    Cloudflare Sync
 ```
 
 **Setup Required**:
 1. Create fine-grained PAT: https://github.com/settings/tokens?type=beta
    - Repository access: Only `SamirPaulb.github.io`
    - Permissions: Contents (Read and write), Metadata (Read-only)
-2. Add as `WORKFLOW_TOKEN` secret in content repo
-3. Add workflow to content repo (see `content/.github/workflows/update-content-submodule.yml`)
+2. Add as `PARENT_REPO_TOKEN` secret in content repo
+3. Add workflow to content repo: `.github/workflows/notify-parent.yml` (see `notify-parent.yml` in blog repo root)
 
 ### 2. Hugo Build & Deploy (`hugo.yml`)
-**Trigger**: Push to main branch (Deploy key ```CONTENT_SUBMODULE_SSH_PRIVATE_KEY``` used for cloning private content repo)
+**Trigger**: Push to main OR `workflow_run` (after UPDATE_CONTENT_SUBMODULE completes)
 **Action**: Builds Hugo site → deploys to GitHub Pages
+**Note**: Uses `CONTENT_SUBMODULE_SSH_PRIVATE_KEY` to clone private content repo
 
 ### 3. Cloudflare Branch Sync (`sync-cloudflare-pages-branch.yml`)
-**Trigger**: Push to main branch
+**Trigger**: Push to main OR `workflow_run` (after UPDATE_CONTENT_SUBMODULE completes)
 **Action**: Creates/updates `cloudflare-pages` branch with domain config updates
 
 ## 🔧 Configuration
@@ -86,11 +87,11 @@ cd SamirPaulb.github.io
 git submodule update --init --recursive
 ```
 
-### Update Content Submodule Manually
+### UPDATE_CONTENT_SUBMODULE Manually
 ```bash
 git submodule update --remote --merge content
 git add content
-git commit -m "Update content submodule"
+git commit -m "UPDATE_CONTENT_SUBMODULE"
 git push origin main
 ```
 
@@ -134,7 +135,7 @@ hugo --minify
 - `CONTENT_SUBMODULE_SSH_PRIVATE_KEY` - SSH key for accessing private content repo
 
 ### In Content Repository (content)
-- `WORKFLOW_TOKEN` - Fine-grained PAT to trigger blog repo workflows
+- `PARENT_REPO_TOKEN` - Fine-grained PAT to trigger blog repo workflows
 
 ## 📚 Resources
 

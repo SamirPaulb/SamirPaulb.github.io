@@ -1,11 +1,17 @@
 # Builds and deploys Hugo blog to GitHub Pages
 # Triggered when main branch is updated (either direct push or from content submodule update)
-name: Build & Deploy Hugo Site to GitHub Pages
+name: Build & Deploy Hugo Site
 
 on:
   push:
     branches: ["main"]
   workflow_dispatch:
+  workflow_run:
+    workflows: ["UPDATE_CONTENT_SUBMODULE"]
+    types:
+      - completed
+    branches:
+      - main
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
