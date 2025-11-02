@@ -25,29 +25,19 @@ jobs:
             echo "Commit: ${{ github.event.client_payload.sha }}"
           fi
 
-      # Clone blog repo with submodules
+      # Clone blog repo with submodules (SSH key required for private content repo)
       - name: Checkout blog repository
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: recursive
           token: ${{ secrets.GITHUB_TOKEN }}
+          ssh-key: ${{ secrets.CONTENT_SUBMODULE_SSH_PRIVATE_KEY }}
 
       # Configure git for committing
       - name: Setup git identity
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      # Setup SSH to access private content submodule
-      - name: Configure SSH for private content repo
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.CONTENT_SUBMODULE_SSH_PRIVATE_KEY }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-          git config --global url."git@github.com:".insteadOf "https://github.com/"
 
       # Fetch latest content from main branch and check for changes
       - name: Update content submodule
