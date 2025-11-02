@@ -80,6 +80,9 @@ jobs:
       - name: Push update to main branch
         if: steps.check_updates.outputs.has_updates == 'true'
         run: |
+          # Reconfigure git to use HTTPS with token for pushing (SSH key is read-only)
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
           git add content
 
           # Create commit with summary
