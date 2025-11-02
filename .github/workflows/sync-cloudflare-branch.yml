@@ -31,10 +31,10 @@ jobs:
           # Change the remote URL to use HTTPS with GITHUB_TOKEN instead of SSH
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
 
-      - name: Sync samir.pages.dev branch
+      - name: Sync cloudflare-pages branch
         run: |
           # Configuration
-          BRANCH="samir.pages.dev"
+          BRANCH="cloudflare-pages"
           REMOTE="origin"
           FROM="samirpaulb.github.io"
           TO="samir.pages.dev"
