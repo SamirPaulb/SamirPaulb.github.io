@@ -86,11 +86,11 @@ disableKinds = []
   # website title
   title = "Samir's Blog"
   # site description
-  description = "Technical blog for developers. Computer Science, Data Structures Algorithms, Networking, Artificial Intelligence and Coding Interview Prep."
+  description = "A place to share learnings, ideas, short notes, guides, and reflections from projects and everyday life, focused on clarity and usefulness. Lessons learned and experiences are distilled into actionable takeaways for curious readers."
   # site keywords
-  keywords = ["Computer Science", "Data Structures Algorithms", "Networking", "Artificial Intelligence", "Coding Interview Prep", "AI/ML", "Experience", "Travel"]
+  keywords = ["Samir Paul", "Personal Blog", "Software Engineering", "Computer Science", "System Design", "Learnings", "Data Structures Algorithms", "Networking", "Artificial Intelligence", "Problem-solving", "Coding Interview Prep", "AI/ML", "Experience", "Travel"]
   #  site default theme ("light", "dark", "black", "auto")
-  defaultTheme = "light"
+  defaultTheme = "auto"
   # public git repo url only then enableGitInfo is true
   gitRepo = ""
   #  which hash function used for SRI, when empty, no SRI is used
