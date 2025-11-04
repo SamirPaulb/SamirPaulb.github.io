@@ -207,7 +207,7 @@ disableKinds = []
     custom = '''
       <span>
         <a href="/contact">Contact</a> ·
-        <a href="/sitemap.xml">Sitemap</a> ·
+        <a href="/newsletter">Newsletter</a> ·
         <a href="/privacy">Privacy</a> ·
         <a href="/disclaimer">Disclaimer</a>
       </span>
