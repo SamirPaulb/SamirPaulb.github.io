@@ -6,7 +6,7 @@ Hugo blog with automated content updates and dual deployment (GitHub Pages + Clo
 
 - **GitHub Pages**: https://samirpaulb.github.io (from `main` branch)
 - **Cloudflare Pages**: https://samir.pages.dev (from `cloudflare-pages` branch)
-
+ 
 ## 📦 Repository Structure
 
 ```
