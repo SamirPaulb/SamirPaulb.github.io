@@ -298,7 +298,7 @@ disableKinds = []
   # Social Media Links (Author Profile)
   # ----------------------------------------------------------------------------
   [params.social]
-    LinkedIn = "samirpaul"
+    Linkedin = "samirpaul"
     GitHub = "SamirPaulb"
     Twitter = "SamirPaulb"
     Instagram = "SamirPaulb"
