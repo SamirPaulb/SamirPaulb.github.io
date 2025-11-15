@@ -33,7 +33,7 @@
         "sizes": "640x320",
         "type": "image/png",
         "form_factor": "wide",
-        "label": "Wonder Widgets"
+        "label": "screenshots"
     }],
     "start_url": "/",
     "display": "standalone",
