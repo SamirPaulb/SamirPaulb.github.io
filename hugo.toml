@@ -66,14 +66,14 @@ disableKinds = []
     url = "/posts/"
     weight = 1
   [[menu.main]]
-    identifier = "tags"
-    name = "Tags"
-    url = "/tags/"
-    weight = 2
-  [[menu.main]]
     identifier = "categories"
     name = "Categories"
     url = "/categories/"
+    weight = 2
+  [[menu.main]]
+    identifier = "about"
+    name = "About"
+    url = "/about/"
     weight = 3
 
 # ============================================================================
@@ -116,9 +116,9 @@ disableKinds = []
   # Author Configuration
   # ----------------------------------------------------------------------------
   [params.author]
-    name = "Samir P."
-    email = "www.netproxy@gmail.com"
-    link = ""
+    name = "Samir Paul"
+    email = "www.netproxy+website@gmail.com"
+    link = "/about/"
     avatar = "/avatar.webp"
     gravatarEmail = ""
   # ----------------------------------------------------------------------------
@@ -298,8 +298,8 @@ disableKinds = []
   # Social Media Links (Author Profile)
   # ----------------------------------------------------------------------------
   [params.social]
+    LinkedIn = "samirpaul"
     GitHub = "SamirPaulb"
-    Linkedin = "samirpaul"
     Twitter = "SamirPaulb"
     Instagram = "SamirPaulb"
     Facebook = ""
@@ -367,7 +367,7 @@ disableKinds = []
     Linktree = ""
     QQ = ""
     QQGroup = ""
-    Email = "www.netproxy@gmail.com"
+    Email = ""
     RSS = true # 
 
   # ----------------------------------------------------------------------------
