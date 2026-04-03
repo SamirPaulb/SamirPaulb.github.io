@@ -924,7 +924,7 @@
             <select class="music-select" id="musicMode" onchange="changeMusicMode()">
                 <option value="off">Off</option>
                 <option value="auto">Auto Mix</option>
-                <option value="live">YouTube Live</option>
+                <!-- <option value="live">YouTube Live</option> -->
                 <option value="radio">Radio</option>
             </select>
         </div>
@@ -1734,6 +1734,10 @@
         dom.ytApiPlayer = newDiv;
     }
 
+    function showNowPlaying(videoId, label) {
+        dom.autoMixStatus.innerHTML = label + ' <a href="https://www.youtube.com/watch?v=' + videoId + '" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;font-size:inherit;">' + videoId + '</a>';
+    }
+
     function loadVideoInPlayer(videoId) {
         dom.autoMixStatus.textContent = 'Loading...';
         try {
@@ -1760,7 +1764,7 @@
                                 event.target.mute();
                             }
                             event.target.playVideo();
-                            dom.autoMixStatus.textContent = 'Playing';
+                            showNowPlaying(videoId, 'Playing');
                             setTimeout(function() {
                                 try {
                                     if (userHasInteracted && ytPlayer && ytPlayer.isMuted && ytPlayer.isMuted()) {
@@ -1778,7 +1782,7 @@
                             if (event.data === YT.PlayerState.ENDED && state.musicStation === 'auto') {
                                 playNextAutoMix();
                             } else if (event.data === YT.PlayerState.PLAYING) {
-                                dom.autoMixStatus.textContent = 'Playing';
+                                showNowPlaying(videoId, 'Playing');
                                 if (userHasInteracted) {
                                     try {
                                         if (ytPlayer && ytPlayer.isMuted && ytPlayer.isMuted()) {
