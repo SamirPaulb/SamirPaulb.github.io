@@ -1479,15 +1479,34 @@
     alarmAudio.volume = 1.0;
     alarmAudio.preload = 'auto';
 
+    // Web Audio API gain node for 3x alarm amplification
+    var alarmAudioCtx = null;
+    var alarmGainNode = null;
+    function ensureAlarmGain() {
+        if (alarmGainNode) return;
+        try {
+            alarmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            var source = alarmAudioCtx.createMediaElementSource(alarmAudio);
+            alarmGainNode = alarmAudioCtx.createGain();
+            alarmGainNode.gain.value = 5.0;
+            source.connect(alarmGainNode);
+            alarmGainNode.connect(alarmAudioCtx.destination);
+        } catch(e) {}
+    }
+
     function ensureAudioReady() {
-        // Preload audio on user gesture (required by iOS/Safari)
         if (alarmAudio.paused) {
             alarmAudio.load();
         }
+        ensureAlarmGain();
     }
 
     function playAlarmSound() {
         try {
+            ensureAlarmGain();
+            if (alarmAudioCtx && alarmAudioCtx.state === 'suspended') {
+                alarmAudioCtx.resume();
+            }
             alarmAudio.currentTime = 0;
             alarmAudio.volume = 1.0;
             alarmAudio.play().catch(() => {});
@@ -2157,4 +2176,3 @@
 </script>
 </body>
 </html>
-
