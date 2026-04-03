@@ -819,12 +819,18 @@
         #ytApiPlayer {
             border-radius: 10px;
             overflow: hidden;
+            position: relative;
+            width: 1px;
+            height: 1px;
         }
 
         #ytApiPlayer iframe {
-            width: 100%;
-            height: 80px;
+            width: 1px;
+            height: 1px;
             border-radius: 10px;
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
         }
 
         /* hidden utility */
@@ -1733,8 +1739,8 @@
         try {
             recreatePlayerDiv();
             ytPlayer = new YT.Player('ytApiPlayer', {
-                height: '80',
-                width: '100%',
+                height: '1',
+                width: '1',
                 videoId: videoId,
                 playerVars: {
                     autoplay: 1,
@@ -1813,7 +1819,7 @@
     function loadHlsRadioInPlayer(hlsUrl) {
         stopAutoMix();
         stopHlsRadio();
-        dom.autoMixControls.style.display = 'block';
+        dom.autoMixControls.style.display = 'none';
 
         // Create audio element styled to fit in the player area
         var audio = document.createElement('audio');
@@ -1859,83 +1865,12 @@
     }
 
     function loadLiveChannelInPlayer(channelId) {
-        dom.autoMixControls.style.display = 'block';
-        if (!ytApiReady) {
-            dom.autoMixStatus.textContent = 'Waiting for player...';
-            return;
-        }
-        dom.autoMixStatus.textContent = 'Loading live...';
-        try {
-            // Clean up existing player
-            try {
-                if (ytPlayer) { ytPlayer.stopVideo(); ytPlayer.destroy(); }
-            } catch(e) {}
-            ytPlayer = null;
-            stopQualityEnforcer();
-
-            // Remove old player element
-            var oldEl = document.getElementById('ytApiPlayer');
-            if (oldEl) oldEl.remove();
-
-            // Create iframe for live stream with enablejsapi for API control
-            var iframe = document.createElement('iframe');
-            iframe.id = 'ytApiPlayer';
-            iframe.width = '100%';
-            iframe.height = '80';
-            iframe.style.border = 'none';
-            iframe.style.display = 'block';
-            iframe.allow = 'autoplay; encrypted-media';
-            iframe.src = 'https://www.youtube.com/embed/live_stream?channel=' + channelId +
-                '&enablejsapi=1&autoplay=1&vq=tiny&origin=' + window.location.origin;
-            dom.musicPlayerWrapper.insertBefore(iframe, dom.musicIframe);
-
-            dom.musicIframe.style.display = 'none';
-            dom.musicIframe.src = '';
-
-            // Wrap with YT.Player API for quality enforcement
-            ytPlayer = new YT.Player('ytApiPlayer', {
-                events: {
-                    onReady: function(event) {
-                        try {
-                            forceLowestQuality(event.target);
-                            startQualityEnforcer();
-                            if (!userHasInteracted) event.target.mute();
-                            dom.autoMixStatus.textContent = 'Live';
-                            setTimeout(function() {
-                                try {
-                                    if (userHasInteracted && ytPlayer && ytPlayer.isMuted && ytPlayer.isMuted()) {
-                                        ytPlayer.unMute();
-                                    }
-                                } catch(e) {}
-                            }, 1500);
-                        } catch(e) {
-                            dom.autoMixStatus.textContent = 'Live...';
-                        }
-                    },
-                    onStateChange: function(event) {
-                        try {
-                            forceLowestQuality(event.target);
-                            if (event.data === YT.PlayerState.PLAYING) {
-                                dom.autoMixStatus.textContent = 'Live';
-                                if (userHasInteracted) {
-                                    try { if (ytPlayer && ytPlayer.isMuted && ytPlayer.isMuted()) ytPlayer.unMute(); } catch(e) {}
-                                }
-                            }
-                        } catch(e) {}
-                    },
-                    onError: function(event) {
-                        console.warn('Live stream error:', event.data, 'for channel', channelId);
-                        dom.autoMixStatus.textContent = 'Stream unavailable';
-                    }
-                }
-            });
-
-            dom.ytApiPlayer = document.getElementById('ytApiPlayer');
-            dom.musicPlayerWrapper.classList.add('visible');
-        } catch(e) {
-            console.warn('Failed to load live channel:', e);
-            dom.autoMixStatus.textContent = 'Error';
-        }
+        stopAutoMix();
+        dom.autoMixControls.style.display = 'none';
+        // Use simple iframe — YT.Player wrapping of live_stream URLs is unreliable
+        dom.musicIframe.style.display = 'block';
+        dom.musicIframe.src = 'https://www.youtube.com/embed/live_stream?channel=' + channelId + '&autoplay=1&vq=tiny';
+        dom.musicPlayerWrapper.classList.add('visible');
     }
 
     function playNextAutoMix() {
