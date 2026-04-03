@@ -804,17 +804,14 @@
         }
 
         #ytApiPlayer {
-            width: 1px;
-            height: 1px;
+            border-radius: 10px;
             overflow: hidden;
-            opacity: 0;
-            position: absolute;
-            pointer-events: none;
         }
 
         #ytApiPlayer iframe {
-            width: 1px;
-            height: 1px;
+            width: 100%;
+            height: 80px;
+            border-radius: 10px;
         }
 
         /* hidden utility */
@@ -1098,6 +1095,26 @@
         'gawncvuktaI','hvEh9YI1fpw','i-dJBDQtouk','J0GFa37rNlM','JLxfwb-KcLg',
         'Kl1C2NujJDc','NxMKcxiRhLk','pAPMnY7cQZE','RnEypwmJiaA','TfmECBzmOn4',
         'tNWyemL1gbw','UcxXKlkqSMM','UZozDPIEjAM','v0GzQaxGAkI','XJPg36CObXM',
+        // --- User-curated picks ---
+        'LKXwgGsY0fw','uqFhchPFR5o','K7MWD_Ial24','Cb0yjDMu0-8','gSMlVALgjEc',
+        'Cl3OVsp5pvc','dk8Rqv3OKgY','-ffRvuRRVEE','1MdNz-EdhXI','NRuqAKuRP64',
+        'pM-T2aKjBsU','andH_K7Hfoo','PLVYR5o7iGc','sR_sffdbzcE','yLXGgy1Cqk4',
+        'Sp9BrfnyFIw','NBai3tYGacE','4LIt_ICJyjk','CLeZyIID9Bo','fslL-sjPr5g',
+        'UbXYxaf1itQ','NpQbEadBq_w','S_bON2ei8iA','9by72PbEiZE','P4r9LeM7DiQ',
+        '6mN1780N9vg','qzyl0f3mRG0','NjJx6B5De8g','FJflWlFyhRE','lVZAkpmKbQ4',
+        'w1hjz0rrK28','bkeyQPcy5zg','ztELR-OhON0','qPAiYaZOGeQ','e-XGK_2UQko',
+        'PNwplS-YFzU','N5ws0pe2DGE',
+        // --- User-curated picks (batch 2) ---
+        'ADCQSyX_jTQ','hGrIgIfCxP0','tA8yqkwNp_M','oaIJNOqY1oQ','Xc1Le3CSdrM',
+        'r0z8pE9Ix9M','IHLLYeFc5sg','aIExzhcQ0xs','VDzcGYZsb3g','W9q-0tCfvKE',
+        'HT2rbv_-MOg','7lVE9BQENGg','HqzUFulMwyQ','Vdxp5H2vOdU','e-aUx-XYq90',
+        'RUDrYhTV1qc','fWX8zsaTeTc','bfjGMMWxujc','cd9bCN5z7jw','KTRRp9N7BTc',
+        'YJhTVBKdmqk','rJVYb2Ib8DU','6qrVzDOC7Fo','NdbqI7zHHF4','yFlk2GIUNVY',
+        'N9nWdq0Q5r0','YDaHXGWclg0','lTRiuFIWV54','-FlxM_0S2lA','n61ULEU7CO0',
+        'wAPCSnAhhC8','_tV5LEBDs7w','BTYAsjAVa3I','TURbeWK2wwg','i43tkaTXtwI',
+        '1fueZCTYkpA','zFhfksjf_mY','l98w9OSKVNA','CFGLoQIhmow','gnZImHvA0ME',
+        'Nyx6SBixRE8','1P5BSm_oFJg','TlWYgGyNnJo','mmKguZohAck','UJs6__K7gSY',
+        'sXFQExxceC4','O7RG-B6N1Vw',
     ];
 
     let ytApiReady = false;
@@ -1638,12 +1655,12 @@
         try {
             recreatePlayerDiv();
             ytPlayer = new YT.Player('ytApiPlayer', {
-                height: '1',
-                width: '1',
+                height: '80',
+                width: '100%',
                 videoId: videoId,
                 playerVars: {
                     autoplay: 1,
-                    controls: 0,
+                    controls: 1,
                     modestbranding: 1,
                     rel: 0,
                     playsinline: 1,
@@ -1793,6 +1810,7 @@
         }
 
         if (mode === 'auto') {
+            dom.musicIframe.src = '';  // stop any playing live stream
             startAutoMix();
             return;
         }
