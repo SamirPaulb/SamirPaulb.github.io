@@ -503,7 +503,6 @@
             font-size: 1rem;
         }
 
-        /* (features-row removed - using card layout now) */
 
         .feature-icon {
             font-size: 1.5rem;
@@ -683,54 +682,6 @@
         }
 
         /* Custom URL Input */
-        .custom-url-row {
-            display: none;
-            gap: 8px;
-            margin-top: 10px;
-            align-items: center;
-        }
-
-        .custom-url-row.visible {
-            display: flex;
-        }
-
-        .custom-url-row input {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 8px 12px;
-            color: var(--text-primary);
-            font-size: 0.78rem;
-            outline: none;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .custom-url-row input::placeholder {
-            color: var(--text-muted);
-        }
-
-        .custom-url-row input:focus {
-            border-color: var(--accent);
-        }
-
-        .custom-url-row button {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 14px;
-            font-size: 0.78rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background var(--transition);
-            white-space: nowrap;
-        }
-
-        .custom-url-row button:hover {
-            background: #7c3aed;
-        }
-
         /* Keyboard Hint */
         .shortcut-hint {
             text-align: center;
@@ -1101,21 +1052,63 @@
         soundcloud: 'https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/lofi_girl&auto_play=true&show_artwork=true&visual=true&color=%238b5cf6',
     };
 
-    // ===== AUTO MIX: Large YouTube playlists (2000+ songs total) =====
-    // Each playlist has 200-500+ songs. Played shuffled + looped = months of music.
-    const autoMixPlaylists = [
-        'PLOzDu-MXXLliO9fBNZOQTBDddoA3FzZUo', // Lofi Girl - lofi hip hop (500+)
-        'PLofht4PTcKYnaH8w5olJCI-wUVxuoMHqM',  // Lofi Fruits Music (400+)
-        'PLQkQfzsIUwRYKGCsmxfMB9y2iI2PAzhiD',  // Lofi Chill Mix (300+)
-        'PL6NdkXsPL07KN01gH2vucrHCEyyNmVEx4',  // Lofi Hip Hop Mix (200+)
-        'PLt7bG0K25RE2d0jR6gLfEsCHISeIoHIBJ',  // Chillhop Essentials (300+)
-        'PLMIbmfP_9vb8BCxRoraJpoo4q1yMFg4CE',  // The Bootleg Boy (200+)
-        'PLDfKAXSi6kUZGjxSCguR4-vKcZ909TI2v',  // Dreamy Lofi Beats (200+)
+    // ===== AUTO MIX: Individual lofi video IDs (185+ videos, ~280hrs) =====
+    // Shuffled infinitely. Each video is 1-3hrs of lofi music.
+    // Sources: Chill Chill Journal, Lofi 9260, Quiet Quest, The Bootleg Boy,
+    //          Chillhop Music, College Music, Lofi Fruits
+    const autoMixVideos = [
+        // --- Chill Chill Journal ---
+        '__A3JkF0KoQ','0BA7D66lpk4','2zzr4YVy1kM','6WubskuCsaE','AsNiVFEdyzY',
+        'BIJvspEB0O8','dWzce7JtBTU','ErJgRXUceks','F2iMJIhIGqw','I_eleTBzDQs',
+        'ifS1NrZDfVY','lTqiX6SAioQ','lXQ4H8VUwKI','MOMvj_qRqX4','NnB5QTfACo0',
+        'OJUyk74jgOU','pH_Z7CXI_ZI','r_mdYIp8_gA','sI-qUQViWi8','Sp_7wYJR7QI',
+        'Tkv3mUaEyK4','uBoeN_Bz0QU','V-9Eg3FMpIc','vYVZplAS_QA','wEeidzMwSFU',
+        'XtkKEv9ZK-U','yPIMtvb7C8E','ZNqxYWjWx4w','zonLk1uM1pY','ZuadLz4qF4k',
+        // --- Lofi 9260 ---
+        '7R0iu0Ezau8','Bf6K3dkmC7M','EEM_vnhIbGI','H2bc6EHe9Ac','RlREBLP5msM',
+        'SMfqVV3EHhs',
+        // --- Quiet Quest ---
+        '-XP5-h-qJpI','1x_x3hC1e04','2NbI_kToEYI','4bNyIPIYFaI','b_tyrJQis4w',
+        'baYDzb06vQw','cTZeDccAf5M','EmhFL5ZMh5o','eyTizBo1EEg','FbNuTlNSioM',
+        'fQCBLirc3LU','GQOi8IJSga8','H6TZeOPdrBg','KwdRng-yBJU','mRLDHNxOuBc',
+        'N-dpgEB4L04','OAE5lm-xFDM','oyEixtn8L6A','Qt0ubngZN8g','RvZEsjIcDqA',
+        'SpqWK4ULccY','TPLyoDVbLJI','UgViAKlM98w','uoXM_Q8iQMY','vSwpHSjksIc',
+        'XP6gJm0uU_8','xqFRhhWniYc','Xv6ObzQAxIk','yFgoUw9dRc0','ZOPBI87xXrk',
+        // --- The Bootleg Boy ---
+        '-SoTgXcERxM','0VHDaaplGwQ','1ishiNFrjbg','3cw0okh5n1U','3lqRPmfWFRc',
+        'AEaZJwgevPs','AjVbrKvy7VE','Ap9fzoUFdh0','cxbcpBMt1ok','CZ9823w33WU',
+        'GLekHeloxJM','HU0rUBR_Zic','JixQ4TcnlWk','m_x0eUH_k3Q','mG1aeD7odqk',
+        'nlFKu8Pkvqk','nthgeDivazI','nYD7Pm1eges','PtoXEe3l1As','R0k89VMK5vM',
+        'Ruiufx7uj9E','ryw1Jrpz3Fk','sdtLhwI4aW0','Uwvt-P7c-lU','UxhriWIA1Vw',
+        'vTr6bmlGgjk','w5iEPKUlXF0','Wb9MiwpP9is','y2bF7FWbCis','yO_fRszUnDc',
+        // --- Chillhop Music ---
+        '4C6-UjnclYA','4HaoDKGXxFM','Cae61o04YRU','cTYYfW5MLXQ','diLczGT5J-s',
+        'DUzQadS3aJ0','HFQibg2OJkU','hnIPvfTexgM','HOqQXM7pOUc','IU3yBo2szD8',
+        'kblfv8dKAk0','KLmHcEaNPoc','Kq0i9wAnxFg','KxpViLLzlrc','m98hOZK-Fkk',
+        'NtxyP0xbDco','nzD7YdsBjps','O_stmaXMIiI','OkjC4z5dFrg','OpiOEvzfF-s',
+        'P2DubjKBRLE','pof6SbQwgMs','QRFv3HESAtE','rmL9LvTYjMQ','RSyi8e4DFPY',
+        'RZ7FmDUwPFY','u9fRJ3yN18Y','ueuCDqVu4PY','vFZ6ObVhKbA','WEh4EiIQ0Po',
+        // --- College Music ---
+        '_0el4iJcFOA','-HtQyo0CeXE','2OjaUK7GRsI','3ooEOrmRPyI','51Em5pVyrpk',
+        'b1FQ9zwqgls','bKm8coo6U8g','CDB9nzVgtQY','eIgh9VYQdlo','ghlZWEmRgL4',
+        'H6SMhE3VhCc','hoiVPLwTlgY','hWL6jyP3xxg','JH0pR65a3aw','KjfvBlWxNGg',
+        'kOzLaLQAB64','lFDvEdJjOuE','NJrXExl0XAM','nOGyN7MWLr0','OcsV_jvQUE0',
+        'pbtmpWAVWZU','pMH2IDVaahY','q0jlEat2sms','tSacs7oXmAc','uXIqukazJ84',
+        'W_kC9CqqvpE','wY5EygdUIsc','X0tSWTaLsUQ','y7OxnGxVGfM',
+        // --- Lofi Fruits ---
+        '1zDUIwfkK7A','22l4l8JL-go','2u82JcZkmmc','4W7a82QnEZU','7eA_BHJSlsE',
+        '7hwSISHWFeY','7pynJSfyVSQ','8stA4bH-LhM','8XFr0Y-XDF8','aC3K-AqUZyo',
+        'AsZw_TtNudk','BLmVzm3Y44Y','BrGKkBgtMio','eBWXFzvDSr0','G8Gvb38eORU',
+        'gawncvuktaI','hvEh9YI1fpw','i-dJBDQtouk','J0GFa37rNlM','JLxfwb-KcLg',
+        'Kl1C2NujJDc','NxMKcxiRhLk','pAPMnY7cQZE','RnEypwmJiaA','TfmECBzmOn4',
+        'tNWyemL1gbw','UcxXKlkqSMM','UZozDPIEjAM','v0GzQaxGAkI','XJPg36CObXM',
     ];
 
     let ytApiReady = false;
     let ytPlayer = null;
-    let currentPlaylistIndex = -1;
+    let shuffledQueue = [];
+    let currentVideoIndex = -1;
+    let userHasInteracted = false;
 
     // ===== WEB WORKER for accurate background ticking =====
     let timerWorker = null;
@@ -1238,6 +1231,7 @@
     function startTimer() {
         if (state.isAlarming) return;
         ensureAudioReady();
+        requestNotificationPermission();
 
         state.isRunning = true;
         state.isPaused = false;
@@ -1588,71 +1582,94 @@
         } catch(e) { console.warn('Failed to load YouTube API:', e); }
     })();
 
+    // Track user interaction for autoplay policy
+    document.addEventListener('click', function() { userHasInteracted = true; }, { once: true });
+    document.addEventListener('keydown', function() { userHasInteracted = true; }, { once: true });
+    document.addEventListener('touchstart', function() { userHasInteracted = true; }, { once: true });
+
     // Global callback required by YouTube API
     window.onYouTubeIframeAPIReady = function() {
         ytApiReady = true;
-        // If Auto Mix was selected before API loaded
         if (state.musicStation === 'auto' && !ytPlayer) {
             startAutoMix();
         }
     };
 
-    // ===== AUTO MIX =====
-    function getRandomPlaylist() {
-        let idx;
-        do {
-            idx = Math.floor(Math.random() * autoMixPlaylists.length);
-        } while (idx === currentPlaylistIndex && autoMixPlaylists.length > 1);
-        currentPlaylistIndex = idx;
-        return autoMixPlaylists[idx];
+    // ===== AUTO MIX (Individual Video IDs) =====
+    // Fisher-Yates shuffle — creates a new shuffled copy
+    function shuffleArray(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
     }
 
-    function startAutoMix() {
-        if (!ytApiReady) {
-            dom.autoMixStatus.textContent = 'Loading YouTube API...';
-            return;
+    function buildShuffledQueue() {
+        shuffledQueue = shuffleArray(autoMixVideos);
+        currentVideoIndex = 0;
+    }
+
+    function getNextVideoId() {
+        if (shuffledQueue.length === 0 || currentVideoIndex >= shuffledQueue.length) {
+            buildShuffledQueue(); // reshuffle when exhausted
         }
+        return shuffledQueue[currentVideoIndex++];
+    }
 
-        const playlistId = getRandomPlaylist();
+    function getPrevVideoId() {
+        if (shuffledQueue.length === 0) buildShuffledQueue();
+        currentVideoIndex = Math.max(0, currentVideoIndex - 2);
+        return shuffledQueue[currentVideoIndex++];
+    }
 
-        // Show YT API player, hide regular iframe
-        dom.musicIframe.style.display = 'none';
-        dom.ytApiPlayer.style.display = 'block';
-        dom.musicPlayerWrapper.classList.add('visible');
-        dom.autoMixControls.style.display = 'block';
-        dom.autoMixStatus.textContent = 'Shuffling...';
+    function recreatePlayerDiv() {
+        if (ytPlayer) {
+            try { ytPlayer.destroy(); } catch(e) {}
+            ytPlayer = null;
+        }
+        const oldDiv = document.getElementById('ytApiPlayer');
+        if (oldDiv) oldDiv.remove();
+        const newDiv = document.createElement('div');
+        newDiv.id = 'ytApiPlayer';
+        dom.musicPlayerWrapper.insertBefore(newDiv, dom.musicIframe);
+        dom.ytApiPlayer = newDiv;
+    }
 
+    function loadVideoInPlayer(videoId) {
+        dom.autoMixStatus.textContent = 'Loading...';
         try {
-            if (ytPlayer) {
-                try { ytPlayer.destroy(); } catch(e) {}
-                ytPlayer = null;
-                // Recreate the div (destroy removes it)
-                const newDiv = document.createElement('div');
-                newDiv.id = 'ytApiPlayer';
-                dom.ytApiPlayer.parentNode.insertBefore(newDiv, dom.ytApiPlayer);
-                dom.ytApiPlayer.remove();
-                dom.ytApiPlayer = newDiv;
-            }
-
+            recreatePlayerDiv();
             ytPlayer = new YT.Player('ytApiPlayer', {
                 height: '80',
                 width: '100%',
+                videoId: videoId,
                 playerVars: {
-                    listType: 'playlist',
-                    list: playlistId,
                     autoplay: 1,
-                    loop: 1,
                     controls: 1,
                     modestbranding: 1,
                     rel: 0,
+                    playsinline: 1,
                     origin: window.location.origin,
                 },
                 events: {
                     onReady: function(event) {
                         try {
-                            event.target.setShuffle(true);
+                            // Force autoplay: start muted if no interaction yet, unmute after
+                            if (!userHasInteracted) {
+                                event.target.mute();
+                            }
                             event.target.playVideo();
-                            dom.autoMixStatus.textContent = 'Playing shuffled';
+                            dom.autoMixStatus.textContent = 'Playing';
+                            // Try to unmute after a short delay (user gesture may have happened)
+                            setTimeout(function() {
+                                try {
+                                    if (userHasInteracted && ytPlayer && ytPlayer.isMuted && ytPlayer.isMuted()) {
+                                        ytPlayer.unMute();
+                                    }
+                                } catch(e) {}
+                            }, 1500);
                         } catch(e) {
                             dom.autoMixStatus.textContent = 'Playing...';
                         }
@@ -1660,44 +1677,59 @@
                     onStateChange: function(event) {
                         try {
                             if (event.data === YT.PlayerState.ENDED) {
-                                // If entire playlist ended, switch to another random playlist
-                                const next = getRandomPlaylist();
-                                event.target.loadPlaylist({
-                                    listType: 'playlist',
-                                    list: next,
-                                    index: 0,
-                                    startSeconds: 0,
-                                });
-                                setTimeout(() => {
-                                    try { event.target.setShuffle(true); } catch(e) {}
-                                }, 1000);
+                                // Auto-advance to next video
+                                playNextAutoMix();
                             } else if (event.data === YT.PlayerState.PLAYING) {
-                                dom.autoMixStatus.textContent = 'Playing shuffled';
+                                dom.autoMixStatus.textContent = 'Playing';
+                                // Unmute if user has interacted
+                                if (userHasInteracted) {
+                                    try {
+                                        if (ytPlayer && ytPlayer.isMuted && ytPlayer.isMuted()) {
+                                            ytPlayer.unMute();
+                                        }
+                                    } catch(e) {}
+                                }
                             }
                         } catch(e) {}
                     },
                     onError: function(event) {
                         // Error codes: 2=invalid param, 5=html5 err, 100=not found, 101/150=not embeddable
-                        console.warn('YT Player error:', event.data);
-                        try {
-                            // Skip to next video in playlist
-                            if (ytPlayer && ytPlayer.nextVideo) {
-                                ytPlayer.nextVideo();
-                            } else {
-                                // Try a different playlist entirely
-                                dom.autoMixStatus.textContent = 'Switching playlist...';
-                                setTimeout(() => startAutoMix(), 1500);
-                            }
-                        } catch(e) {
-                            dom.autoMixStatus.textContent = 'Error - try another mode';
-                        }
+                        console.warn('YT error code', event.data, 'for video', videoId, '- skipping');
+                        dom.autoMixStatus.textContent = 'Skipping unavailable...';
+                        setTimeout(function() { playNextAutoMix(); }, 800);
                     }
                 }
             });
         } catch(e) {
-            console.error('Failed to create YT player:', e);
-            dom.autoMixStatus.textContent = 'Error loading player';
+            console.warn('Failed to create YT player, skipping:', e);
+            dom.autoMixStatus.textContent = 'Skipping...';
+            setTimeout(function() { playNextAutoMix(); }, 800);
         }
+    }
+
+    function playNextAutoMix() {
+        const videoId = getNextVideoId();
+        loadVideoInPlayer(videoId);
+    }
+
+    function playPrevAutoMix() {
+        const videoId = getPrevVideoId();
+        loadVideoInPlayer(videoId);
+    }
+
+    function startAutoMix() {
+        dom.musicIframe.style.display = 'none';
+        dom.musicPlayerWrapper.classList.add('visible');
+        dom.autoMixControls.style.display = 'block';
+
+        if (!ytApiReady) {
+            dom.autoMixStatus.textContent = 'Loading YouTube API...';
+            return;
+        }
+
+        // Build shuffled queue if empty
+        if (shuffledQueue.length === 0) buildShuffledQueue();
+        playNextAutoMix();
     }
 
     function stopAutoMix() {
@@ -1709,15 +1741,13 @@
         } catch(e) {}
         ytPlayer = null;
 
-        // Recreate the ytApiPlayer div
         try {
-            const container = dom.musicPlayerWrapper;
             const oldDiv = document.getElementById('ytApiPlayer');
             if (oldDiv) oldDiv.remove();
             const newDiv = document.createElement('div');
             newDiv.id = 'ytApiPlayer';
             newDiv.style.display = 'none';
-            container.insertBefore(newDiv, dom.musicIframe);
+            dom.musicPlayerWrapper.insertBefore(newDiv, dom.musicIframe);
             dom.ytApiPlayer = newDiv;
         } catch(e) {}
 
@@ -1726,15 +1756,11 @@
     }
 
     window.nextTrack = function() {
-        try {
-            if (ytPlayer && ytPlayer.nextVideo) ytPlayer.nextVideo();
-        } catch(e) {}
+        if (state.musicStation === 'auto') playNextAutoMix();
     };
 
     window.prevTrack = function() {
-        try {
-            if (ytPlayer && ytPlayer.previousVideo) ytPlayer.previousVideo();
-        } catch(e) {}
+        if (state.musicStation === 'auto') playPrevAutoMix();
     };
 
     // ===== MUSIC MODE SWITCHING =====
@@ -1887,8 +1913,6 @@
             document.getElementById('musicFileWarning').style.display = 'block';
         }
 
-        // Request notification permission (for cross-tab alarm alerts)
-        requestNotificationPermission();
     }
 
     init();
@@ -1897,3 +1921,4 @@
 </script>
 </body>
 </html>
+
