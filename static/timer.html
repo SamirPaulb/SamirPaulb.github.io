@@ -804,12 +804,17 @@
         }
 
         #ytApiPlayer {
-            border-radius: 10px;
+            width: 1px;
+            height: 1px;
             overflow: hidden;
+            opacity: 0;
+            position: absolute;
+            pointer-events: none;
         }
 
         #ytApiPlayer iframe {
-            border-radius: 10px;
+            width: 1px;
+            height: 1px;
         }
 
         /* hidden utility */
@@ -1633,12 +1638,12 @@
         try {
             recreatePlayerDiv();
             ytPlayer = new YT.Player('ytApiPlayer', {
-                height: '80',
-                width: '100%',
+                height: '1',
+                width: '1',
                 videoId: videoId,
                 playerVars: {
                     autoplay: 1,
-                    controls: 1,
+                    controls: 0,
                     modestbranding: 1,
                     rel: 0,
                     playsinline: 1,
@@ -1648,7 +1653,12 @@
                     onReady: function(event) {
                         try {
                             // Force lowest quality — we only need audio
-                            try { event.target.setPlaybackQuality('tiny'); } catch(e) {}
+                            try {
+                                if (event.target.setPlaybackQualityRange) {
+                                    event.target.setPlaybackQualityRange('tiny', 'tiny');
+                                }
+                                event.target.setPlaybackQuality('tiny');
+                            } catch(e) {}
                             // Force autoplay: start muted if no interaction yet, unmute after
                             if (!userHasInteracted) {
                                 event.target.mute();
@@ -1670,7 +1680,12 @@
                     onStateChange: function(event) {
                         try {
                             // Keep quality at lowest on every state change
-                            try { event.target.setPlaybackQuality('tiny'); } catch(e) {}
+                            try {
+                                if (event.target.setPlaybackQualityRange) {
+                                    event.target.setPlaybackQualityRange('tiny', 'tiny');
+                                }
+                                event.target.setPlaybackQuality('tiny');
+                            } catch(e) {}
                             if (event.data === YT.PlayerState.ENDED) {
                                 // Auto-advance to next video
                                 playNextAutoMix();
