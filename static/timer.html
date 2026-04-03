@@ -189,7 +189,7 @@
             position: relative;
         }
 
-        /* Animated gradient background */
+        /* Gradient background — static (no animation = no repaints) */
         body::before {
             content: '';
             position: fixed;
@@ -198,18 +198,12 @@
                 radial-gradient(ellipse at 20% 50%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
                 radial-gradient(ellipse at 80% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
                 radial-gradient(ellipse at 50% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
-            animation: bgPulse 12s ease-in-out infinite alternate;
             z-index: 0;
             pointer-events: none;
+            will-change: auto;
         }
 
-        @keyframes bgPulse {
-            0% { opacity: 0.6; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.05); }
-            100% { opacity: 0.7; transform: scale(1); }
-        }
-
-        /* Stars / Particles */
+        /* Stars / Particles — static (no animation = no GPU compositing) */
         body::after {
             content: '';
             position: fixed;
@@ -225,14 +219,10 @@
                 radial-gradient(1.5px 1.5px at 90% 60%, rgba(255,255,255,0.12), transparent),
                 radial-gradient(1px 1px at 60% 40%, rgba(255,255,255,0.06), transparent),
                 radial-gradient(1px 1px at 5% 80%, rgba(255,255,255,0.1), transparent);
+            opacity: 0.75;
             z-index: 0;
             pointer-events: none;
-            animation: twinkle 8s ease-in-out infinite alternate;
-        }
-
-        @keyframes twinkle {
-            0% { opacity: 0.5; }
-            100% { opacity: 1; }
+            will-change: auto;
         }
 
         .app {
@@ -276,8 +266,8 @@
         .card {
             width: 100%;
             background: var(--bg-card);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--border);
             border-radius: var(--radius);
             padding: 28px 24px;
@@ -617,8 +607,8 @@
         .music-card {
             width: 100%;
             background: var(--bg-card);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--border);
             border-radius: var(--radius);
             padding: 20px;
@@ -1043,12 +1033,13 @@
     };
 
     // ===== YOUTUBE LIVE CHANNEL SOURCES =====
+    // vq=tiny forces 144p (lowest quality) — we only need audio
     const liveSources = {
-        lofi:       'https://www.youtube.com/embed/jfKfPfyJRdk?si=1&autoplay=1',
-        cafe:       'https://www.youtube.com/embed/DSGyEsJ17cI?si=1&autoplay=1',
-        chillhop:   'https://www.youtube.com/embed/5yx6BWlEVcY?si=1&autoplay=1',
-        relaxdaily: 'https://www.youtube.com/embed/Dx5qFachd3A?si=1&autoplay=1',
-        lofisleep:  'https://www.youtube.com/embed/rUxyKA_-grg?si=1&autoplay=1',
+        lofi:       'https://www.youtube.com/embed/jfKfPfyJRdk?si=1&autoplay=1&vq=tiny',
+        cafe:       'https://www.youtube.com/embed/DSGyEsJ17cI?si=1&autoplay=1&vq=tiny',
+        chillhop:   'https://www.youtube.com/embed/5yx6BWlEVcY?si=1&autoplay=1&vq=tiny',
+        relaxdaily: 'https://www.youtube.com/embed/Dx5qFachd3A?si=1&autoplay=1&vq=tiny',
+        lofisleep:  'https://www.youtube.com/embed/rUxyKA_-grg?si=1&autoplay=1&vq=tiny',
         soundcloud: 'https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/lofi_girl&auto_play=true&show_artwork=true&visual=true&color=%238b5cf6',
     };
 
@@ -1656,6 +1647,8 @@
                 events: {
                     onReady: function(event) {
                         try {
+                            // Force lowest quality — we only need audio
+                            try { event.target.setPlaybackQuality('tiny'); } catch(e) {}
                             // Force autoplay: start muted if no interaction yet, unmute after
                             if (!userHasInteracted) {
                                 event.target.mute();
@@ -1676,6 +1669,8 @@
                     },
                     onStateChange: function(event) {
                         try {
+                            // Keep quality at lowest on every state change
+                            try { event.target.setPlaybackQuality('tiny'); } catch(e) {}
                             if (event.data === YT.PlayerState.ENDED) {
                                 // Auto-advance to next video
                                 playNextAutoMix();
@@ -1825,17 +1820,17 @@
             const scMatch = raw.match(/soundcloud\.com\/([\w-]+)/);
 
             if (ytWatch) {
-                url = `https://www.youtube.com/embed/${ytWatch[1]}?si=1&autoplay=1`;
+                url = `https://www.youtube.com/embed/${ytWatch[1]}?si=1&autoplay=1&vq=tiny`;
             } else if (ytPlaylist) {
-                url = `https://www.youtube.com/embed/videoseries?list=${ytPlaylist[1]}&autoplay=1`;
+                url = `https://www.youtube.com/embed/videoseries?list=${ytPlaylist[1]}&autoplay=1&vq=tiny`;
             } else if (ytChannel) {
                 // Channel live stream embed
-                url = `https://www.youtube.com/embed/live_stream?channel=${ytChannel[1]}&autoplay=1`;
+                url = `https://www.youtube.com/embed/live_stream?channel=${ytChannel[1]}&autoplay=1&vq=tiny`;
             } else if (scMatch) {
                 url = `https://w.soundcloud.com/player/?url=${encodeURIComponent(raw)}&auto_play=true&visual=true&color=%238b5cf6`;
             } else if (/^[\w-]{11}$/.test(raw)) {
                 // Just a video ID like "jfKfPfyJRdk"
-                url = `https://www.youtube.com/embed/${raw}?si=1&autoplay=1`;
+                url = `https://www.youtube.com/embed/${raw}?si=1&autoplay=1&vq=tiny`;
             }
             // If already an embed URL, use as-is
         } catch(e) {
