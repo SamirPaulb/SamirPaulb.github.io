@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
     Pomodoro Timer - Focus Timer with Lo-fi Music & Screen Wake Lock
-    Copyright (c) 2026 Samir Paul. All rights reserved.
+    Copyright © 2026 Samir Paul. All rights reserved.
 
     AUDIO & VIDEO CONTENT DISCLAIMER:
     This application does NOT store, host, or redistribute any audio or video content.
@@ -15,6 +15,8 @@
     THIRD-PARTY SERVICES:
     - YouTube IFrame Player API (https://developers.google.com/youtube/iframe_api_reference)
     - SoundCloud Widget API (https://developers.soundcloud.com/docs/api/html5-widget)
+    - HLS.js (https://github.com/video-dev/hls.js) - Apache 2.0 License
+    - All India Radio / Akashvani (https://akashvani.gov.in) - Prasar Bharati
     - NoSleep.js (https://github.com/richtr/NoSleep.js) - MIT License
     - Google Fonts (Inter, JetBrains Mono)
 -->
@@ -25,8 +27,8 @@
 
     <!-- Primary SEO Meta Tags -->
     <title>Pomodoro Timer - Focus Timer with Lo-fi Music, Auto Shuffle & Screen Wake Lock</title>
-    <meta name="description" content="Free aesthetic Pomodoro Timer with 2000+ shuffled lo-fi songs, YouTube live radio, SoundCloud integration, screen wake lock, customizable intervals, and browser notifications. Stay focused and study better. No sign-up required.">
-    <meta name="keywords" content="pomodoro timer, focus timer, study timer, lofi music timer, pomodoro technique, productivity timer, screen wake lock, no sleep timer, online timer, study with me, aesthetic timer, concentration timer, work timer, tomato timer, lofi girl, chillhop, study music, focus music, auto shuffle music, youtube lofi radio, soundcloud lofi, study timer with music, free pomodoro, pomodoro online, pomodoro app, study session timer, exam study timer, homework timer, deep focus timer, coding timer, reading timer, meditation timer, break timer, 25 minute timer, custom timer, countdown timer, aesthetic study, dark mode timer, ambient music study, lo-fi beats, chill beats, jazz study music, study playlist, background music for studying, keep screen awake, prevent screen sleep, screen on timer, no sleep mode, productivity app, time management tool, study tool, focus app, student productivity, work from home timer, remote work timer, pomodoro clock, interval timer, task timer">
+    <meta name="description" content="Free aesthetic Pomodoro Timer with 2000+ shuffled lo-fi songs, YouTube live radio, All India Radio (Akashvani), SoundCloud integration, screen wake lock, customizable intervals, and browser notifications. Stay focused and study better. No sign-up required.">
+    <meta name="keywords" content="pomodoro timer, focus timer, study timer, lofi music timer, pomodoro technique, productivity timer, screen wake lock, no sleep timer, online timer, study with me, aesthetic timer, concentration timer, work timer, tomato timer, lofi girl, chillhop, study music, focus music, auto shuffle music, youtube lofi radio, soundcloud lofi, all india radio, akashvani, vividh bharati, raagam, indian radio online, study timer with music, free pomodoro, pomodoro online, pomodoro app, study session timer, exam study timer, homework timer, deep focus timer, coding timer, reading timer, meditation timer, break timer, 25 minute timer, custom timer, countdown timer, aesthetic study, dark mode timer, ambient music study, lo-fi beats, chill beats, jazz study music, study playlist, background music for studying, keep screen awake, prevent screen sleep, screen on timer, no sleep mode, productivity app, time management tool, study tool, focus app, student productivity, work from home timer, remote work timer, pomodoro clock, interval timer, task timer">
     <meta name="author" content="Samir Paul">
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
     <link rel="canonical" href="/timer">
@@ -35,7 +37,7 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="/timer">
     <meta property="og:title" content="Pomodoro Timer - Focus Timer with Lo-fi Music, Auto Shuffle & Screen Wake Lock">
-    <meta property="og:description" content="Free aesthetic Pomodoro Timer with 2000+ shuffled lo-fi songs, YouTube live radio, SoundCloud, screen wake lock, and customizable intervals. Boost productivity.">
+    <meta property="og:description" content="Free aesthetic Pomodoro Timer with 2000+ shuffled lo-fi songs, YouTube live radio, All India Radio (Akashvani), SoundCloud, screen wake lock, and customizable intervals. Boost productivity.">
     <meta property="og:site_name" content="Samir Paul - Pomodoro Timer">
     <meta property="og:locale" content="en_US">
 
@@ -43,7 +45,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="/timer">
     <meta name="twitter:title" content="Pomodoro Timer - Focus Timer with Lo-fi Music, Auto Shuffle & Screen Wake Lock">
-    <meta name="twitter:description" content="Free aesthetic Pomodoro Timer with 2000+ shuffled lo-fi songs, YouTube live radio, SoundCloud, screen wake lock, and customizable intervals.">
+    <meta name="twitter:description" content="Free aesthetic Pomodoro Timer with 2000+ shuffled lo-fi songs, YouTube live radio, All India Radio, SoundCloud, screen wake lock, and customizable intervals.">
     <meta name="twitter:creator" content="@SamirPaulb">
 
     <!-- Additional SEO -->
@@ -81,6 +83,7 @@
             "Customizable Pomodoro intervals (1m to 2h+)",
             "Auto Mix: 2000+ lo-fi songs shuffled endlessly",
             "YouTube Live radio (Lofi Girl, Chillhop, Cafe BGM)",
+            "All India Radio (Vividh Bharati, Raagam, Aaradhana, AIR News)",
             "SoundCloud integration",
             "Screen wake lock (no sleep mode)",
             "Alarm with increasing urgency and auto-reset",
@@ -120,6 +123,14 @@
             },
             {
                 "@type": "Question",
+                "name": "What radio stations are available?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "The timer includes YouTube Live channels (Lofi Girl, Chillhop, Cafe Music) and All India Radio (Akashvani) stations including Vividh Bharati, Raagam, Akashvani Aaradhana, and AIR News. You can also paste any YouTube or SoundCloud URL."
+                }
+            },
+            {
+                "@type": "Question",
                 "name": "Is this timer free to use?",
                 "acceptedAnswer": {
                     "@type": "Answer",
@@ -149,6 +160,8 @@
 
     <!-- NoSleep.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/nosleep.js@0.12.0/dist/NoSleep.min.js"></script>
+    <!-- HLS.js for Akashvani radio streams -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
 
     <style>
         *, *::before, *::after {
@@ -906,6 +919,7 @@
                 <option value="off">Off</option>
                 <option value="auto">Auto Mix</option>
                 <option value="live">YouTube Live</option>
+                <option value="radio">Radio</option>
             </select>
         </div>
 
@@ -923,10 +937,9 @@
             <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
                 <select class="music-select" id="liveChannelSelect" onchange="changeLiveChannel()" style="flex:1; min-width:140px;">
                     <option value="lofi">Lofi Girl</option>
-                    <option value="cafe">Cafe Music BGM</option>
+                    <option value="cafe">Cafe Jazz Radio</option>
                     <option value="chillhop">Chillhop Music</option>
-                    <option value="relaxdaily">relaxdaily</option>
-                    <option value="lofisleep">Lofi Girl Sleep</option>
+                    <option value="cafebgm">Cafe Music BGM</option>
                     <option value="soundcloud">SoundCloud Lofi</option>
                 </select>
             </div>
@@ -935,6 +948,19 @@
                        placeholder="or paste URL / video ID / @channel"
                        style="flex:1; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; padding:7px 10px; color:var(--text-primary); font-size:0.78rem; outline:none; font-family:'Inter',sans-serif;">
                 <button onclick="applyCustomUrl()" style="background:var(--accent); color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:0.78rem; font-weight:600; cursor:pointer; white-space:nowrap;">Play</button>
+            </div>
+        </div>
+
+        <!-- Radio: Channel selector -->
+        <div id="radioChannelRow" style="display:none; margin-top:10px;">
+            <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+                <select class="music-select" id="radioChannelSelect" onchange="changeRadioChannel()" style="flex:1; min-width:140px;">
+                    <option value="vividh">Vividh Bharati</option>
+                    <option value="raagam">Raagam</option>
+                    <option value="aaradhana">Akashvani Aaradhana</option>
+                    <option value="newsonair">News on AIR</option>
+                    <option value="airnews">AIR News 24x7</option>
+                </select>
             </div>
         </div>
 
@@ -1003,6 +1029,7 @@
         selectedPreset: 25,
         musicStation: 'off',
         liveChannel: 'lofi',
+        radioChannel: 'vividh',
         customMusicUrl: '',
         // Timestamp-based accuracy
         timerStartedAt: null,    // Date.now() when timer was started/resumed
@@ -1023,6 +1050,8 @@
         musicMode: document.getElementById('musicMode'),
         liveChannelSelect: document.getElementById('liveChannelSelect'),
         liveChannelRow: document.getElementById('liveChannelRow'),
+        radioChannelSelect: document.getElementById('radioChannelSelect'),
+        radioChannelRow: document.getElementById('radioChannelRow'),
         autoMixControls: document.getElementById('autoMixControls'),
         autoMixStatus: document.getElementById('autoMixStatus'),
         musicPlayerWrapper: document.getElementById('musicPlayerWrapper'),
@@ -1036,13 +1065,23 @@
 
     // ===== YOUTUBE LIVE CHANNEL SOURCES =====
     // vq=tiny forces 144p (lowest quality) — we only need audio
-    const liveSources = {
-        lofi:       'https://www.youtube.com/embed/jfKfPfyJRdk?si=1&autoplay=1&vq=tiny',
-        cafe:       'https://www.youtube.com/embed/DSGyEsJ17cI?si=1&autoplay=1&vq=tiny',
-        chillhop:   'https://www.youtube.com/embed/5yx6BWlEVcY?si=1&autoplay=1&vq=tiny',
-        relaxdaily: 'https://www.youtube.com/embed/Dx5qFachd3A?si=1&autoplay=1&vq=tiny',
-        lofisleep:  'https://www.youtube.com/embed/rUxyKA_-grg?si=1&autoplay=1&vq=tiny',
-        soundcloud: 'https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/lofi_girl&auto_play=true&show_artwork=true&visual=true&color=%238b5cf6',
+    // YouTube live channels — uses channel ID (fixed) not video ID (changes per stream)
+    // Format: embed/live_stream?channel=UC... auto-resolves to current live stream
+    const liveChannels = {
+        lofi:       { channelId: 'UCSJ4gkVC6NrvII8umztf0Ow' },  // Lofi Girl
+        cafe:       { channelId: 'UCJhjE7wbdYAae1G25m0tHAA' },  // Cafe Music BGM (Jazz)
+        chillhop:   { channelId: 'UCOxqgCwgOqC2lMqC5PYz_Dg' },  // Chillhop Music
+        cafebgm:    { channelId: 'UCAayZDDj3uom0QpSJiwLoUw' },  // Cafe Music BGM
+        soundcloud: { src: 'https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/lofi_girl&auto_play=true&show_artwork=true&visual=true&color=%238b5cf6' },
+    };
+
+    // Akashvani (All India Radio) national channels — HLS audio streams
+    const radioChannels = {
+        airnews:   'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio002/hlspbaudio002_Auto.m3u8',   // AIR Live News 24x7
+        newsonair: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio233/hlspbaudio233_Auto.m3u8',   // News on AIR (newsonair.gov.in)
+        vividh:    'https://air.pc.cdn.bitgravity.com/air/live/pbaudio001/playlist.m3u8',                        // Vividh Bharati
+        raagam:    'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudioragam/hlspbaudioragam_Auto.m3u8', // Raagam
+        aaradhana: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio003/hlspbaudio003_Auto.m3u8',   // Akashvani Aaradhana
     };
 
     // ===== AUTO MIX: Individual lofi video IDs (185+ videos, ~280hrs) =====
@@ -1119,9 +1158,43 @@
 
     let ytApiReady = false;
     let ytPlayer = null;
+    let hlsInstance = null;
+    let hlsAudioEl = null;
     let shuffledQueue = [];
     let currentVideoIndex = -1;
     let userHasInteracted = false;
+    let qualityEnforcerInterval = null;
+
+    function forceLowestQuality(player) {
+        try {
+            if (!player || typeof player.getAvailableQualityLevels !== 'function') return;
+            var levels = player.getAvailableQualityLevels();
+            if (levels && levels.length > 0) {
+                var lowest = levels[levels.length - 1];
+                player.setPlaybackQuality(lowest);
+            }
+            try { player.setPlaybackQuality('tiny'); } catch(e) {}
+            try {
+                if (player.setPlaybackQualityRange) {
+                    player.setPlaybackQualityRange('tiny', 'tiny');
+                }
+            } catch(e) {}
+        } catch(e) {}
+    }
+
+    function startQualityEnforcer() {
+        stopQualityEnforcer();
+        qualityEnforcerInterval = setInterval(function() {
+            if (ytPlayer) forceLowestQuality(ytPlayer);
+        }, 3000);
+    }
+
+    function stopQualityEnforcer() {
+        if (qualityEnforcerInterval) {
+            clearInterval(qualityEnforcerInterval);
+            qualityEnforcerInterval = null;
+        }
+    }
 
     // ===== WEB WORKER for accurate background ticking =====
     let timerWorker = null;
@@ -1189,6 +1262,9 @@
             if (data.liveChannel) {
                 state.liveChannel = data.liveChannel;
             }
+            if (data.radioChannel) {
+                state.radioChannel = data.radioChannel;
+            }
             if (data.customMusicUrl) {
                 state.customMusicUrl = data.customMusicUrl;
             }
@@ -1202,6 +1278,7 @@
                 sessionsCompleted: state.sessionsCompleted,
                 musicStation: state.musicStation,
                 liveChannel: state.liveChannel,
+                radioChannel: state.radioChannel,
                 customMusicUrl: state.customMusicUrl,
             }));
         } catch(e) { /* ignore */ }
@@ -1603,8 +1680,9 @@
     // Global callback required by YouTube API
     window.onYouTubeIframeAPIReady = function() {
         ytApiReady = true;
-        if (state.musicStation === 'auto' && !ytPlayer) {
-            startAutoMix();
+        // Resume any YouTube-based mode that was waiting for the API
+        if (!ytPlayer && (state.musicStation === 'auto' || state.musicStation === 'live')) {
+            changeMusicMode();
         }
     };
 
@@ -1664,25 +1742,19 @@
                     modestbranding: 1,
                     rel: 0,
                     playsinline: 1,
+                    vq: 'tiny',
                     origin: window.location.origin,
                 },
                 events: {
                     onReady: function(event) {
                         try {
-                            // Force lowest quality — we only need audio
-                            try {
-                                if (event.target.setPlaybackQualityRange) {
-                                    event.target.setPlaybackQualityRange('tiny', 'tiny');
-                                }
-                                event.target.setPlaybackQuality('tiny');
-                            } catch(e) {}
-                            // Force autoplay: start muted if no interaction yet, unmute after
+                            forceLowestQuality(event.target);
+                            startQualityEnforcer();
                             if (!userHasInteracted) {
                                 event.target.mute();
                             }
                             event.target.playVideo();
                             dom.autoMixStatus.textContent = 'Playing';
-                            // Try to unmute after a short delay (user gesture may have happened)
                             setTimeout(function() {
                                 try {
                                     if (userHasInteracted && ytPlayer && ytPlayer.isMuted && ytPlayer.isMuted()) {
@@ -1696,19 +1768,11 @@
                     },
                     onStateChange: function(event) {
                         try {
-                            // Keep quality at lowest on every state change
-                            try {
-                                if (event.target.setPlaybackQualityRange) {
-                                    event.target.setPlaybackQualityRange('tiny', 'tiny');
-                                }
-                                event.target.setPlaybackQuality('tiny');
-                            } catch(e) {}
-                            if (event.data === YT.PlayerState.ENDED) {
-                                // Auto-advance to next video
+                            forceLowestQuality(event.target);
+                            if (event.data === YT.PlayerState.ENDED && state.musicStation === 'auto') {
                                 playNextAutoMix();
                             } else if (event.data === YT.PlayerState.PLAYING) {
                                 dom.autoMixStatus.textContent = 'Playing';
-                                // Unmute if user has interacted
                                 if (userHasInteracted) {
                                     try {
                                         if (ytPlayer && ytPlayer.isMuted && ytPlayer.isMuted()) {
@@ -1731,6 +1795,146 @@
             console.warn('Failed to create YT player, skipping:', e);
             dom.autoMixStatus.textContent = 'Skipping...';
             setTimeout(function() { playNextAutoMix(); }, 800);
+        }
+    }
+
+    function stopHlsRadio() {
+        if (hlsInstance) {
+            hlsInstance.destroy();
+            hlsInstance = null;
+        }
+        if (hlsAudioEl) {
+            hlsAudioEl.pause();
+            hlsAudioEl.remove();
+            hlsAudioEl = null;
+        }
+    }
+
+    function loadHlsRadioInPlayer(hlsUrl) {
+        stopAutoMix();
+        stopHlsRadio();
+        dom.autoMixControls.style.display = 'block';
+
+        // Create audio element styled to fit in the player area
+        var audio = document.createElement('audio');
+        audio.id = 'hlsRadioPlayer';
+        audio.controls = true;
+        audio.autoplay = true;
+        audio.style.width = '100%';
+        audio.style.height = '40px';
+        audio.style.display = 'block';
+        audio.style.borderRadius = '8px';
+
+        // Insert above the music iframe
+        dom.musicPlayerWrapper.insertBefore(audio, dom.musicIframe);
+        dom.musicIframe.style.display = 'none';
+        dom.musicIframe.src = '';
+        hlsAudioEl = audio;
+
+        if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+            hlsInstance = new Hls();
+            hlsInstance.loadSource(hlsUrl);
+            hlsInstance.attachMedia(audio);
+            hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+                audio.play().catch(function() {});
+            });
+            hlsInstance.on(Hls.Events.ERROR, function(event, data) {
+                if (data.fatal) {
+                    console.warn('HLS fatal error:', data.type);
+                    dom.autoMixStatus.textContent = 'Stream error';
+                    stopHlsRadio();
+                }
+            });
+        } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+            // Safari native HLS
+            audio.src = hlsUrl;
+            audio.play().catch(function() {});
+        } else {
+            dom.autoMixStatus.textContent = 'HLS not supported';
+            return;
+        }
+
+        dom.autoMixStatus.textContent = 'Radio Live';
+        dom.musicPlayerWrapper.classList.add('visible');
+    }
+
+    function loadLiveChannelInPlayer(channelId) {
+        dom.autoMixControls.style.display = 'block';
+        if (!ytApiReady) {
+            dom.autoMixStatus.textContent = 'Waiting for player...';
+            return;
+        }
+        dom.autoMixStatus.textContent = 'Loading live...';
+        try {
+            // Clean up existing player
+            try {
+                if (ytPlayer) { ytPlayer.stopVideo(); ytPlayer.destroy(); }
+            } catch(e) {}
+            ytPlayer = null;
+            stopQualityEnforcer();
+
+            // Remove old player element
+            var oldEl = document.getElementById('ytApiPlayer');
+            if (oldEl) oldEl.remove();
+
+            // Create iframe for live stream with enablejsapi for API control
+            var iframe = document.createElement('iframe');
+            iframe.id = 'ytApiPlayer';
+            iframe.width = '100%';
+            iframe.height = '80';
+            iframe.style.border = 'none';
+            iframe.style.display = 'block';
+            iframe.allow = 'autoplay; encrypted-media';
+            iframe.src = 'https://www.youtube.com/embed/live_stream?channel=' + channelId +
+                '&enablejsapi=1&autoplay=1&vq=tiny&origin=' + window.location.origin;
+            dom.musicPlayerWrapper.insertBefore(iframe, dom.musicIframe);
+
+            dom.musicIframe.style.display = 'none';
+            dom.musicIframe.src = '';
+
+            // Wrap with YT.Player API for quality enforcement
+            ytPlayer = new YT.Player('ytApiPlayer', {
+                events: {
+                    onReady: function(event) {
+                        try {
+                            forceLowestQuality(event.target);
+                            startQualityEnforcer();
+                            if (!userHasInteracted) event.target.mute();
+                            dom.autoMixStatus.textContent = 'Live';
+                            setTimeout(function() {
+                                try {
+                                    if (userHasInteracted && ytPlayer && ytPlayer.isMuted && ytPlayer.isMuted()) {
+                                        ytPlayer.unMute();
+                                    }
+                                } catch(e) {}
+                            }, 1500);
+                        } catch(e) {
+                            dom.autoMixStatus.textContent = 'Live...';
+                        }
+                    },
+                    onStateChange: function(event) {
+                        try {
+                            forceLowestQuality(event.target);
+                            if (event.data === YT.PlayerState.PLAYING) {
+                                dom.autoMixStatus.textContent = 'Live';
+                                if (userHasInteracted) {
+                                    try { if (ytPlayer && ytPlayer.isMuted && ytPlayer.isMuted()) ytPlayer.unMute(); } catch(e) {}
+                                }
+                            }
+                        } catch(e) {}
+                    },
+                    onError: function(event) {
+                        console.warn('Live stream error:', event.data, 'for channel', channelId);
+                        dom.autoMixStatus.textContent = 'Stream unavailable';
+                    }
+                }
+            });
+
+            dom.ytApiPlayer = document.getElementById('ytApiPlayer');
+            dom.musicPlayerWrapper.classList.add('visible');
+        } catch(e) {
+            console.warn('Failed to load live channel:', e);
+            dom.autoMixStatus.textContent = 'Error';
         }
     }
 
@@ -1760,6 +1964,8 @@
     }
 
     function stopAutoMix() {
+        stopQualityEnforcer();
+        stopHlsRadio();
         try {
             if (ytPlayer) {
                 ytPlayer.stopVideo();
@@ -1798,9 +2004,11 @@
 
         // Hide everything first
         dom.liveChannelRow.style.display = 'none';
+        dom.radioChannelRow.style.display = 'none';
         dom.autoMixControls.style.display = 'none';
 
         if (mode !== 'auto') stopAutoMix();
+        stopHlsRadio();
 
         if (mode === 'off') {
             dom.musicPlayerWrapper.classList.remove('visible');
@@ -1810,7 +2018,7 @@
         }
 
         if (mode === 'auto') {
-            dom.musicIframe.src = '';  // stop any playing live stream
+            dom.musicIframe.src = '';
             startAutoMix();
             return;
         }
@@ -1820,63 +2028,115 @@
             changeLiveChannel();
             return;
         }
+
+        if (mode === 'radio') {
+            dom.radioChannelRow.style.display = 'block';
+            changeRadioChannel();
+            return;
+        }
     };
 
     window.changeLiveChannel = function() {
-        const channel = dom.liveChannelSelect.value;
+        var channel = dom.liveChannelSelect.value;
         state.liveChannel = channel;
         savePrefs();
 
-        stopAutoMix(); // ensure YT API player is off
-        dom.musicIframe.style.display = 'block';
+        stopAutoMix();
+        dom.autoMixControls.style.display = 'none';
 
-        const src = liveSources[channel];
-        if (src) {
-            dom.musicIframe.src = src;
+        var config = liveChannels[channel];
+        if (!config) return;
+
+        if (config.channelId) {
+            // YouTube channel — use YT.Player API with live_stream embed
+            loadLiveChannelInPlayer(config.channelId);
+        } else if (config.src) {
+            // SoundCloud or other non-YouTube — use iframe
+            dom.musicIframe.style.display = 'block';
+            dom.musicIframe.src = config.src;
             dom.musicPlayerWrapper.classList.add('visible');
         }
     };
 
+    window.changeRadioChannel = function() {
+        var channel = dom.radioChannelSelect.value;
+        state.radioChannel = channel;
+        savePrefs();
+
+        var hlsUrl = radioChannels[channel];
+        if (hlsUrl) {
+            loadHlsRadioInPlayer(hlsUrl);
+        }
+    };
+
     window.applyCustomUrl = function() {
-        const raw = dom.customUrlInput.value.trim();
+        var raw = dom.customUrlInput.value.trim();
         if (!raw) return;
-        let url = raw;
+
+        state.customMusicUrl = raw;
+        savePrefs();
+        stopAutoMix();
+        stopHlsRadio();
+        dom.autoMixControls.style.display = 'none';
 
         try {
             // youtube.com/watch?v=ID or youtu.be/ID
-            const ytWatch = raw.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+            var ytWatch = raw.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+            // youtube.com/channel/UCxxxx or youtube.com/channel/UCxxxx/live
+            var ytChannelUrl = raw.match(/youtube\.com\/channel\/(UC[\w-]+)/);
             // youtube.com/playlist?list=ID
-            const ytPlaylist = raw.match(/youtube\.com\/playlist\?list=([\w-]+)/);
-            // @channel or youtube.com/@channel → try channel live
-            const ytChannel = raw.match(/(?:youtube\.com\/)?@([\w.-]+)/);
+            var ytPlaylist = raw.match(/youtube\.com\/playlist\?list=([\w-]+)/);
+            // youtube.com/live/VIDEO_ID
+            var ytLive = raw.match(/youtube\.com\/live\/([\w-]+)/);
+            // @handle or youtube.com/@handle
+            var ytHandle = raw.match(/(?:youtube\.com\/)?@([\w.-]+)/);
             // soundcloud.com/artist
-            const scMatch = raw.match(/soundcloud\.com\/([\w-]+)/);
+            var scMatch = raw.match(/soundcloud\.com\/([\w-]+)/);
 
             if (ytWatch) {
-                url = `https://www.youtube.com/embed/${ytWatch[1]}?si=1&autoplay=1&vq=tiny`;
+                // Video URL → YT.Player API for 144p quality control
+                dom.musicIframe.style.display = 'none';
+                loadVideoInPlayer(ytWatch[1]);
+                dom.musicPlayerWrapper.classList.add('visible');
+            } else if (ytLive) {
+                // youtube.com/live/VIDEO_ID → YT.Player API
+                dom.musicIframe.style.display = 'none';
+                loadVideoInPlayer(ytLive[1]);
+                dom.musicPlayerWrapper.classList.add('visible');
+            } else if (ytChannelUrl) {
+                // Channel URL with UC... ID → live_stream embed with API quality control
+                loadLiveChannelInPlayer(ytChannelUrl[1]);
             } else if (ytPlaylist) {
-                url = `https://www.youtube.com/embed/videoseries?list=${ytPlaylist[1]}&autoplay=1&vq=tiny`;
-            } else if (ytChannel) {
-                // Channel live stream embed
-                url = `https://www.youtube.com/embed/live_stream?channel=${ytChannel[1]}&autoplay=1&vq=tiny`;
+                // Playlist → iframe (API doesn't support playlists directly)
+                dom.musicIframe.style.display = 'block';
+                dom.musicIframe.src = 'https://www.youtube.com/embed/videoseries?list=' + ytPlaylist[1] + '&autoplay=1&vq=tiny';
+                dom.musicPlayerWrapper.classList.add('visible');
+            } else if (ytHandle) {
+                // @handle → try as channel live embed (YouTube may resolve it)
+                loadLiveChannelInPlayer(ytHandle[1]);
             } else if (scMatch) {
-                url = `https://w.soundcloud.com/player/?url=${encodeURIComponent(raw)}&auto_play=true&visual=true&color=%238b5cf6`;
+                dom.musicIframe.style.display = 'block';
+                dom.musicIframe.src = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(raw) + '&auto_play=true&visual=true&color=%238b5cf6';
+                dom.musicPlayerWrapper.classList.add('visible');
+            } else if (/^UC[\w-]{22}$/.test(raw)) {
+                // Bare channel ID (UC + 22 chars) → live_stream embed with API
+                loadLiveChannelInPlayer(raw);
             } else if (/^[\w-]{11}$/.test(raw)) {
-                // Just a video ID like "jfKfPfyJRdk"
-                url = `https://www.youtube.com/embed/${raw}?si=1&autoplay=1&vq=tiny`;
+                // Bare 11-char video ID → YT.Player API for quality control
+                dom.musicIframe.style.display = 'none';
+                loadVideoInPlayer(raw);
+                dom.musicPlayerWrapper.classList.add('visible');
+            } else {
+                // Fallback: use raw URL in iframe as-is
+                dom.musicIframe.style.display = 'block';
+                dom.musicIframe.src = raw;
+                dom.musicPlayerWrapper.classList.add('visible');
             }
-            // If already an embed URL, use as-is
         } catch(e) {
-            // Fallback: use raw URL
+            dom.musicIframe.style.display = 'block';
+            dom.musicIframe.src = raw;
+            dom.musicPlayerWrapper.classList.add('visible');
         }
-
-        state.customMusicUrl = url;
-        savePrefs();
-
-        stopAutoMix();
-        dom.musicIframe.style.display = 'block';
-        dom.musicIframe.src = url;
-        dom.musicPlayerWrapper.classList.add('visible');
     };
 
     // ===== KEYBOARD SHORTCUTS =====
@@ -1920,7 +2180,16 @@
             dom.musicMode.value = state.musicStation;
         }
         if (state.liveChannel) {
+            if (!liveChannels[state.liveChannel]) {
+                state.liveChannel = 'lofi';
+            }
             dom.liveChannelSelect.value = state.liveChannel;
+        }
+        if (state.radioChannel) {
+            if (!radioChannels[state.radioChannel]) {
+                state.radioChannel = 'vividh';
+            }
+            dom.radioChannelSelect.value = state.radioChannel;
         }
 
         if (state.selectedPreset) {
