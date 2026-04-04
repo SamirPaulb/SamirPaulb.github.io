@@ -141,7 +141,7 @@ disableKinds = []
   # ----------------------------------------------------------------------------
   [params.search]
     enable = true
-    # type of search engine ("algolia", "fuse")
+    # type of search engine ("algolia", "fuse", "pagefind")
     type = "fuse"
     # max index length of the chunked content
     contentLength = 4000
@@ -170,6 +170,13 @@ disableKinds = []
       ignoreLocation = false
       useExtendedSearch = false
       ignoreFieldNorm = false
+    [params.search.pagefind]
+      # https://pagefind.app/docs/search-config/#available-options
+      # run `npx pagefind --site $YOUR_PUBLIC_DIR` after site build to create pagefind index
+      termFrequency = 1.0
+      pageLength = 0.75
+      termSimilarity = 1.0
+      termSaturation = 1.4
 
   # ----------------------------------------------------------------------------
   # Image Optimization Configuration (Performance)
@@ -300,7 +307,7 @@ disableKinds = []
   [params.social]
     Linkedin = "samirpaul"
     GitHub = "SamirPaulb"
-    Twitter = "SamirPaulb"
+    X = "SamirPaulb"
     Instagram = "SamirPaulb"
     Facebook = ""
     Telegram = ""
@@ -368,7 +375,8 @@ disableKinds = []
     QQ = ""
     QQGroup = ""
     Email = ""
-    RSS = true # 
+    Bluesky = ""
+    RSS = true
 
   # ----------------------------------------------------------------------------
   # Page Configuration (Default Settings for All Pages)
@@ -456,14 +464,24 @@ disableKinds = []
     [params.page.table]
       # whether to enable sorting in the tables
       sort = true
+    #  Header auto-numbering config
+    [params.page.header]
+      [params.page.header.number]
+        enable = false
+        [params.page.header.number.format]
+          h2 = "{h2} {title}"
+          h3 = "{h2}.{h3} {title}"
+          h4 = "{h2}.{h3}.{h4} {title}"
+          h5 = "{h2}.{h3}.{h4}.{h5} {title}"
+          h6 = "{h2}.{h3}.{h4}.{h5}.{h6} {title}"
     #  Mapbox GL JS config
     [params.page.mapbox]
       # access token of Mapbox GL JS
       accessToken = ""
       # style for the light theme
-      lightStyle = "mapbox://styles/mapbox/light-v9"
+      lightStyle = "mapbox://styles/mapbox/light-v10?optimize=true"
       # style for the dark theme
-      darkStyle = "mapbox://styles/mapbox/dark-v9"
+      darkStyle = "mapbox://styles/mapbox/dark-v10?optimize=true"
       # whether to add NavigationControl
       navigation = true
       # whether to add GeolocateControl
@@ -574,7 +592,7 @@ disableKinds = []
         width = "100%"
         numPosts = 10
         appId = ""
-        languageCode = ""
+        locale = ""
       #  Telegram comments config
       [params.page.comment.telegram]
         enable = false
@@ -632,6 +650,7 @@ disableKinds = []
         dataCategory = ""
         dataCategoryId = "DIC_kwDOQLe9b84CxN4R"
         dataMapping = "pathname"
+        dataStrict = "0"
         dataReactionsEnabled = "1"
         dataEmitMetadata = "1"
         dataInputPosition = "top"
@@ -723,6 +742,7 @@ disableKinds = []
     baidu = ""
     so = "" # 360 search
     sogou = ""
+    naver = ""
 
   # ----------------------------------------------------------------------------
   # Site SEO Configuration (Schema.org)
@@ -767,6 +787,20 @@ disableKinds = []
     #  Cloudflare Analytics
     [params.analytics.cloudflare]
       token = ""
+    #  Splitbee Analytics
+    [params.analytics.splitbee]
+      enable = false
+      No_cookie = true
+      Do_not_track = true
+      data_token = ""
+    #  Matomo Analytics
+    [params.analytics.matomo]
+      enable = false
+      server = ""
+      site_id = 1
+      Track_no_js = true
+      No_cookie = true
+      Do_not_track = true
 
   # ----------------------------------------------------------------------------
   # Cookie Consent Configuration (DISABLED)
@@ -826,6 +860,11 @@ disableKinds = []
     [markup.goldmark.renderer]
       # whether to use HTML tags directly in the document
       unsafe = true
+    [markup.goldmark.extensions.passthrough]
+      enable = true
+    [markup.goldmark.extensions.passthrough.delimiters]
+      block = [['\[', '\]'], ['$$', '$$']]
+      inline = [['\(', '\)']]
   # Table Of Contents settings
   [markup.tableOfContents]
     startLevel = 2
@@ -904,3 +943,4 @@ disableKinds = []
 [taxonomies]
 category = "categories"
 tag = "tags"
+series = "series"
