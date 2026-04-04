@@ -90,7 +90,7 @@ disableKinds = []
   #  DoIt theme version
   version = "1.0.X"
   # website title
-  title = "~samir"
+  title = "Samir's blog"
   # site description
   description = "A place to share learnings, ideas, short notes, guides, and reflections from projects and everyday life, focused on clarity and usefulness. Lessons learned and experiences are distilled into actionable takeaways for curious readers."
   # site keywords
@@ -203,7 +203,7 @@ disableKinds = []
       # URL of the LOGO
       logo = ""
       # title name
-      name = "Samir's blog"
+      name = "~samir"
       # you can add extra information before the name (HTML format is supported), such as icons
       pre = ""
       # you can add extra information after the name (HTML format is supported), such as icons
