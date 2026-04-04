@@ -194,7 +194,7 @@ disableKinds = []
       # you can add extra information before the name (HTML format is supported), such as icons
       pre = ""
       # you can add extra information after the name (HTML format is supported), such as icons
-      post = ""
+      post = "🌱"
       #  whether to use typeit animation for title name
       typeit = false
 
