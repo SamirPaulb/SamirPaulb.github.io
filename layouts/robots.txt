@@ -1,0 +1,194 @@
+# ============================================================
+# ALLOW - Major Search Engine Crawlers (Maximum Visibility)
+# ============================================================
+
+# Google
+User-agent: Googlebot
+Allow: /
+User-agent: Googlebot-Image
+Allow: /
+User-agent: Googlebot-Video
+Allow: /
+User-agent: Googlebot-News
+Allow: /
+User-agent: Storebot-Google
+Allow: /
+
+# Bing / Microsoft
+User-agent: Bingbot
+Allow: /
+User-agent: MSNBot
+Allow: /
+User-agent: BingPreview
+Allow: /
+User-agent: adidxbot
+Allow: /
+
+# Yandex
+User-agent: YandexBot
+Allow: /
+User-agent: YandexImages
+Allow: /
+
+# Baidu
+User-agent: Baiduspider
+Allow: /
+
+# DuckDuckGo
+User-agent: DuckDuckBot
+Allow: /
+
+# Yahoo / Slurp
+User-agent: Slurp
+Allow: /
+
+# Naver (Korean)
+User-agent: Yeti
+Allow: /
+
+# Sogou (Chinese)
+User-agent: Sogou
+Allow: /
+
+# 360 Search (Chinese)
+User-agent: 360Spider
+Allow: /
+
+# Brave Search
+User-agent: BraveSearch
+Allow: /
+
+# Apple / Applebot
+User-agent: Applebot
+Allow: /
+
+# Facebook / Meta (for link previews)
+User-agent: facebookexternalhit
+Allow: /
+
+# Twitter/X (for card previews)
+User-agent: Twitterbot
+Allow: /
+
+# LinkedIn (for link previews)
+User-agent: LinkedInBot
+Allow: /
+
+# Telegram (for link previews)
+User-agent: TelegramBot
+Allow: /
+
+# WhatsApp (for link previews)
+User-agent: WhatsApp
+Allow: /
+
+# Pinterest
+User-agent: Pinterest
+Allow: /
+
+# ============================================================
+# BLOCK - AI Crawlers (Protect content, save bandwidth)
+# ============================================================
+
+# OpenAI
+User-agent: GPTBot
+Disallow: /
+User-agent: ChatGPT-User
+Disallow: /
+
+# Common Crawl (used to train LLMs)
+User-agent: CCBot
+Disallow: /
+
+# Anthropic
+User-agent: anthropic-ai
+Disallow: /
+User-agent: Claude-Web
+Disallow: /
+User-agent: ClaudeBot
+Disallow: /
+
+# Perplexity AI
+User-agent: PerplexityBot
+Disallow: /
+
+# Bytedance
+User-agent: Bytespider
+Disallow: /
+
+# Meta AI
+User-agent: FacebookBot
+Disallow: /
+
+# Cohere
+User-agent: cohere-ai
+Disallow: /
+
+# Amazon
+User-agent: Amazonbot
+Disallow: /
+
+# Apple AI training
+User-agent: Applebot-Extended
+Disallow: /
+
+# Google AI training (not search)
+User-agent: Google-Extended
+Disallow: /
+
+# ============================================================
+# BLOCK - SEO Spam Bots & Scrapers
+# ============================================================
+
+User-agent: MJ12bot
+Disallow: /
+User-agent: AhrefsBot
+Disallow: /
+User-agent: BLEXBot
+Disallow: /
+User-agent: SISTRIX Crawler
+Disallow: /
+User-agent: sistrix
+Disallow: /
+User-agent: 007ac9
+Disallow: /
+User-agent: 007ac9 Crawler
+Disallow: /
+User-agent: UptimeRobot/2.0
+Disallow: /
+User-agent: Ezooms Robot
+Disallow: /
+User-agent: Perl LWP
+Disallow: /
+User-agent: netEstate NE Crawler (+http://www.website-datenbank.de/)
+Disallow: /
+User-agent: WiseGuys Robot
+Disallow: /
+User-agent: Turnitin Robot
+Disallow: /
+User-agent: Heritrix
+Disallow: /
+User-agent: pimonster
+Disallow: /
+User-agent: SurdotlyBot
+Disallow: /
+User-agent: ZoominfoBot
+Disallow: /
+User-agent: SemrushBot
+Disallow: /
+User-agent: DotBot
+Disallow: /
+User-agent: DataForSeoBot
+Disallow: /
+User-agent: PetalBot
+Disallow: /
+
+# ============================================================
+# DEFAULT - Allow all other bots, block /resume
+# ============================================================
+
+User-agent: *
+Allow: /
+Disallow: /resume
+
+Sitemap: {{ "/sitemap.xml" | absURL }}
