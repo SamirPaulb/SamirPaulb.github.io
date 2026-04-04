@@ -6,11 +6,17 @@ languageName = "English"
 defaultContentLanguage = "en"
 timeZone = "Asia/Kolkata"
 
+# Enable emoji shortcodes in content
+enableEmoji = true
+
 # Disable unnecessary language processing for better performance
 hasCJKLanguage = false
 
-# Enable Git info for lastmod dates
-enableGitInfo = false
+# Let Hugo generate robots.txt from template
+enableRobotsTXT = true
+
+# Enable Git info for lastmod dates (improves SEO with accurate lastmod in sitemap)
+enableGitInfo = true
 
 # Performance: Disable unused taxonomy pages
 disableKinds = []
