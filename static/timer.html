@@ -29,7 +29,7 @@
 
     <!-- Primary SEO Meta Tags -->
     <title>Pomodoro Timer - Focus Timer with Lo-fi Music, Radio & Screen Wake Lock</title>
-    <meta name="description" content="Free aesthetic Pomodoro Timer with 300+ shuffled lo-fi songs, All India Radio (Akashvani), BBC Radio, self-healing radio streams, SoundCloud integration, screen wake lock, 7x amplified alarm, customizable intervals, and browser notifications. Stay focused and study better. No sign-up required.">
+    <meta name="description" content="Free aesthetic Pomodoro Timer with 300+ shuffled lo-fi songs, All India Radio (Akashvani), BBC Radio, self-healing radio streams, SoundCloud integration, screen wake lock, 5x amplified alarm, customizable intervals, and browser notifications. Stay focused and study better. No sign-up required.">
     <meta name="keywords" content="pomodoro timer, focus timer, study timer, lofi music timer, pomodoro technique, productivity timer, screen wake lock, no sleep timer, online timer, study with me, aesthetic timer, concentration timer, work timer, lofi girl, chillhop, study music, focus music, auto shuffle music, youtube lofi, soundcloud lofi, all india radio, akashvani, vividh bharati, raagam, fm gold, fm rainbow, bbc radio, bbc world service, indian radio online, internet radio, radio browser, study timer with music, free pomodoro, pomodoro online, pomodoro app, study session timer, exam study timer, homework timer, deep focus timer, coding timer, reading timer, meditation timer, break timer, 25 minute timer, custom timer, countdown timer, aesthetic study, dark mode timer, ambient music study, lo-fi beats, chill beats, jazz study music, study playlist, background music for studying, keep screen awake, prevent screen sleep, screen on timer, no sleep mode, productivity app, time management tool, study tool, focus app, student productivity, work from home timer, remote work timer, pomodoro clock, interval timer, task timer">
     <meta name="author" content="Samir Paul">
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
@@ -948,10 +948,10 @@
                         <option value="raagam">Raagam</option>
                         <option value="aaradhana">Akashvani Aaradhana</option>
                         <option value="fmgold">AIR FM Gold</option>
-                        <option value="fmrainbow">AIR FM Rainbow</option>
-                        <option value="dhwani">AIR Dhwani</option>
                         <option value="newsonair">News on AIR</option>
                         <option value="airnews">AIR News 24x7</option>
+                        <option value="siliguri">Akashvani Siliguri</option>
+                        <option value="bangla">Akashvani Bangla</option>
                     </optgroup>
                     <optgroup label="BBC Radio">
                         <option value="bbcradio1">BBC Radio 1</option>
@@ -1103,8 +1103,8 @@
         raagam:    'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudioragam/hlspbaudioragam_Auto.m3u8', // Raagam
         aaradhana: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio003/hlspbaudio003_Auto.m3u8',   // Akashvani Aaradhana
         fmgold:    'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio008/hlspbaudio008_Auto.m3u8',   // AIR FM Gold (Hindi music)
-        fmrainbow: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio006/hlspbaudio006_Auto.m3u8',   // AIR FM Rainbow (pop/entertainment)
-        dhwani:    'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio005/hlspbaudio005_Auto.m3u8',   // AIR Dhwani (Indian classical)
+        siliguri:      'https://air.pc.cdn.bitgravity.com/air/live/pbaudio164/playlist.m3u8',                    // Akashvani Siliguri (Bengali, West Bengal)
+        bangla:        'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio137/hlspbaudio137_Auto.m3u8', // Akashvani Bangla (Bengali, West Bengal)
         airnews:   'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio002/hlspbaudio002_Auto.m3u8',   // AIR Live News 24x7
         newsonair: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio233/hlspbaudio233_Auto.m3u8',   // News on AIR (newsonair.gov.in)
         // --- BBC (Akamai CDN, worldwide HLS — 128kbps, verified via radio-browser.info) ---
@@ -1120,7 +1120,7 @@
     // Covers ALL stations — Indian, BBC, and any future additions
     const radioSearchNames = {
         vividh: 'Vividh Bharati', raagam: 'Raagam', aaradhana: 'Akashvani Aaradhana',
-        fmgold: 'FM Gold', fmrainbow: 'FM Rainbow', dhwani: 'AIR Dhwani',
+        fmgold: 'FM Gold', siliguri: 'Akashvani Siliguri', bangla: 'Akashvani Bangla',
         airnews: 'All India Radio News', newsonair: 'News on AIR',
         bbcradio1: 'BBC Radio 1', bbcradio2: 'BBC Radio 2', bbcradio3: 'BBC Radio 3',
         bbcradio4: 'BBC Radio 4', bbcworld: 'BBC World Service', bbcasian: 'BBC Asian Network',
@@ -1246,8 +1246,6 @@
                 if (nextUrl) {
                     setRadioCache(channelKey, nextUrl);
                     radioChannels[channelKey] = nextUrl;
-                    console.log('Radio fallback [' + radioBrowserMirrors[mirrorIdx] + ']: ' + channelKey +
-                        ' → ' + nextUrl + ' (saved to localStorage, ' + urls.length + ' alternatives available)');
                     dom.autoMixStatus.textContent = 'Reconnecting\u2026';
                     loadHlsRadioInPlayer(nextUrl, channelKey);
                 } else {
@@ -1676,7 +1674,7 @@
     alarmAudio.volume = 1.0;
     alarmAudio.preload = 'auto';
 
-    // Web Audio API gain node for 3x alarm amplification
+    // Web Audio API gain node for 5x alarm amplification
     var alarmAudioCtx = null;
     var alarmGainNode = null;
     function ensureAlarmGain() {
@@ -1685,7 +1683,7 @@
             alarmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
             var source = alarmAudioCtx.createMediaElementSource(alarmAudio);
             alarmGainNode = alarmAudioCtx.createGain();
-            alarmGainNode.gain.value = 7.0;
+            alarmGainNode.gain.value = 5.0;
             source.connect(alarmGainNode);
             alarmGainNode.connect(alarmAudioCtx.destination);
         } catch(e) {}
@@ -1717,9 +1715,21 @@
         } catch(e) {}
     }
 
+    // Pause background music so alarm is clearly heard, resume on dismiss
+    function pauseBackgroundMusic() {
+        try { if (ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo(); } catch(e) {}
+        try { if (hlsAudioEl && !hlsAudioEl.paused) hlsAudioEl.pause(); } catch(e) {}
+    }
+    function resumeBackgroundMusic() {
+        try { if (ytPlayer && ytPlayer.playVideo && state.musicStation === 'auto') ytPlayer.playVideo(); } catch(e) {}
+        try { if (hlsAudioEl && hlsAudioEl.paused && state.musicStation === 'radio') hlsAudioEl.play(); } catch(e) {}
+    }
+
     function startAlarm() {
         state.isAlarming = true;
         state.alarmStartTime = Date.now();
+
+        pauseBackgroundMusic();
 
         dom.display.classList.add('alarming');
         dom.status.textContent = 'TIME UP!';
@@ -1729,10 +1739,45 @@
         dom.startPauseBtn.textContent = 'Dismiss';
         dom.startPauseBtn.classList.remove('running');
 
+        // Media Session API — lets hardware media keys (Play/Pause, Stop) dismiss alarm
+        // Works on desktop (Chrome/Edge/Firefox) and mobile even when tab is in background
+        setupMediaSessionDismiss();
+
         // Send browser notification (works even in other tabs/apps)
         showNotification();
 
         scheduleNextRing();
+    }
+
+    // ===== MEDIA SESSION API (hardware media key dismiss) =====
+    function setupMediaSessionDismiss() {
+        if (!('mediaSession' in navigator)) return;
+        try {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: 'Pomodoro Timer - Time Up!',
+                artist: 'Press Play/Pause to dismiss',
+            });
+            navigator.mediaSession.playbackState = 'playing';
+            var actions = ['play', 'pause', 'stop', 'nexttrack', 'previoustrack'];
+            for (var i = 0; i < actions.length; i++) {
+                try {
+                    navigator.mediaSession.setActionHandler(actions[i], function() {
+                        if (state.isAlarming) dismissAlarm();
+                    });
+                } catch(e) {}
+            }
+        } catch(e) {}
+    }
+    function clearMediaSessionDismiss() {
+        if (!('mediaSession' in navigator)) return;
+        try {
+            navigator.mediaSession.metadata = null;
+            navigator.mediaSession.playbackState = 'none';
+            var actions = ['play', 'pause', 'stop', 'nexttrack', 'previoustrack'];
+            for (var i = 0; i < actions.length; i++) {
+                try { navigator.mediaSession.setActionHandler(actions[i], null); } catch(e) {}
+            }
+        } catch(e) {}
     }
 
     // ===== BROWSER NOTIFICATIONS (for cross-tab/app alarm) =====
@@ -1802,6 +1847,8 @@
     window.dismissAlarm = function() {
         onTimerEndRunning = false; // reset guard for next session
         stopAlarmCompletely();
+        clearMediaSessionDismiss();
+        resumeBackgroundMusic();
         state.timeRemaining = state.durationSeconds;
         state.isRunning = false;
         state.isPaused = false;
@@ -2339,13 +2386,15 @@
     document.addEventListener('keydown', function(e) {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
 
-        const key = e.key.toLowerCase();
-
-        if (key === 's') {
+        // ANY key dismisses the alarm when it's ringing
+        if (state.isAlarming) {
             e.preventDefault();
-            if (state.isAlarming) dismissAlarm();
+            dismissAlarm();
             return;
         }
+
+        const key = e.key.toLowerCase();
+
         if (key === ' ' || e.code === 'Space') {
             e.preventDefault();
             toggleTimer();
@@ -2358,12 +2407,10 @@
         }
     });
 
-    // ===== MOBILE: Power/volume button dismiss =====
-    // Mobile: dismiss alarm when user presses power/volume button to wake screen
-    // Desktop: do NOT auto-dismiss on tab switch — user must see the alarm banner
-    var isMobileDevice = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    // ===== DISMISS ALARM ON TAB RETURN (all devices) =====
+    // When user switches back to this tab, dismiss the alarm automatically
     document.addEventListener('visibilitychange', function() {
-        if (isMobileDevice && document.visibilityState === 'visible' && state.isAlarming) {
+        if (document.visibilityState === 'visible' && state.isAlarming) {
             dismissAlarm();
         }
     });
