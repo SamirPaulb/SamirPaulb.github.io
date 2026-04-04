@@ -194,7 +194,7 @@ disableKinds = []
       # you can add extra information before the name (HTML format is supported), such as icons
       pre = ""
       # you can add extra information after the name (HTML format is supported), such as icons
-      post = "🌱"
+      post = " 🌱"
       #  whether to use typeit animation for title name
       typeit = false
 
@@ -282,7 +282,7 @@ disableKinds = []
       # whether to show social links
       social = true
       #  disclaimer (HTML format is supported)
-      disclaimer = '<div style="margin-top:1.5rem;max-width:700px;width:100%"><img src="/banner.svg" alt="Decorative banner" loading="lazy" decoding="async" width="701" height="183" style="width:100%;height:auto"></div>'
+      disclaimer = '<style>[theme="dark"] .home-banner-img{filter:invert(1)}</style><div style="margin-top:1.5rem;max-width:700px;width:100%"><img class="home-banner-img" src="/banner.svg" alt="Decorative banner" loading="lazy" decoding="async" width="701" height="183" style="width:100%;height:auto"></div>'
     # Home page posts
     [params.home.posts]
       enable = true
