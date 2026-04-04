@@ -57,7 +57,7 @@
     <meta name="application-name" content="Pomodoro Timer">
 
     <!-- Favicon (inline SVG tomato) -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍅</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏰</text></svg>">
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
@@ -894,26 +894,6 @@
         </div>
     </section>
 
-    <!-- Screen Wake -->
-    <div class="card" style="text-align:center;">
-        <div class="card-title">Screen Wake</div>
-        <div style="display:flex; align-items:center; justify-content:center; gap:12px;">
-            <span style="font-size:1.3rem;">&#9788;</span>
-            <label class="toggle" aria-label="Toggle screen wake lock">
-                <input type="checkbox" id="noSleepToggle" onchange="toggleNoSleep()">
-                <span class="slider"></span>
-            </label>
-            <span class="feature-status" id="noSleepStatus">Off</span>
-        </div>
-        <div class="nosleep-timer-section" id="noSleepTimerSection">
-            <div style="margin-top:10px; display:flex; align-items:center; justify-content:center; gap:8px;">
-                <input type="text" class="nosleep-timer-input" id="noSleepDuration" placeholder="min" aria-label="Wake lock duration in minutes">
-                <span class="nosleep-timer-label">minutes (blank = forever)</span>
-            </div>
-            <div id="noSleepCountdown"></div>
-        </div>
-    </div>
-
     <!-- Music Section -->
     <section class="music-card" aria-label="Background music">
         <div class="music-header">
@@ -923,7 +903,7 @@
             </div>
             <select class="music-select" id="musicMode" onchange="changeMusicMode()">
                 <option value="off">Off</option>
-                <option value="auto">Auto Mix</option>
+                <option value="auto">Lofi AutoMix</option>
                 <!-- <option value="live">YouTube Live</option> -->
                 <option value="radio">Radio</option>
             </select>
@@ -958,7 +938,7 @@
         </div>
 
         <!-- Radio: Channel selector -->
-        <div id="radioChannelRow" style="display:none; margin-top:10px;">
+        <div id="radioChannelRow" style="display:none; margin-top:10px; margin-bottom:8px;">
             <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
                 <select class="music-select" id="radioChannelSelect" onchange="changeRadioChannel()" style="flex:1; min-width:140px;">
                     <option value="vividh">Vividh Bharati</option>
@@ -983,6 +963,26 @@
                     title="Background focus music"></iframe>
         </div>
     </section>
+
+    <!-- Screen Wake -->
+    <div class="card" style="text-align:center;">
+        <div class="card-title">Screen Wake</div>
+        <div style="display:flex; align-items:center; justify-content:center; gap:12px;">
+            <span style="font-size:1.3rem;">&#9788;</span>
+            <label class="toggle" aria-label="Toggle screen wake lock">
+                <input type="checkbox" id="noSleepToggle" onchange="toggleNoSleep()">
+                <span class="slider"></span>
+            </label>
+            <span class="feature-status" id="noSleepStatus">Off</span>
+        </div>
+        <div class="nosleep-timer-section" id="noSleepTimerSection">
+            <div style="margin-top:10px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                <input type="text" class="nosleep-timer-input" id="noSleepDuration" placeholder="min" aria-label="Wake lock duration in minutes">
+                <span class="nosleep-timer-label">minutes (blank = forever)</span>
+            </div>
+            <div id="noSleepCountdown"></div>
+        </div>
+    </div>
 
     <!-- Shortcut Hint -->
     <div class="shortcut-hint">
@@ -1149,7 +1149,6 @@
         '6mN1780N9vg','qzyl0f3mRG0','NjJx6B5De8g','FJflWlFyhRE','lVZAkpmKbQ4',
         'w1hjz0rrK28','bkeyQPcy5zg','ztELR-OhON0','qPAiYaZOGeQ','e-XGK_2UQko',
         'PNwplS-YFzU','N5ws0pe2DGE',
-        // --- User-curated picks (batch 2) ---
         'ADCQSyX_jTQ','hGrIgIfCxP0','tA8yqkwNp_M','oaIJNOqY1oQ','Xc1Le3CSdrM',
         'r0z8pE9Ix9M','IHLLYeFc5sg','aIExzhcQ0xs','VDzcGYZsb3g','W9q-0tCfvKE',
         'HT2rbv_-MOg','7lVE9BQENGg','HqzUFulMwyQ','Vdxp5H2vOdU','e-aUx-XYq90',
@@ -1160,6 +1159,18 @@
         '1fueZCTYkpA','zFhfksjf_mY','l98w9OSKVNA','CFGLoQIhmow','gnZImHvA0ME',
         'Nyx6SBixRE8','1P5BSm_oFJg','TlWYgGyNnJo','mmKguZohAck','UJs6__K7gSY',
         'sXFQExxceC4','O7RG-B6N1Vw',
+        'sF80I-TQiW0','gUbNlN_SqpE','V-b9MirVx2w','zW5wpJY1rgQ','VUQfT3gNT3g',
+        'd2VdpHxmbPE','amfWIRasxtI','l-2hOKIrIyI','IvNDR1wJJKQ','nNgIMdc6wqU',
+        'cIZhlFIyJ_Y','ot5UsNymqgQ','zuCRSwWssVk','gGOpElxqlQw','CBSlu_VMS9U',
+        '8b3fqIBrNW0','9F0Kzbni5R0','Tq7523sJc6I','RO04JSM3Mso','1Waq8ohWbV4',
+        'nv_2rz5BFDA','MZhivjxcF-M','HlHAib1LCYI','5jaT_8hy3Vg','vWjl07A3rZg',
+        'lXSIxqm0Pwc','82ujdQBjpDQ','e94hCLHEEsk','vvThzcBfnyc','yKoBrB2dSbw',
+        'NvftPSb5Xtw','mVycGYAPehY','AznRJvAPtwM','GNWLILeztaI','SuzmYTFGBuQ',
+        '1DkDrVEK2rc','ivdPyFUPbAk','tIMtzkZ93gg','9M4jZuqdw04','FiXvN3mHyCM',
+        '5wRWniH7rt8','leg3dJ4Xl_Q','UOJ4V3DAAx8','_-UlZAdX8Ec','ff5lO8TkVX8',
+        'Ru8DQ5f5A6U','yYdC9ieX3SE','sjkrrmBnpGE','oPVte6aMprI','4GnVDPD01as',
+        'jXZAbnn1kTU','KJWoyM1Q1tw','gtmzPUmq7XU','m80E1K75vDI','SjiSEvh6fJs',
+        'ceGLEhahLKQ','ITn5Q6W9RQY','XMsp0TBTgxQ','WL9EOfzoSsA','1yuDK3IXnb4',
     ];
 
     let ytApiReady = false;
@@ -1488,7 +1499,7 @@
             alarmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
             var source = alarmAudioCtx.createMediaElementSource(alarmAudio);
             alarmGainNode = alarmAudioCtx.createGain();
-            alarmGainNode.gain.value = 5.0;
+            alarmGainNode.gain.value = 7.0;
             source.connect(alarmGainNode);
             alarmGainNode.connect(alarmAudioCtx.destination);
         } catch(e) {}
@@ -1550,7 +1561,7 @@
         try {
             const n = new Notification('Pomodoro Timer - Time Up!', {
                 body: 'Your timer has ended. Click to dismiss and restart.',
-                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🍅</text></svg>',
+                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⏰</text></svg>',
                 tag: 'pomodoro-alarm',
                 requireInteraction: true,
             });
