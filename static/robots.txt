@@ -1,4 +1,0 @@
-User-agent: *
-Disallow: /resume
-
-Sitemap: https://samirpaulb.github.io/sitemap.xml
