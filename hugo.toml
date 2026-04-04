@@ -90,7 +90,7 @@ disableKinds = []
   #  DoIt theme version
   version = "1.0.X"
   # website title
-  title = "Samir's blog"
+  title = "Samir Paul"
   # site description
   description = "A place to share learnings, ideas, short notes, guides, and reflections from projects and everyday life, focused on clarity and usefulness. Lessons learned and experiences are distilled into actionable takeaways for curious readers."
   # site keywords
@@ -132,7 +132,7 @@ disableKinds = []
   # ----------------------------------------------------------------------------
   [params.app]
     # optional site title override for the app when added to an iOS home screen or Android launcher
-    title = "Samir's Blog"
+    title = "Samir Paul"
     # whether to omit favicon resource links
     noFavicon = false
     # modern SVG favicon to use in place of older style .png and .ico files
@@ -708,7 +708,7 @@ disableKinds = []
       images = []
       # Publisher info
       [params.page.seo.publisher]
-        name = "Samir's Blog"
+        name = "Samir Paul"
         logoUrl = "/logo.png"
     #  Related content config
       [params.page.related]
@@ -760,7 +760,7 @@ disableKinds = []
     thumbnailUrl = "/screenshot.png"
     # 
     # alternate site name in Google search result
-    alternateName = ["Samir's TechBlog"]
+    alternateName = ["~samir"]
 
   # ----------------------------------------------------------------------------
   # Analytics Configuration (DISABLED for Privacy & Performance)
