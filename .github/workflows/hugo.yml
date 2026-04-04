@@ -34,7 +34,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      HUGO_VERSION: 0.152.2
+      HUGO_VERSION: 0.159.2
     steps:
       # Setup Hugo environment
       - name: Install Hugo CLI
@@ -47,7 +47,7 @@ jobs:
 
       # Clone repo with content submodule (requires SSH key for private content repo)
       - name: Checkout blog with submodules
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 0
@@ -55,7 +55,7 @@ jobs:
 
       - name: Setup Pages
         id: pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Install Node.js dependencies
         run: "[[ -f package-lock.json || -f npm-shrinkwrap.json ]] && npm ci || true"
@@ -74,7 +74,7 @@ jobs:
 
       # Upload build output for deployment
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: ./public
 
@@ -89,4 +89,4 @@ jobs:
       # Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

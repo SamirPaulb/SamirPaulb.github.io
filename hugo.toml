@@ -82,7 +82,7 @@ disableKinds = []
 
 [params]
   #  DoIt theme version
-  version = "0.4.X"
+  version = "1.0.X"
   # website title
   title = "Samir's Blog"
   # site description

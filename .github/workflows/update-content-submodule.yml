@@ -32,7 +32,7 @@ jobs:
 
       # Clone blog repo with submodules (SSH key for private content, GITHUB_TOKEN for checkout)
       - name: Checkout blog repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
           token: ${{ secrets.GITHUB_TOKEN }}
