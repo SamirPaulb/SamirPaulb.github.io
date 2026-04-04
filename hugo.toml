@@ -295,7 +295,7 @@ disableKinds = []
       # whether to show social links
       social = true
       #  disclaimer (HTML format is supported)
-      disclaimer = '<style>[theme="dark"] .home-banner-img{filter:invert(1)}</style><div style="margin-top:1rem;max-width:700px;width:100%"><img class="home-banner-img" src="/banner.svg" alt="Decorative banner" loading="lazy" decoding="async" width="701" height="183" style="width:100%;height:auto;border-radius:8px"></div>'
+      disclaimer = '<style>[theme="dark"] .home-banner-img{filter:invert(1)}</style><div style="margin-top:0.7rem;max-width:700px;width:100%"><img class="home-banner-img" src="/banner.svg" alt="banner" loading="lazy" decoding="async" width="701" height="183" style="width:100%;height:auto;border-radius:4px"></div>'
     # Home page posts
     [params.home.posts]
       enable = true
