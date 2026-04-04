@@ -18,6 +18,7 @@
     - HLS.js (https://github.com/video-dev/hls.js) - Apache 2.0 License
     - All India Radio / Akashvani (https://akashvani.gov.in) - Prasar Bharati
     - BBC Radio (https://www.bbc.co.uk/sounds) - Akamai CDN HLS streams
+    - SomaFM (https://somafm.com) - Listener-supported internet radio
     - Radio Browser API (https://www.radio-browser.info) - Community radio station index (fallback)
     - NoSleep.js (https://github.com/richtr/NoSleep.js) - MIT License
     - Google Fonts (Inter, JetBrains Mono)
@@ -943,6 +944,7 @@
         <div id="radioChannelRow" style="display:none; margin-top:10px; margin-bottom:8px;">
             <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
                 <select class="music-select" id="radioChannelSelect" onchange="changeRadioChannel()" style="flex:1; min-width:140px;">
+                    <option value="groovesalad">SomaFM Groove Salad</option>
                     <optgroup label="All India Radio">
                         <option value="vividh">Vividh Bharati</option>
                         <option value="raagam">Raagam</option>
@@ -1097,6 +1099,8 @@
 
     // Akashvani (All India Radio) national channels — HLS audio streams
     const radioChannels = {
+        // --- Focus Music (HLS only — reliable in all browsers, trusted broadcasters) ---
+        groovesalad:   'https://hls.somafm.com/hls/groovesalad/320k/program.m3u8',                                  // SomaFM Groove Salad (ambient/chill, HLS 320k AAC, est. 2000, 46K+ votes on radio-browser.info)
         // --- All India Radio (Prasar Bharati) ---
         vividh:    'https://air.pc.cdn.bitgravity.com/air/live/pbaudio001/playlist.m3u8',                        // Vividh Bharati
         raagam:    'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudioragam/hlspbaudioragam_Auto.m3u8', // Raagam
@@ -1117,6 +1121,7 @@
     // Radio Browser API fallback search names (used when any radio URL fails)
     // Covers ALL stations — Indian, BBC, and any future additions
     const radioSearchNames = {
+        groovesalad: 'SomaFM Groove Salad',
         vividh: 'Vividh Bharati', raagam: 'Raagam', aaradhana: 'Akashvani Aaradhana',
         fmgold: 'FM Gold', bangla: 'Akashvani Bangla',
         airnews: 'All India Radio News', newsonair: 'News on AIR',
@@ -2144,10 +2149,32 @@
                 return;
             }
         } else {
-            // Direct MP3/AAC/OGG stream — native <audio> handles it
-            audio.src = hlsUrl;
+            // Direct MP3/AAC/OGG Icecast stream — wait for data before playing
+            audio.preload = 'none';
             audio.addEventListener('error', function() { onStreamError('Direct stream'); });
-            audio.play().catch(function() {});
+
+            // Stall timeout: if no audio plays within 12 seconds, trigger fallback
+            var stallTimer = setTimeout(function() {
+                if (audio.paused || audio.readyState < 3) {
+                    onStreamError('Stalled (no data within 12s)');
+                }
+            }, 12000);
+
+            audio.addEventListener('canplay', function() {
+                clearTimeout(stallTimer);
+                audio.play().catch(function() {});
+            }, { once: true });
+
+            // Also handle stalled event (Firefox fires this when stream hangs)
+            audio.addEventListener('stalled', function() {
+                if (audio.paused && audio.readyState < 3) {
+                    clearTimeout(stallTimer);
+                    onStreamError('Stream stalled');
+                }
+            }, { once: true });
+
+            audio.src = hlsUrl;
+            audio.load();
         }
 
         dom.autoMixStatus.textContent = 'Radio Live';
