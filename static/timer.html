@@ -17,6 +17,8 @@
     - SoundCloud Widget API (https://developers.soundcloud.com/docs/api/html5-widget)
     - HLS.js (https://github.com/video-dev/hls.js) - Apache 2.0 License
     - All India Radio / Akashvani (https://akashvani.gov.in) - Prasar Bharati
+    - BBC Radio (https://www.bbc.co.uk/sounds) - Akamai CDN HLS streams
+    - Radio Browser API (https://www.radio-browser.info) - Community radio station index (fallback)
     - NoSleep.js (https://github.com/richtr/NoSleep.js) - MIT License
     - Google Fonts (Inter, JetBrains Mono)
 -->
@@ -26,9 +28,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Primary SEO Meta Tags -->
-    <title>Pomodoro Timer - Focus Timer with Lo-fi Music, Auto Shuffle & Screen Wake Lock</title>
-    <meta name="description" content="Free aesthetic Pomodoro Timer with 2000+ shuffled lo-fi songs, YouTube live radio, All India Radio (Akashvani), SoundCloud integration, screen wake lock, customizable intervals, and browser notifications. Stay focused and study better. No sign-up required.">
-    <meta name="keywords" content="pomodoro timer, focus timer, study timer, lofi music timer, pomodoro technique, productivity timer, screen wake lock, no sleep timer, online timer, study with me, aesthetic timer, concentration timer, work timer, tomato timer, lofi girl, chillhop, study music, focus music, auto shuffle music, youtube lofi radio, soundcloud lofi, all india radio, akashvani, vividh bharati, raagam, indian radio online, study timer with music, free pomodoro, pomodoro online, pomodoro app, study session timer, exam study timer, homework timer, deep focus timer, coding timer, reading timer, meditation timer, break timer, 25 minute timer, custom timer, countdown timer, aesthetic study, dark mode timer, ambient music study, lo-fi beats, chill beats, jazz study music, study playlist, background music for studying, keep screen awake, prevent screen sleep, screen on timer, no sleep mode, productivity app, time management tool, study tool, focus app, student productivity, work from home timer, remote work timer, pomodoro clock, interval timer, task timer">
+    <title>Pomodoro Timer - Focus Timer with Lo-fi Music, Radio & Screen Wake Lock</title>
+    <meta name="description" content="Free aesthetic Pomodoro Timer with 300+ shuffled lo-fi songs, All India Radio (Akashvani), BBC Radio, self-healing radio streams, SoundCloud integration, screen wake lock, 7x amplified alarm, customizable intervals, and browser notifications. Stay focused and study better. No sign-up required.">
+    <meta name="keywords" content="pomodoro timer, focus timer, study timer, lofi music timer, pomodoro technique, productivity timer, screen wake lock, no sleep timer, online timer, study with me, aesthetic timer, concentration timer, work timer, lofi girl, chillhop, study music, focus music, auto shuffle music, youtube lofi, soundcloud lofi, all india radio, akashvani, vividh bharati, raagam, fm gold, fm rainbow, bbc radio, bbc world service, indian radio online, internet radio, radio browser, study timer with music, free pomodoro, pomodoro online, pomodoro app, study session timer, exam study timer, homework timer, deep focus timer, coding timer, reading timer, meditation timer, break timer, 25 minute timer, custom timer, countdown timer, aesthetic study, dark mode timer, ambient music study, lo-fi beats, chill beats, jazz study music, study playlist, background music for studying, keep screen awake, prevent screen sleep, screen on timer, no sleep mode, productivity app, time management tool, study tool, focus app, student productivity, work from home timer, remote work timer, pomodoro clock, interval timer, task timer">
     <meta name="author" content="Samir Paul">
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
     <link rel="canonical" href="/timer">
@@ -36,16 +38,16 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="/timer">
-    <meta property="og:title" content="Pomodoro Timer - Focus Timer with Lo-fi Music, Auto Shuffle & Screen Wake Lock">
-    <meta property="og:description" content="Free aesthetic Pomodoro Timer with 2000+ shuffled lo-fi songs, YouTube live radio, All India Radio (Akashvani), SoundCloud, screen wake lock, and customizable intervals. Boost productivity.">
+    <meta property="og:title" content="Pomodoro Timer - Focus Timer with Lo-fi Music, Radio & Screen Wake Lock">
+    <meta property="og:description" content="Free aesthetic Pomodoro Timer with 300+ shuffled lo-fi songs, All India Radio (Akashvani), BBC Radio, self-healing radio streams, screen wake lock, and customizable intervals. Boost productivity.">
     <meta property="og:site_name" content="Samir Paul - Pomodoro Timer">
     <meta property="og:locale" content="en_US">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="/timer">
-    <meta name="twitter:title" content="Pomodoro Timer - Focus Timer with Lo-fi Music, Auto Shuffle & Screen Wake Lock">
-    <meta name="twitter:description" content="Free aesthetic Pomodoro Timer with 2000+ shuffled lo-fi songs, YouTube live radio, All India Radio, SoundCloud, screen wake lock, and customizable intervals.">
+    <meta name="twitter:title" content="Pomodoro Timer - Focus Timer with Lo-fi Music, Radio & Screen Wake Lock">
+    <meta name="twitter:description" content="Free aesthetic Pomodoro Timer with 300+ shuffled lo-fi songs, All India Radio, BBC Radio, self-healing radio streams, screen wake lock, and customizable intervals.">
     <meta name="twitter:creator" content="@SamirPaulb">
 
     <!-- Additional SEO -->
@@ -888,7 +890,7 @@
 
         <!-- Sessions -->
         <div class="sessions">
-            <span class="tomato">&#127813;</span>
+            <span class="tomato">&#127919;</span>
             <span>Sessions completed:</span>
             <span class="count" id="sessionCount">0</span>
         </div>
@@ -941,11 +943,24 @@
         <div id="radioChannelRow" style="display:none; margin-top:10px; margin-bottom:8px;">
             <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
                 <select class="music-select" id="radioChannelSelect" onchange="changeRadioChannel()" style="flex:1; min-width:140px;">
-                    <option value="vividh">Vividh Bharati</option>
-                    <option value="raagam">Raagam</option>
-                    <option value="aaradhana">Akashvani Aaradhana</option>
-                    <option value="newsonair">News on AIR</option>
-                    <option value="airnews">AIR News 24x7</option>
+                    <optgroup label="All India Radio">
+                        <option value="vividh">Vividh Bharati</option>
+                        <option value="raagam">Raagam</option>
+                        <option value="aaradhana">Akashvani Aaradhana</option>
+                        <option value="fmgold">AIR FM Gold</option>
+                        <option value="fmrainbow">AIR FM Rainbow</option>
+                        <option value="dhwani">AIR Dhwani</option>
+                        <option value="newsonair">News on AIR</option>
+                        <option value="airnews">AIR News 24x7</option>
+                    </optgroup>
+                    <optgroup label="BBC Radio">
+                        <option value="bbcradio1">BBC Radio 1</option>
+                        <option value="bbcradio2">BBC Radio 2</option>
+                        <option value="bbcradio3">BBC Radio 3</option>
+                        <option value="bbcradio4">BBC Radio 4</option>
+                        <option value="bbcworld">BBC World Service</option>
+                        <option value="bbcasian">BBC Asian Network</option>
+                    </optgroup>
                 </select>
             </div>
         </div>
@@ -1083,12 +1098,180 @@
 
     // Akashvani (All India Radio) national channels — HLS audio streams
     const radioChannels = {
-        airnews:   'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio002/hlspbaudio002_Auto.m3u8',   // AIR Live News 24x7
-        newsonair: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio233/hlspbaudio233_Auto.m3u8',   // News on AIR (newsonair.gov.in)
+        // --- All India Radio (Prasar Bharati) ---
         vividh:    'https://air.pc.cdn.bitgravity.com/air/live/pbaudio001/playlist.m3u8',                        // Vividh Bharati
         raagam:    'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudioragam/hlspbaudioragam_Auto.m3u8', // Raagam
         aaradhana: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio003/hlspbaudio003_Auto.m3u8',   // Akashvani Aaradhana
+        fmgold:    'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio008/hlspbaudio008_Auto.m3u8',   // AIR FM Gold (Hindi music)
+        fmrainbow: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio006/hlspbaudio006_Auto.m3u8',   // AIR FM Rainbow (pop/entertainment)
+        dhwani:    'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio005/hlspbaudio005_Auto.m3u8',   // AIR Dhwani (Indian classical)
+        airnews:   'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio002/hlspbaudio002_Auto.m3u8',   // AIR Live News 24x7
+        newsonair: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio233/hlspbaudio233_Auto.m3u8',   // News on AIR (newsonair.gov.in)
+        // --- BBC (Akamai CDN, worldwide HLS — 128kbps, verified via radio-browser.info) ---
+        bbcradio1: 'https://as-hls-ww-live.akamaized.net/pool_01505109/live/ww/bbc_radio_one/bbc_radio_one.isml/bbc_radio_one-audio%3d128000.norewind.m3u8',  // BBC Radio 1 (pop/dance)
+        bbcradio2: 'https://as-hls-ww-live.akamaized.net/pool_74208725/live/ww/bbc_radio_two/bbc_radio_two.isml/bbc_radio_two-audio%3d128000.norewind.m3u8',  // BBC Radio 2 (pop/rock/soul)
+        bbcradio3: 'https://as-hls-ww-live.akamaized.net/pool_23461179/live/ww/bbc_radio_three/bbc_radio_three.isml/bbc_radio_three-audio%3d128000.norewind.m3u8',  // BBC Radio 3 (classical)
+        bbcradio4: 'https://as-hls-ww-live.akamaized.net/pool_55057080/live/ww/bbc_radio_fourfm/bbc_radio_fourfm.isml/bbc_radio_fourfm-audio%3d128000.norewind.m3u8',  // BBC Radio 4 (talk/news/drama)
+        bbcworld:  'https://as-hls-ww-live.akamaized.net/pool_87948813/live/ww/bbc_world_service/bbc_world_service.isml/bbc_world_service-audio%3d128000.norewind.m3u8',  // BBC World Service (news)
+        bbcasian:  'https://as-hls-ww-live.akamaized.net/pool_22108647/live/ww/bbc_asian_network/bbc_asian_network.isml/bbc_asian_network-audio%3d128000.norewind.m3u8',  // BBC Asian Network (South Asian music)
     };
+
+    // Radio Browser API fallback search names (used when any radio URL fails)
+    // Covers ALL stations — Indian, BBC, and any future additions
+    const radioSearchNames = {
+        vividh: 'Vividh Bharati', raagam: 'Raagam', aaradhana: 'Akashvani Aaradhana',
+        fmgold: 'FM Gold', fmrainbow: 'FM Rainbow', dhwani: 'AIR Dhwani',
+        airnews: 'All India Radio News', newsonair: 'News on AIR',
+        bbcradio1: 'BBC Radio 1', bbcradio2: 'BBC Radio 2', bbcradio3: 'BBC Radio 3',
+        bbcradio4: 'BBC Radio 4', bbcworld: 'BBC World Service', bbcasian: 'BBC Asian Network',
+    };
+
+    // ===== SELF-HEALING RADIO WITH RADIO BROWSER API + LOCALSTORAGE CACHE =====
+    //
+    // Designed to keep working for years without code changes:
+    //
+    // 1. On channel select: try localStorage cached URL (from previous API lookup) → if none, use hardcoded
+    // 2. If URL fails: search radio-browser.info API (tries 3 mirrors) for up to 10 alternatives
+    // 3. Try each API result one by one until one works
+    // 4. Cache the working URL to localStorage with timestamp
+    // 5. Next visit: use cached URL directly (fast, no API call)
+    // 6. If cached URL breaks months/years later: repeat from step 2 — search API again, cache new URL
+    // 7. This cycle repeats forever — the app self-heals as long as radio-browser.info is alive
+    //
+    // Docs: https://de1.api.radio-browser.info/
+    // API params: hidebroken=true (filter dead), order=votes&reverse=true (best first)
+    // url_resolved: auto-resolves PLS/M3U playlists & HTTP redirects (safe for browser <audio>)
+
+    var radioBrowserMirrors = [
+        'https://de1.api.radio-browser.info',
+        'https://nl1.api.radio-browser.info',
+        'https://at1.api.radio-browser.info',
+    ];
+
+    // Per-channel state for the current page session
+    var radioFailedUrls = {};      // URLs that failed this session (skip on retry)
+    var radioApiResults = {};      // Cached API results to try multiple URLs without re-fetching
+    var radioApiFetched = {};      // Whether API has been fetched this session (per channel)
+
+    // --- localStorage cache (persists across sessions) ---
+    function getRadioCache() {
+        try { return JSON.parse(localStorage.getItem('radioUrlCache') || '{}'); } catch(e) { return {}; }
+    }
+    function setRadioCache(key, url) {
+        try {
+            var cache = getRadioCache();
+            cache[key] = { url: url, ts: Date.now() };
+            localStorage.setItem('radioUrlCache', JSON.stringify(cache));
+        } catch(e) { /* localStorage full or disabled — graceful degradation */ }
+    }
+    function clearRadioCacheEntry(key) {
+        try {
+            var cache = getRadioCache();
+            delete cache[key];
+            localStorage.setItem('radioUrlCache', JSON.stringify(cache));
+        } catch(e) {}
+    }
+
+    // --- Core fallback: called whenever a radio stream fails ---
+    function radioFallback(channelKey) {
+        // Track the URL that just failed so we don't retry it
+        var failedUrl = radioChannels[channelKey];
+        if (!radioFailedUrls[channelKey]) radioFailedUrls[channelKey] = {};
+        radioFailedUrls[channelKey][failedUrl] = true;
+
+        // Also clear this URL from cache if it was cached (it's broken now)
+        var cache = getRadioCache();
+        if (cache[channelKey] && cache[channelKey].url === failedUrl) {
+            clearRadioCacheEntry(channelKey);
+        }
+
+        // If we already fetched API results this session, try the next untried URL from results
+        if (radioApiFetched[channelKey] && radioApiResults[channelKey]) {
+            var nextUrl = pickNextUrl(channelKey);
+            if (nextUrl) {
+                radioChannels[channelKey] = nextUrl;
+                dom.autoMixStatus.textContent = 'Trying alternative\u2026';
+                loadHlsRadioInPlayer(nextUrl, channelKey);
+                return;
+            }
+            // All API results exhausted
+            dom.autoMixStatus.textContent = 'Stream unavailable';
+            return;
+        }
+
+        // Search the Radio Browser API
+        var searchName = radioSearchNames[channelKey];
+        if (!searchName) { dom.autoMixStatus.textContent = 'Stream unavailable'; return; }
+
+        dom.autoMixStatus.textContent = 'Searching radio-browser.info\u2026';
+        radioApiFetched[channelKey] = true;
+
+        function tryMirror(mirrorIdx) {
+            if (mirrorIdx >= radioBrowserMirrors.length) {
+                dom.autoMixStatus.textContent = 'Stream unavailable \u2014 all mirrors failed';
+                return;
+            }
+            var apiUrl = radioBrowserMirrors[mirrorIdx] + '/json/stations/search?name=' +
+                encodeURIComponent(searchName) + '&limit=10&order=votes&reverse=true&hidebroken=true';
+
+            var controller = new AbortController();
+            var timeout = setTimeout(function() { controller.abort(); }, 8000); // 8s timeout
+
+            fetch(apiUrl, { signal: controller.signal }).then(function(r) {
+                clearTimeout(timeout);
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            }).then(function(stations) {
+                // Build list of playable URLs (HTTPS, resolved, not already failed)
+                var urls = [];
+                for (var i = 0; i < stations.length; i++) {
+                    var s = stations[i];
+                    if (s.lastcheckok !== 1) continue;
+                    var u = (s.url_resolved || s.url || '').replace(/^http:\/\//i, 'https://');
+                    if (!u) continue;
+                    if (radioFailedUrls[channelKey] && radioFailedUrls[channelKey][u]) continue; // skip known-broken
+                    urls.push(u);
+                }
+
+                radioApiResults[channelKey] = urls;
+
+                if (urls.length === 0) {
+                    // This mirror returned no usable results — try next mirror
+                    tryMirror(mirrorIdx + 1);
+                    return;
+                }
+
+                // Try the first untried URL
+                var nextUrl = pickNextUrl(channelKey);
+                if (nextUrl) {
+                    setRadioCache(channelKey, nextUrl);
+                    radioChannels[channelKey] = nextUrl;
+                    console.log('Radio fallback [' + radioBrowserMirrors[mirrorIdx] + ']: ' + channelKey +
+                        ' → ' + nextUrl + ' (saved to localStorage, ' + urls.length + ' alternatives available)');
+                    dom.autoMixStatus.textContent = 'Reconnecting\u2026';
+                    loadHlsRadioInPlayer(nextUrl, channelKey);
+                } else {
+                    dom.autoMixStatus.textContent = 'Stream unavailable';
+                }
+            }).catch(function(err) {
+                clearTimeout(timeout);
+                console.warn('Radio Browser mirror ' + mirrorIdx + ' failed:', err.message);
+                tryMirror(mirrorIdx + 1);
+            });
+        }
+
+        tryMirror(0);
+    }
+
+    // Pick the next URL from API results that hasn't been tried/failed yet
+    function pickNextUrl(channelKey) {
+        var urls = radioApiResults[channelKey] || [];
+        var failed = radioFailedUrls[channelKey] || {};
+        for (var i = 0; i < urls.length; i++) {
+            if (!failed[urls[i]]) return urls[i];
+        }
+        return null;
+    }
 
     // ===== AUTO MIX: Individual lofi video IDs (185+ videos, ~280hrs) =====
     // Shuffled infinitely. Each video is 1-3hrs of lofi music.
@@ -1412,7 +1595,10 @@
         updateDisplay();
     }
 
+    var onTimerEndRunning = false; // guard against double-call from tick race condition
     function onTimerEnd() {
+        if (onTimerEndRunning) return;
+        onTimerEndRunning = true;
         state.sessionsCompleted++;
         dom.sessionCount.textContent = state.sessionsCompleted;
         savePrefs();
@@ -1614,6 +1800,7 @@
     }
 
     window.dismissAlarm = function() {
+        onTimerEndRunning = false; // reset guard for next session
         stopAlarmCompletely();
         state.timeRemaining = state.durationSeconds;
         state.isRunning = false;
@@ -1639,6 +1826,10 @@
 
     function enableNoSleep() {
         try {
+            if (typeof NoSleep === 'undefined') {
+                dom.noSleepStatus.textContent = 'Unavailable';
+                return;
+            }
             if (!state.noSleep) { state.noSleep = new NoSleep(); }
             state.noSleep.enable();
             state.noSleepEnabled = true;
@@ -1850,10 +2041,24 @@
         }
     }
 
-    function loadHlsRadioInPlayer(hlsUrl) {
+    function loadHlsRadioInPlayer(hlsUrl, channelKey) {
         stopAutoMix();
         stopHlsRadio();
         dom.autoMixControls.style.display = 'none';
+
+        // Track current URL so radioFallback knows what failed
+        if (channelKey) radioChannels[channelKey] = hlsUrl;
+
+        // Error handler — marks URL as failed, triggers self-healing fallback
+        function onStreamError(source) {
+            console.warn(source + ' error for ' + (channelKey || 'unknown') + ': ' + hlsUrl);
+            stopHlsRadio();
+            if (channelKey) {
+                radioFallback(channelKey);
+            } else {
+                dom.autoMixStatus.textContent = 'Stream error';
+            }
+        }
 
         // Create audio element styled to fit in the player area
         var audio = document.createElement('audio');
@@ -1871,27 +2076,33 @@
         dom.musicIframe.src = '';
         hlsAudioEl = audio;
 
-        if (typeof Hls !== 'undefined' && Hls.isSupported()) {
-            hlsInstance = new Hls();
-            hlsInstance.loadSource(hlsUrl);
-            hlsInstance.attachMedia(audio);
-            hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+        var isHls = /\.m3u8(\?|$)/i.test(hlsUrl);
+
+        if (isHls) {
+            if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+                hlsInstance = new Hls({ manifestLoadingTimeOut: 8000, levelLoadingTimeOut: 8000 });
+                hlsInstance.loadSource(hlsUrl);
+                hlsInstance.attachMedia(audio);
+                hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+                    audio.play().catch(function() {});
+                });
+                hlsInstance.on(Hls.Events.ERROR, function(event, data) {
+                    if (data.fatal) onStreamError('HLS/' + data.type);
+                });
+            } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+                // Safari native HLS
+                audio.src = hlsUrl;
+                audio.addEventListener('error', function() { onStreamError('Safari HLS'); });
                 audio.play().catch(function() {});
-            });
-            hlsInstance.on(Hls.Events.ERROR, function(event, data) {
-                if (data.fatal) {
-                    console.warn('HLS fatal error:', data.type);
-                    dom.autoMixStatus.textContent = 'Stream error';
-                    stopHlsRadio();
-                }
-            });
-        } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
-            // Safari native HLS
-            audio.src = hlsUrl;
-            audio.play().catch(function() {});
+            } else {
+                dom.autoMixStatus.textContent = 'HLS not supported';
+                return;
+            }
         } else {
-            dom.autoMixStatus.textContent = 'HLS not supported';
-            return;
+            // Direct MP3/AAC/OGG stream — native <audio> handles it
+            audio.src = hlsUrl;
+            audio.addEventListener('error', function() { onStreamError('Direct stream'); });
+            audio.play().catch(function() {});
         }
 
         dom.autoMixStatus.textContent = 'Radio Live';
@@ -2032,9 +2243,19 @@
         state.radioChannel = channel;
         savePrefs();
 
-        var hlsUrl = radioChannels[channel];
+        // Reset per-session fallback state on manual switch (allow fresh retries)
+        radioFailedUrls[channel] = {};
+        radioApiResults[channel] = null;
+        radioApiFetched[channel] = false;
+
+        // Prefer cached URL (previously resolved & saved from Radio Browser API)
+        // Fall back to hardcoded URL if no cache exists
+        var cache = getRadioCache();
+        var cached = cache[channel];
+        var hlsUrl = (cached && cached.url) ? cached.url : radioChannels[channel];
+
         if (hlsUrl) {
-            loadHlsRadioInPlayer(hlsUrl);
+            loadHlsRadioInPlayer(hlsUrl, channel);
         }
     };
 
@@ -2095,16 +2316,22 @@
                 dom.musicIframe.style.display = 'none';
                 loadVideoInPlayer(raw);
                 dom.musicPlayerWrapper.classList.add('visible');
-            } else {
-                // Fallback: use raw URL in iframe as-is
+            } else if (/^https?:\/\//i.test(raw)) {
+                // Fallback: only allow http/https URLs (block javascript:/data: injection)
                 dom.musicIframe.style.display = 'block';
                 dom.musicIframe.src = raw;
                 dom.musicPlayerWrapper.classList.add('visible');
+            } else {
+                dom.autoMixStatus.textContent = 'Invalid URL \u2014 use https://';
             }
         } catch(e) {
-            dom.musicIframe.style.display = 'block';
-            dom.musicIframe.src = raw;
-            dom.musicPlayerWrapper.classList.add('visible');
+            if (/^https?:\/\//i.test(raw)) {
+                dom.musicIframe.style.display = 'block';
+                dom.musicIframe.src = raw;
+                dom.musicPlayerWrapper.classList.add('visible');
+            } else {
+                dom.autoMixStatus.textContent = 'Invalid URL';
+            }
         }
     };
 
@@ -2132,8 +2359,11 @@
     });
 
     // ===== MOBILE: Power/volume button dismiss =====
+    // Mobile: dismiss alarm when user presses power/volume button to wake screen
+    // Desktop: do NOT auto-dismiss on tab switch — user must see the alarm banner
+    var isMobileDevice = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'visible' && state.isAlarming) {
+        if (isMobileDevice && document.visibilityState === 'visible' && state.isAlarming) {
             dismissAlarm();
         }
     });
