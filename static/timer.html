@@ -844,7 +844,7 @@
 
 <div class="alarm-overlay" id="alarmOverlay"></div>
 <div class="alarm-banner" id="alarmBanner" onclick="dismissAlarm()">
-    Press <kbd>S</kbd> or tap here to dismiss
+    Press any key or tap to dismiss
 </div>
 
 <div class="app">
@@ -1556,7 +1556,12 @@
 
     window.resetTimer = function() {
         stopTicking();
+        if (state.isAlarming) {
+            onTimerEndRunning = false;
+            clearMediaSessionDismiss();
+        }
         stopAlarmCompletely();
+        resumeBackgroundMusic();
         state.isRunning = false;
         state.isPaused = false;
         state.timerStartedAt = null;
@@ -1609,7 +1614,12 @@
     // ===== PRESETS =====
     window.setPreset = function(minutes) {
         stopTicking();
-        if (state.isAlarming) stopAlarmCompletely();
+        if (state.isAlarming) {
+            onTimerEndRunning = false;
+            clearMediaSessionDismiss();
+            stopAlarmCompletely();
+            resumeBackgroundMusic();
+        }
 
         state.selectedPreset = minutes;
         state.durationSeconds = minutes * 60;
@@ -1649,7 +1659,12 @@
         if (isNaN(totalMinutes) || totalMinutes <= 0) return;
 
         stopTicking();
-        if (state.isAlarming) stopAlarmCompletely();
+        if (state.isAlarming) {
+            onTimerEndRunning = false;
+            clearMediaSessionDismiss();
+            stopAlarmCompletely();
+            resumeBackgroundMusic();
+        }
 
         state.durationSeconds = Math.round(totalMinutes * 60);
         state.timeRemaining = state.durationSeconds;
