@@ -413,9 +413,21 @@
     }
     </script>
 
-    <!-- Google Fonts -->
+    <!-- Preconnect: domains needed at page load (DNS + TCP + TLS) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
+    <!-- DNS Prefetch: domains used on user action (DNS only, zero-cost) -->
+    <link rel="dns-prefetch" href="https://www.youtube.com">
+    <link rel="dns-prefetch" href="https://w.soundcloud.com">
+    <link rel="dns-prefetch" href="https://air.pc.cdn.bitgravity.com">
+    <link rel="dns-prefetch" href="https://airhlspush.pc.cdn.bitgravity.com">
+    <link rel="dns-prefetch" href="https://as-hls-ww-live.akamaized.net">
+    <link rel="dns-prefetch" href="https://hls.somafm.com">
+    <link rel="dns-prefetch" href="https://de1.api.radio-browser.info">
+
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 
     <!-- NoSleep.js CDN -->
