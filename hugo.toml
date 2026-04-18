@@ -5,6 +5,7 @@ languageCode = "en"
 languageName = "English"
 defaultContentLanguage = "en"
 timeZone = "Asia/Kolkata"
+timeout = "5m"
 
 # Enable emoji shortcodes in content
 enableEmoji = true
