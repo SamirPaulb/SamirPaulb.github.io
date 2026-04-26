@@ -41,8 +41,8 @@ jobs:
       # Configure git for committing
       - name: Setup git identity
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "SamirPaulb"
+          git config user.email "77569653+SamirPaulb@users.noreply.github.com"
 
       # Reconfigure remote to use HTTPS for pushing (SSH key is read-only)
       - name: Setup HTTPS for push
