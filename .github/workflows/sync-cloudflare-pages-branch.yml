@@ -32,8 +32,8 @@ jobs:
       # Configure git identity
       - name: Setup git identity
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "SamirPaulb"
+          git config --global user.email "77569653+SamirPaulb@users.noreply.github.com"
 
       # Use HTTPS for pushing to allow writing
       - name: Setup HTTPS push credentials
