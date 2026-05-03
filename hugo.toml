@@ -1,7 +1,7 @@
-theme = "DoIt"
+theme = "FixIt"
 title = "Samir Paul"
 baseURL = "https://samirpaulb.github.io/"
-languageCode = "en"
+locale = "en"
 languageName = "English"
 defaultContentLanguage = "en"
 timeZone = "Asia/Kolkata"
@@ -22,6 +22,13 @@ enableGitInfo = true
 # Performance: Disable unused taxonomy pages
 disableKinds = []
 
+# -------------------------------------------------------------------------------------
+# Front Matter Configuration
+# -------------------------------------------------------------------------------------
+
+[frontmatter]
+lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
+
 # ============================================================================
 # BUILD & MINIFICATION CONFIGURATION (Performance Optimization)
 # ============================================================================
@@ -41,11 +48,10 @@ disableKinds = []
   minifyOutput = true
   [minify.tdewolff]
     [minify.tdewolff.css]
-      decimals = -1
-      keepCSS2 = true
+      precision = 0
     [minify.tdewolff.html]
       keepComments = false
-      keepConditionalComments = true
+      keepSpecialComments = true
       keepDefaultAttrVals = true
       keepDocumentTags = true
       keepEndTags = true
@@ -58,7 +64,6 @@ disableKinds = []
       precision = 0
     [minify.tdewolff.svg]
       precision = 2
-      # Preserve viewBox attributes to prevent icon distortion
       keepComments = false
     [minify.tdewolff.xml]
       keepWhitespace = false
@@ -66,59 +71,81 @@ disableKinds = []
 # ============================================================================
 # MENU CONFIGURATION
 # ============================================================================
-[menu]
-  [[menu.main]]
-    identifier = "posts"
-    name = "Posts"
-    url = "/posts/"
-    weight = 1
-  [[menu.main]]
-    identifier = "categories"
-    name = "Categories"
-    url = "/categories/"
-    weight = 2
-  [[menu.main]]
-    identifier = "about"
-    name = "About"
-    url = "/about/"
-    weight = 3
+
+[[menus.main]]
+  identifier = "posts"
+  name = "Posts"
+  url = "/posts/"
+  title = ""
+  weight = 1
+  [menus.main.params]
+    icon = "fa-solid fa-archive"
+
+[[menus.main]]
+  identifier = "categories"
+  name = "Categories"
+  url = "/categories/"
+  title = ""
+  weight = 2
+  [menus.main.params]
+    icon = "fa-solid fa-folder-tree"
+
+[[menus.main]]
+  identifier = "tags"
+  name = "Tags"
+  url = "/tags/"
+  title = ""
+  weight = 3
+  [menus.main.params]
+    icon = "fa-solid fa-tags"
+
+[[menus.main]]
+  identifier = "about"
+  name = "About"
+  url = "/about/"
+  title = ""
+  weight = 4
+  [menus.main.params]
+    icon = "fa-solid fa-user"
 
 # ============================================================================
 # SITE PARAMETERS
 # ============================================================================
 
 [params]
-  #  DoIt theme version
-  version = "1.0.X"
-  # website title
-  title = "Samir Paul"
+  # FixIt theme version
+  version = "0.4.X"
   # site description
   description = "A place to share learnings, ideas, short notes, guides, and reflections from projects and everyday life, focused on clarity and usefulness. Lessons learned and experiences are distilled into actionable takeaways for curious readers."
   # site keywords
   keywords = ["Samir Paul", "Personal Blog", "Software Engineering", "Computer Science", "System Design", "Learnings", "Data Structures Algorithms", "Networking", "Artificial Intelligence", "Problem-solving", "Coding Interview Prep", "AI/ML", "Experience", "Travel"]
-  #  site default theme ("light", "dark", "black", "auto")
+  # site default theme ("light", "dark", "auto")
   defaultTheme = "auto"
-  # public git repo url only then enableGitInfo is true
-  gitRepo = ""
-  #  which hash function used for SRI, when empty, no SRI is used
-  # ("sha256", "sha384", "sha512", "md5")
+  # which hash function used for SRI, when empty, no SRI is used
   fingerprint = ""
-  #  date format
+  # date format
   dateFormat = "02-Jan-2006"
   # website images for Open Graph and Twitter Cards
   images = ["/screenshot.png"]
-  #  enable PWA support
+  # enable PWA support
   enablePWA = true
-  # [Experimental] cache remote images in markdown, more info: https://github.com/HEIGE-PCloud/DoIt/pull/860#issue-1574342372
-  cacheRemoteImages = true
-  # [Experimental] generate image srcset attribute with hugo image processing feature.
-  optimizeImages = true
-  # [Experimental] resize method for srcset attribute in optimizeImages, more info: https://gohugo.io/content-management/image-processing/#image-processing-options
-  srcsetSmallResizeMethod = "700x webp Lanczos q75"
-  srcsetDefaultResizeMethod = "1200x webp Lanczos q75"
-  srcsetLargeResizeMethod = "2000x webp Lanczos q75"
-  #  License information
+  # whether to add external Icon for external links automatically
+  externalIcon = false
+  # whether to capitalize titles
+  capitalizeTitles = false
+  # whether to add site title to the title of every page
+  withSiteTitle = true
+  # title delimiter when the site title is be added to the title of every page
+  titleDelimiter = "-"
+  # whether to add site subtitle to the title of index page
+  indexWithSubtitle = false
+  # whether to enable tooltip replacement for elements with title attribute
+  tooltip = true
+  # whether to inject FixIt theme meta tag
+  disableThemeInject = false
+  # License information
   license = '<a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>'
+
   # ----------------------------------------------------------------------------
   # Author Configuration
   # ----------------------------------------------------------------------------
@@ -127,47 +154,46 @@ disableKinds = []
     email = "www.netproxy+website@gmail.com"
     link = "/about/"
     avatar = "/avatar.webp"
-    gravatarEmail = ""
+
+  # ----------------------------------------------------------------------------
+  # Git Info Configuration
+  # ----------------------------------------------------------------------------
+  [params.gitInfo]
+    repo = ""
+    branch = "main"
+    dir = "content"
+
   # ----------------------------------------------------------------------------
   # App Icon Configuration (PWA)
   # ----------------------------------------------------------------------------
   [params.app]
-    # optional site title override for the app when added to an iOS home screen or Android launcher
     title = "Samir Paul"
-    # whether to omit favicon resource links
     noFavicon = false
-    # modern SVG favicon to use in place of older style .png and .ico files
     svgFavicon = ""
-    # Safari mask icon color
     iconColor = "#5bbad5"
-    # Windows v8-10 tile color
     tileColor = "#da532c"
+    [params.app.themeColor]
+      light = "#f8f8f8"
+      dark = "#252627"
 
   # ----------------------------------------------------------------------------
   # Search Configuration (Fuse.js - Client-side)
   # ----------------------------------------------------------------------------
   [params.search]
     enable = true
-    # type of search engine ("algolia", "fuse", "pagefind")
+    # type of search engine ("algolia", "fuse", "cse", "post-chat")
     type = "fuse"
-    # max index length of the chunked content
     contentLength = 4000
-    # placeholder of the search bar
-    placeholder = "Search tiles or contents"
-    #  max number of results length
+    placeholder = "Search titles or contents"
     maxResultLength = 10
-    #  snippet length of the result
     snippetLength = 30
-    #  HTML tag name of the highlight part in results
     highlightTag = "em"
-    #  whether to use the absolute URL based on the baseURL in search index
     absoluteURL = false
     [params.search.algolia]
       index = ""
       appID = ""
       searchKey = ""
     [params.search.fuse]
-      #  https://fusejs.io/api/options.html
       isCaseSensitive = false
       minMatchCharLength = 2
       findAllMatches = false
@@ -177,566 +203,151 @@ disableKinds = []
       ignoreLocation = false
       useExtendedSearch = false
       ignoreFieldNorm = false
-    [params.search.pagefind]
-      # https://pagefind.app/docs/search-config/#available-options
-      # run `npx pagefind --site $YOUR_PUBLIC_DIR` after site build to create pagefind index
-      termFrequency = 1.0
-      pageLength = 0.75
-      termSimilarity = 1.0
-      termSaturation = 1.4
 
   # ----------------------------------------------------------------------------
-  # Image Optimization Configuration (Performance)
+  # Image Optimization Configuration
   # ----------------------------------------------------------------------------
   [params.image]
     cacheRemote = true
     optimise = true
 
   # ----------------------------------------------------------------------------
+  # Code Block Configuration
+  # ----------------------------------------------------------------------------
+  [params.codeblock]
+    wrapper = true
+    mode = "classic"
+    maxShownLines = 30
+    copyable = true
+    lineNosToggler = true
+    lineWrapToggler = false
+
+  # ----------------------------------------------------------------------------
   # Header Configuration
   # ----------------------------------------------------------------------------
   [params.header]
-    #  Theme change mode
-    # theme change mode ("switch", "select")
-    themeChangeMode = "switch"
-    #  Header title config
+    desktopMode = "sticky"
+    mobileMode = "auto"
     [params.header.title]
-      # URL of the LOGO
       logo = ""
-      # title name
       name = "~samir"
-      # you can add extra information before the name (HTML format is supported), such as icons
       pre = ""
-      # you can add extra information after the name (HTML format is supported), such as icons
       post = " 🌱"
-      #  whether to use typeit animation for title name
       typeit = false
+    [params.header.subtitle]
+      name = ""
+      typeit = false
+
+  # ----------------------------------------------------------------------------
+  # Breadcrumb Configuration
+  # ----------------------------------------------------------------------------
+  [params.breadcrumb]
+    enable = true
+    sticky = false
+    showHome = true
+
+  # ----------------------------------------------------------------------------
+  # Navigation Configuration
+  # ----------------------------------------------------------------------------
+  [params.navigation]
+    inSection = false
 
   # ----------------------------------------------------------------------------
   # Footer Configuration
   # ----------------------------------------------------------------------------
   [params.footer]
     enable = true
-    #  Custom content (HTML format is supported)
-    custom = '''
-      <span>
-        <a href="/contact">Contact</a> ·
-        <a href="/newsletter">Newsletter</a> ·
-        <a href="/privacy">Privacy</a> ·
-        <a href="/disclaimer">Disclaimer</a>
-      </span>
-    '''
-    #  whether to show Hugo and theme info
-    hugo = false
-    #  Hosted on (HTML format is supported)
-    # <a title="Github Pages" href="https://docs.github.com/en/pages/" target="_blank" rel="noopener noreferrer">GitHub Pages</a>
-    hostedOn = ''
-    #  whether to show copyright info
     copyright = true
-    #  whether to show the author
     author = true
-    # Site creation time
     since = 2020
-    # ICP info only in China (HTML format is supported)
     icp = ""
-    # license info (HTML format is supported)
     license = '<a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>'
+    [params.footer.powered]
+      enable = false
+      hugoLogo = false
+      themeLogo = false
+    [params.footer.siteTime]
+      enable = false
+      animate = true
+      icon = "fa-solid fa-heartbeat"
+      pre = ""
+      value = "2020-01-01T00:00:00+05:30"
+
+  # ----------------------------------------------------------------------------
+  # Archives Page Configuration
+  # ----------------------------------------------------------------------------
+  [params.archives]
+    paginate = 20
+    dateFormat = "01-02"
 
   # ----------------------------------------------------------------------------
   # Section (All Posts) Page Configuration
   # ----------------------------------------------------------------------------
   [params.section]
-    # special amount of posts in each section page
     paginate = 20
-    # date format (month and day)
     dateFormat = "02-Jan-2006"
-    # amount of RSS pages
-    rss = 5000
-    #  recently updated posts settings
-    [params.section.recentlyUpdated]
-      enable = false
-      rss = false
-      days = 30
-      maxCount = 10
+    [params.section.feed]
+      limit = -1
+      fullText = false
 
   # ----------------------------------------------------------------------------
   # List (Category or Tag) Page Configuration
   # ----------------------------------------------------------------------------
   [params.list]
-    # special amount of posts in each list page
     paginate = 20
-    # date format (month and day)
     dateFormat = "02-Jan-2006"
-    # amount of RSS pages
-    rss = 5000
+    [params.list.feed]
+      limit = -1
+      fullText = false
+
+  # ----------------------------------------------------------------------------
+  # Recently Updated Configuration
+  # ----------------------------------------------------------------------------
+  [params.recentlyUpdated]
+    archives = true
+    section = true
+    list = true
+    days = 30
+    maxCount = 10
 
   # ----------------------------------------------------------------------------
   # Home Page Configuration
   # ----------------------------------------------------------------------------
   [params.home]
-    #  amount of RSS pages
-    rss = 10
-    # Home page profile
     [params.home.profile]
       enable = true
-      # Gravatar Email for preferred avatar in home page
       gravatarEmail = ""
-      # URL of avatar shown in home page
-      # Place your avatar file under static or assets directory
-      # The filepath is relative to the static or assets directory
       avatarURL = "/avatar.webp"
-      # URL the avatar links to
-      avatarLinkURL = ""
-      #  title shown in home page (HTML format is supported)
+      avatarMenu = ""
       title = ""
-      # subtitle shown in home page
-      subtitle = "I’m Samir. This is my little hypertext garden on the Internet — make yourself at home!"
-      # whether to use typeit animation for subtitle
+      subtitle = "I'm Samir. This is my little hypertext garden on the Internet - make yourself at home!"
       typeit = true
-      # whether to show social links
       social = true
-      #  disclaimer (HTML format is supported)
-      disclaimer = '<style>[theme="dark"] .home-banner-img{filter:invert(1)}</style><div style="margin-top:0.7rem;max-width:700px;width:100%"><img class="home-banner-img" src="/banner.svg" alt="Welcome banner" loading="lazy" decoding="async" width="701" height="183" style="width:100%;height:auto;border-radius:4px"></div>'
-    # Home page posts
+      disclaimer = '<style>[data-theme="dark"] .home-banner-img{filter:invert(1)}</style><div style="margin-top:0.7rem;max-width:700px;width:100%;margin-left:auto;margin-right:auto"><img class="home-banner-img" src="/banner.svg" alt="Welcome banner" loading="lazy" decoding="async" width="701" height="183" style="width:100%;height:auto;border-radius:4px"></div>'
     [params.home.posts]
       enable = true
-      # hide the featuredImagePreview in home page only
-      imagePreview = false
-      # special amount of posts in each home posts page
       paginate = 7
-      #  replaced with hiddenFromHomePage in params.page
-      # default behavior when you don't set "hiddenFromHomePage" in front matter
-      defaultHiddenFromHomePage = false
+      imagePreview = false
 
   # ----------------------------------------------------------------------------
   # Social Media Links (Author Profile)
   # ----------------------------------------------------------------------------
   [params.social]
-    Linkedin = "samirpaul"
     GitHub = "SamirPaulb"
-    X = "SamirPaulb"
+    Linkedin = "samirpaul"
+    Twitter = "SamirPaulb"
     Instagram = "SamirPaulb"
-    Facebook = ""
-    Telegram = ""
-    Medium = ""
-    Gitlab = ""
-    Youtubelegacy = ""
-    Youtubecustom = ""
-    Youtubechannel = ""
-    Tumblr = ""
-    Quora = ""
-    Keybase = ""
-    Pinterest = ""
-    Reddit = ""
-    Codepen = ""
-    FreeCodeCamp = ""
-    Bitbucket = ""
-    Stackoverflow = ""
-    Weibo = ""
-    Odnoklassniki = ""
-    VK = ""
-    Flickr = ""
-    Xing = ""
-    Snapchat = ""
-    Soundcloud = ""
-    Spotify = ""
-    Bandcamp = ""
-    Paypal = ""
-    Fivehundredpx = ""
-    Mix = ""
-    Goodreads = ""
-    Lastfm = ""
-    Foursquare = ""
-    Hackernews = ""
-    Kickstarter = ""
-    Patreon = ""
-    Steam = ""
-    Twitch = ""
-    Strava = ""
-    Skype = ""
-    Whatsapp = ""
-    Zhihu = ""
-    Douban = ""
-    Angellist = ""
-    Slidershare = ""
-    Jsfiddle = ""
-    Deviantart = ""
-    Behance = ""
-    Dribbble = ""
-    Wordpress = ""
-    Vine = ""
-    Googlescholar = ""
-    Researchgate = ""
-    Mastodon = ""
-    Thingiverse = ""
-    Devto = ""
-    Gitea = ""
-    XMPP = ""
-    Matrix = ""
-    Bilibili = ""
-    ORCID = ""
-    Liberapay = ""
-    Ko-Fi = ""
-    BuyMeACoffee = ""
-    Linktree = ""
-    QQ = ""
-    QQGroup = ""
-    Email = ""
-    Bluesky = ""
     RSS = true
-
-  # ----------------------------------------------------------------------------
-  # Page Configuration (Default Settings for All Pages)
-  # ----------------------------------------------------------------------------
-  [params.page]
-    #  whether to hide a page from home page
-    hiddenFromHomePage = false
-    #  whether to hide a page from search results
-    hiddenFromSearch = false
-    #  whether to enable twemoji
-    twemoji = false
-    # whether to enable lightgallery
-    lightgallery = true
-    #  whether to enable the ruby extended syntax
-    ruby = true
-    #  whether to enable the fraction extended syntax
-    fraction = true
-    # whether to show link to Raw Markdown content of the content
-    linkToMarkdown = false
-    #  configure the link to the source file of the post
-    linkToSource = false
-    # "https://github.com/user/repo/blob/main/{path}"
-    #  configure the link to edit the post
-    linkToEdit = false
-    # "https://github.com/user/repo/edit/main/{path}"
-    # "https://gitlab.com/user/repo/-/edit/main/{path}"
-    # "https://bitbucket.org/user/repo/src/main/{path}?mode=edit"
-    #  configure the link to report issue for the post
-    linkToReport = false
-    # "https://github.com/user/repo/issues/new?title=[bug]%20{title}&body=|Field|Value|%0A|-|-|%0A|Title|{title}|%0A|Url|{url}|%0A|Filename|https://github.com/user/repo/blob/main/{path}|"
-    # Hint search engines to index the page
-    robots = "index, follow"
-    #  whether to show the full text content in RSS
-    rssFullText = true
-    #  whether to enable series navigation
-    seriesNavigation = true
-    # whether to enable last modified time
-    enableLastMod = true
-    # whether to enable word count
-    enableWordCount = true
-    # whether to enable reading time estimation
-    enableReadingTime = true
-    #  outdated article reminder config
-    [params.page.outdatedArticleReminder]
-      enable = false
-      # Display the reminder if the last modified time is more than 90 days ago.
-      reminder = 90
-      # Display warning if the last modified time is more than 180 days ago.
-      warning = 180
-    #  Table of the contents config
-    [params.page.toc]
-      # whether to enable the table of the contents
-      enable = true
-      #  whether to keep the static table of the contents in front of the post
-      keepStatic = false
-      # whether to make the table of the contents in the sidebar automatically collapsed
-      auto = true
-    #  KaTeX mathematical formulas
-    [params.page.math]
-      enable = false
-      # default block delimiter is $$ ... $$ and \\[ ... \\]
-      blockLeftDelimiter = ""
-      blockRightDelimiter = ""
-      # default inline delimiter is $ ... $ and \\( ... \\)
-      inlineLeftDelimiter = ""
-      inlineRightDelimiter = ""
-      # KaTeX extension copy_tex
-      copyTex = true
-      # KaTeX extension mhchem
-      mhchem = true
-      # Use MathJax instead of KaTeX
-      mathjax = false
-    #  Code config
-    [params.page.code]
-      copy = true
-      # the maximum number of lines of displayed code by default
-      maxShownLines = 30
-      # whether to enable line numbers in the code block
-      lineNos = true
-      # whether to enable line wrapping in the code block
-      wrap = false
-      # whether to display the header in the code block
-      header = true
-    #  Table config
-    [params.page.table]
-      # whether to enable sorting in the tables
-      sort = true
-    #  Header auto-numbering config
-    [params.page.header]
-      [params.page.header.number]
-        enable = false
-        [params.page.header.number.format]
-          h2 = "{h2} {title}"
-          h3 = "{h2}.{h3} {title}"
-          h4 = "{h2}.{h3}.{h4} {title}"
-          h5 = "{h2}.{h3}.{h4}.{h5} {title}"
-          h6 = "{h2}.{h3}.{h4}.{h5}.{h6} {title}"
-    #  Mapbox GL JS config
-    [params.page.mapbox]
-      # access token of Mapbox GL JS
-      accessToken = ""
-      # style for the light theme
-      lightStyle = "mapbox://styles/mapbox/light-v10?optimize=true"
-      # style for the dark theme
-      darkStyle = "mapbox://styles/mapbox/dark-v10?optimize=true"
-      # whether to add NavigationControl
-      navigation = true
-      # whether to add GeolocateControl
-      geolocate = true
-      # whether to add ScaleControl
-      scale = true
-      # whether to add FullscreenControl
-      fullscreen = true
-    #  social share links in post page (TOP 7 MOST POPULAR - OPTIMIZED FOR PERFORMANCE)
-    [params.page.share]
-      enable = true
-      # Top 7 most popular social networks (ENABLED for maximum reach with minimal overhead)
-      Twitter = true
-      Facebook = true
-      Linkedin = true
-      Reddit = true
-      Whatsapp = true
-      Pinterest = true
-      HackerNews = true
-      # Secondary networks (DISABLED to improve page load performance)
-      Line = false
-      Weibo = false
-      Mastodon = false
-      Tumblr = false
-      VK = false
-      Baidu = false
-      Evernote = false
-      Myspace = false
-      Blogger = false
-      # Other platforms (DISABLED - minimal usage)
-      Buffer = false
-      Xing = false
-      Pocket = false
-      Instapaper = false
-      Flipboard = false
-      Digg = false
-      Stumbleupon = false
-      Renren = false
-      Odnoklassniki = false
-      Skype = false
-      Trello = false
-      Mix = false
-    # server for PlantUML online rendering
-    [params.page.plantuml]
-      server = "https://www.plantuml.com/plantuml"
-
-    # instant.page config - Preloads pages on hover for faster navigation
-    [params.page.instantpage]
-      enable = true
-
-    #  Comment config
-    [params.page.comment]
-      enable = true
-      # Disqus comment config
-      [params.page.comment.disqus]
-        # 
-        enable = false
-        # Disqus shortname to use Disqus in posts
-        shortname = ""
-      # Gitalk comment config
-      [params.page.comment.gitalk]
-        # 
-        enable = false
-        owner = ""
-        repo = ""
-        clientId = ""
-        clientSecret = ""
-      # Valine comment config
-      [params.page.comment.valine]
-        enable = false
-        appId = ""
-        appKey = ""
-        placeholder = ""
-        avatar = "mp"
-        meta= ""
-        pageSize = 10
-        lang = ""
-        visitor = true
-        recordIP = true
-        highlight = true
-        enableQQ = false
-        serverURLs = ""
-        #  emoji data file name, default is "google.yml"
-        # ("apple.yml", "google.yml", "facebook.yml", "twitter.yml")
-        # located in "themes/DoIt/assets/data/emoji/" directory
-        # you can store your own data files in the same path under your project:
-        # "assets/data/emoji/"
-        emoji = ""
-      # Waline comment config
-      [params.page.comment.waline]
-        # 
-        enable = false
-        serverURL = ""
-        pageview = true
-        comment = true
-        # emoji = ['https://cdn.jsdelivr.net/gh/walinejs/emojis/weibo']
-        # meta = ['nick', 'mail', 'link']
-        # requiredMeta = []
-        # login = 'enable'
-        # wordLimit = 0
-        # pageSize = 10
-        # imageUploader = false
-        # highlighter = false
-        # texRenderer = false
-      # Facebook comment config
-      [params.page.comment.facebook]
-        enable = false
-        width = "100%"
-        numPosts = 10
-        appId = ""
-        locale = ""
-      #  Telegram comments config
-      [params.page.comment.telegram]
-        enable = false
-        siteID = ""
-        limit = 5
-        height = ""
-        color = ""
-        colorful = true
-        dislikes = false
-        outlined = false
-        dark = false
-      #  Commento comment config
-      [params.page.comment.commento]
-        enable = false
-      #  Utterances comment config
-      [params.page.comment.utterances]
-        enable = false
-        # owner/repo
-        repo = ""
-        issueTerm = "pathname"
-        label = ""
-        lightTheme = "github-light"
-        darkTheme = "github-dark"
-      #  Twikoo comment config
-      [params.page.comment.twikoo]
-        enable = false
-        envId = ""
-        region = ""
-        path = ""
-        cloudbase = true # boolean : true / false. #If you deploy your Twikoo on CloudBase, set it to true.
-        visitor = true
-        commentCount = true
-      #  Vssue comment config
-      [params.page.comment.vssue]
-        enable = false
-        platform = "" # ("bitbucket", "gitea", "gitee", "github", "gitlab")
-        owner = ""
-        repo = ""
-        clientId = ""
-        clientSecret = ""
-      #  Remark42 comment config
-      [params.page.comment.remark42]
-        enable = false
-        host = ""
-        site_id = ""
-        max_shown_comments = 15
-        show_email_subscription = true
-        simple_view = false
-      #  giscus comment config
-      [params.page.comment.giscus]
-        enable = true
-        # owner/repo
-        dataRepo = "SamirPaulb/website-comments"
-        dataRepoId = "R_kgDOQLe9bw"
-        dataCategory = ""
-        dataCategoryId = "DIC_kwDOQLe9b84CxN4R"
-        dataMapping = "pathname"
-        dataStrict = "0"
-        dataReactionsEnabled = "1"
-        dataEmitMetadata = "1"
-        dataInputPosition = "top"
-        lightTheme = "light"
-        darkTheme = "dark"
-        dataLang = "en"
-        dataLoading = "lazy"
-      # artalk comment config
-      [params.page.comment.artalk]
-        enable = false
-        server = ""
-        site = ""
-        lite = false
-        katex = false
-        lightbox = false
-        pageview = true
-        commentCount = true
-    #  Third-party library config
-    [params.page.library]
-      [params.page.library.css]
-        # someCSS = "some.css"
-        #  Enhance third-party library config
-        # [params.page.library.css.someOtherCSS]
-        #   src = "someOther.css"
-        #   defer = true
-        #   attr = "customAttribute"
-        # located in "assets/"
-        # Or
-        # someCSS = "https://cdn.example.com/some.css"
-      [params.page.library.js]
-        #  someJavaScript = "instantclick"
-        #  Enhance third-party library config
-        # [params.page.library.js.instantclick]
-        #   src = "/instantclick.min.js"
-        #   defer = true
-        #   async = true
-        #   attr = "data-no-instant"
-        # [params.page.library.js.workbox-sw]
-        #   src = "/sw.js"
-        #   defer = true
-        #   async = true
-        #   attr = "sw"
-        # located in "assets/js/"
-        # Or
-        # someJavaScript = "https://cdn.example.com/some.js"
-    #  Page SEO config
-    [params.page.seo]
-      # image URL
-      images = []
-      # Publisher info
-      [params.page.seo.publisher]
-        name = "Samir Paul"
-        logoUrl = "/logo.png"
-    #  Related content config
-      [params.page.related]
-        enable = false
-        count = 5
-
-  # ----------------------------------------------------------------------------
-  # Sponsor Configuration
-  # ----------------------------------------------------------------------------
-  [params.sponsor]
-    enable = false
-    bio = "If you find this post helpful, please consider sponsoring."
-    link = "https://www.buymeacoffee.com" # The link to your sponsor page
-    custom = "" # Custom HTML button
 
   # ----------------------------------------------------------------------------
   # TypeIt Animation Configuration
   # ----------------------------------------------------------------------------
   [params.typeit]
-    # typing speed between each step (measured in milliseconds)
     speed = 100
-    # blinking speed of the cursor (measured in milliseconds)
     cursorSpeed = 1000
-    # character used for the cursor (HTML format is supported)
     cursorChar = "|"
-    # cursor duration after typing finishing (measured in milliseconds, "-1" means unlimited)
     duration = -1
+    loop = false
 
   # ----------------------------------------------------------------------------
   # Search Engine Verification Codes (SEO)
@@ -747,97 +358,220 @@ disableKinds = []
     yandex = "fe6a06c57be84984"
     pinterest = "24bac6e1fbf1750de40d59bb788d9dd9"
     baidu = ""
-    so = "" # 360 search
+    so = ""
     sogou = ""
-    naver = ""
 
   # ----------------------------------------------------------------------------
   # Site SEO Configuration (Schema.org)
   # ----------------------------------------------------------------------------
   [params.seo]
-    # image URL
     image = "/og-image.png"
-    # thumbnail URL
     thumbnailUrl = "/screenshot.png"
-    # 
-    # alternate site name in Google search result
-    alternateName = ["~samir"]
 
   # ----------------------------------------------------------------------------
-  # Analytics Configuration (DISABLED for Privacy & Performance)
+  # Pace - Page loading progress bar
+  # ----------------------------------------------------------------------------
+  [params.pace]
+    enable = true
+    color = "blue"
+    theme = "minimal"
+
+  # ----------------------------------------------------------------------------
+  # Analytics (DISABLED - privacy-first, using custom Vercount instead)
   # ----------------------------------------------------------------------------
   [params.analytics]
     enable = false
-    # Google Analytics
-    [params.analytics.google]
-      id = ""
-      # whether to anonymize IP
-      anonymizeIP = true
-    # Fathom Analytics
-    [params.analytics.fathom]
-      id = ""
-      # server url for your tracker if you're self hosting
-      server = ""
-    #  Baidu Analytics
-    [params.analytics.baidu]
-      id = ""
-    #  Umami Analytics
-    [params.analytics.umami]
-      data_website_id = ""
-      src = ""
-      data_host_url = ""
-      data_domains = ""
-    #  Plausible Analytics
-    [params.analytics.plausible]
-      data_domain = ""
-      src = ""
-    #  Cloudflare Analytics
-    [params.analytics.cloudflare]
-      token = ""
-    #  Splitbee Analytics
-    [params.analytics.splitbee]
-      enable = false
-      No_cookie = true
-      Do_not_track = true
-      data_token = ""
-    #  Matomo Analytics
-    [params.analytics.matomo]
-      enable = false
-      server = ""
-      site_id = 1
-      Track_no_js = true
-      No_cookie = true
-      Do_not_track = true
 
   # ----------------------------------------------------------------------------
-  # Cookie Consent Configuration (DISABLED)
+  # Cookie Consent (DISABLED - enable if adding tracking)
   # ----------------------------------------------------------------------------
   [params.cookieconsent]
     enable = false
-    # text strings used for Cookie consent banner
     [params.cookieconsent.content]
-      message = "This website uses cookies to enhance your browsing experience, analyze site traffic, and serve better user experiences. By continuing to use this site, you consent to our use of cookies."
+      message = "This website uses cookies to enhance your experience."
       dismiss = "Got it!"
-      link = "Learn more about our Privacy Policy"
+      link = "/privacy/"
 
   # ----------------------------------------------------------------------------
-  # CDN Configuration (Third-party Libraries)
+  # Busuanzi / Vercount Page View Counter (Custom Cloudflare Worker)
   # ----------------------------------------------------------------------------
-  [params.cdn]
-    # CDN data file name, disabled by default
-    # ("jsdelivr.yml")
-    # located in "themes/DoIt/assets/data/cdn/" directory
-    # you can store your own data files in the same path under your project:
-    # "assets/data/cdn/"
-    data = ""
+  [params.busuanzi]
+    enable = true
+    source = "https://web.samirpaul.workers.dev/views/js"
+    siteViews = true
+    pageViews = true
 
   # ----------------------------------------------------------------------------
-  # Browser Compatibility Configuration
+  # Back to Top
   # ----------------------------------------------------------------------------
-  [params.compatibility]
-    # whether to use Polyfill.io on cdnjs to be compatible with older browsers
-    # https://blog.cloudflare.com/polyfill-io-now-available-on-cdnjs-reduce-your-supply-chain-risk
-    polyfill = false
+  [params.backToTop]
+    enable = true
+    scrollpercent = true
+
+  # ----------------------------------------------------------------------------
+  # Reading Progress Bar
+  # ----------------------------------------------------------------------------
+  [params.readingProgress]
+    enable = true
+    start = "left"
+    position = "top"
+    reversed = false
+    light = ""
+    dark = ""
+    height = "2px"
+
+  # ----------------------------------------------------------------------------
+  # Tag Cloud
+  # ----------------------------------------------------------------------------
+  [params.tagcloud]
+    enable = true
+    min = 14
+    max = 32
+    peakCount = 10
+    orderby = "name"
+
+  # ----------------------------------------------------------------------------
+  # GitHub Corner
+  # ----------------------------------------------------------------------------
+  [params.githubCorner]
+    enable = false
+
+  # ----------------------------------------------------------------------------
+  # Feed Configuration (RSS)
+  # ----------------------------------------------------------------------------
+  [params.feed]
+    limit = 10
+    fullText = true
+
+  # ----------------------------------------------------------------------------
+  # Custom Partials Configuration
+  # ----------------------------------------------------------------------------
+  [params.customPartials]
+    head = []
+    menuDesktop = []
+    menuMobile = []
+    profile = []
+    aside = []
+    comment = []
+    footer = ["custom/footer-links.html"]
+    widgets = []
+    assets = []
+    postFooterBefore = []
+    postFooterAfter = []
+
+  # ----------------------------------------------------------------------------
+  # Page Configuration (Default Settings for All Pages)
+  # ----------------------------------------------------------------------------
+  [params.page]
+    authorAvatar = true
+    hiddenFromHomePage = false
+    hiddenFromSearch = false
+    hiddenFromRelated = false
+    hiddenFromFeed = false
+    twemoji = false
+    lightgallery = true
+    ruby = true
+    fraction = true
+    fontawesome = true
+    linkToMarkdown = false
+    linkToSource = false
+    linkToEdit = false
+    linkToReport = false
+    linkToVscode = false
+    pageStyle = "wide"
+    autoBookmark = false
+    showLastmod = true
+    wordCount = true
+    readingTime = true
+    endFlag = ""
+    instantPage = true
+    collectionList = false
+    collectionNavigation = false
+    license = '<a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>'
+
+    # Display a message at the beginning of an article to warn the reader that its content might be expired
+    [params.page.expirationReminder]
+      enable = true
+      reminder = 180
+      warning = 365
+      closeComment = false
+
+    # Table of the contents config
+    [params.page.toc]
+      enable = true
+      keepStatic = false
+      auto = true
+      position = "right"
+
+    # Mathematical formulas configuration
+    [params.page.math]
+      enable = false
+      type = "katex"
+      [params.page.math.katex]
+        copyTex = true
+        throwOnError = false
+        errorColor = "#ff4949"
+
+    # Related content config
+    [params.page.related]
+      enable = true
+      count = 5
+
+    # Social share links in post page
+    [params.page.share]
+      enable = true
+      Twitter = true
+      Facebook = true
+      Linkedin = true
+      Reddit = true
+      Whatsapp = true
+      Pinterest = true
+      HackerNews = true
+      Line = false
+      Weibo = false
+      Tumblr = false
+      VK = false
+      Buffer = false
+      Xing = false
+      Instapaper = false
+      Pocket = false
+      Flipboard = false
+      Myspace = false
+      Blogger = false
+      Baidu = false
+      Odnoklassniki = false
+      Evernote = false
+      Skype = false
+      Trello = false
+      Mix = false
+
+    # Comment config
+    [params.page.comment]
+      enable = true
+      # Giscus comment config (GitHub Discussions-based)
+      [params.page.comment.giscus]
+        enable = true
+        repo = "SamirPaulb/website-comments"
+        repoId = "R_kgDOQLe9bw"
+        category = ""
+        categoryId = "DIC_kwDOQLe9b84CxN4R"
+        mapping = "pathname"
+        origin = "https://giscus.app"
+        strict = "0"
+        reactionsEnabled = "1"
+        emitMetadata = "1"
+        inputPosition = "top"
+        lang = "en"
+        lightTheme = "light"
+        darkTheme = "dark"
+        lazyLoad = true
+
+    # Page SEO config
+    [params.page.seo]
+      images = []
+      [params.page.seo.publisher]
+        name = "Samir Paul"
+        logoUrl = "/logo.png"
 
 
 # ============================================================================
@@ -848,12 +582,11 @@ disableKinds = []
   # Syntax Highlighting
   [markup.highlight]
     codeFences = true
+    noClasses = false
+    anchorLineNos = false
     guessSyntax = true
     lineNos = true
     lineNumbersInTable = true
-    # false is a necessary configuration
-    # (https://github.com/dillonzq/LoveIt/issues/158)
-    noClasses = false
   # Goldmark is from Hugo 0.60 the default library used for Markdown
   [markup.goldmark]
     [markup.goldmark.extensions]
@@ -864,14 +597,26 @@ disableKinds = []
       table = true
       taskList = true
       typographer = true
+      [markup.goldmark.extensions.extras.delete]
+        enable = true
+      [markup.goldmark.extensions.extras.insert]
+        enable = true
+      [markup.goldmark.extensions.extras.mark]
+        enable = true
+      [markup.goldmark.extensions.extras.subscript]
+        enable = true
+      [markup.goldmark.extensions.extras.superscript]
+        enable = true
+      [markup.goldmark.extensions.passthrough]
+        enable = true
+      [markup.goldmark.extensions.passthrough.delimiters]
+        block = [['\[', '\]'], ['$$', '$$']]
+        inline = [['\(', '\)'], ['$', '$']]
+    [markup.goldmark.parser.attribute]
+      block = true
+      title = true
     [markup.goldmark.renderer]
-      # whether to use HTML tags directly in the document
       unsafe = true
-    [markup.goldmark.extensions.passthrough]
-      enable = true
-    [markup.goldmark.extensions.passthrough.delimiters]
-      block = [['\[', '\]'], ['$$', '$$']]
-      inline = [['\(', '\)']]
   # Table Of Contents settings
   [markup.tableOfContents]
     startLevel = 2
@@ -892,9 +637,9 @@ disableKinds = []
 # PERMALINKS CONFIGURATION (URL Structure)
 # ============================================================================
 
-[Permalinks]
-  # posts = ":year/:month/:contentbasename"
-  posts = "posts/:contentbasename"
+[permalinks]
+  [permalinks.page]
+    posts = "posts/:contentbasename"
 
 
 # ============================================================================
@@ -902,9 +647,6 @@ disableKinds = []
 # ============================================================================
 
 [privacy]
-  #  privacy of the Google Analytics (replaced by params.analytics.google)
-  [privacy.googleAnalytics]
-    # ...
   [privacy.x]
     enableDNT = true
   [privacy.youtube]
@@ -912,35 +654,15 @@ disableKinds = []
 
 
 # ============================================================================
-# OUTPUT FORMATS CONFIGURATION
+# OUTPUT CONFIGURATION
 # ============================================================================
 
-# Options to make output .md files
-[mediaTypes]
-  [mediaTypes."text/plain"]
-    suffixes = ["md"]
-
-# Options to make output .md files
-[outputFormats.MarkDown]
-  mediaType = "text/plain"
-  isPlainText = true
-  isHTML = false
-
-# JSON output format for search
-[outputFormats.JSON]
-  mediaType = "application/json"
-  baseName = "index"
-  isPlainText = true
-  notAlternative = false
-
-# Options to make hugo output files
 [outputs]
-  #
-  home = ["HTML", "RSS", "JSON"]
-  page = ["HTML", "MarkDown"]
-  section = ["HTML", "RSS"]
-  taxonomy = ["HTML", "RSS"]
-  term = ["HTML", "RSS"]
+  home = ["html", "rss", "archives", "offline", "search"]
+  page = ["html", "markdown"]
+  section = ["html", "rss"]
+  taxonomy = ["html"]
+  term = ["html", "rss"]
 
 
 # ============================================================================
@@ -948,6 +670,58 @@ disableKinds = []
 # ============================================================================
 
 [taxonomies]
-category = "categories"
-tag = "tags"
-series = "series"
+  category = "categories"
+  tag = "tags"
+  series = "series"
+  collection = "collections"
+
+
+# ============================================================================
+# IMAGING CONFIGURATION
+# ============================================================================
+
+[imaging]
+  quality = 75
+
+
+# ============================================================================
+# RELATED CONTENT CONFIGURATION
+# ============================================================================
+
+[related]
+  includeNewer = false
+  threshold = 80
+  toLower = false
+
+  [[related.indices]]
+    applyFilter = false
+    cardinalityThreshold = 0
+    name = "keywords"
+    pattern = ""
+    toLower = false
+    type = "basic"
+    weight = 100
+
+  [[related.indices]]
+    applyFilter = false
+    cardinalityThreshold = 0
+    name = "date"
+    pattern = ""
+    toLower = false
+    type = "basic"
+    weight = 10
+
+  [[related.indices]]
+    applyFilter = false
+    cardinalityThreshold = 0
+    name = "tags"
+    pattern = ""
+    toLower = false
+    type = "basic"
+    weight = 80
+
+  [[related.indices]]
+    applyFilter = false
+    name = "fragmentrefs"
+    type = "fragments"
+    weight = 80

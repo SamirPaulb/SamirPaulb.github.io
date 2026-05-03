@@ -43,7 +43,9 @@ jobs:
           && sudo dpkg -i ${{ runner.temp }}/hugo.deb
 
       - name: Install Dart Sass
-        run: sudo snap install dart-sass
+        run: |
+          curl -sL "https://github.com/sass/dart-sass/releases/download/1.85.0/dart-sass-1.85.0-linux-x64.tar.gz" | tar -xz -C /usr/local
+          echo "/usr/local/dart-sass" >> $GITHUB_PATH
 
       # Clone repo with content submodule (requires SSH key for private content repo)
       - name: Checkout blog with submodules
