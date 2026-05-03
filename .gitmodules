@@ -1,6 +1,0 @@
-[submodule "content"]
-	path = content
-	url = git@github.com:SamirPaulb/content.git
-[submodule "themes/FixIt"]
-	path = themes/FixIt
-	url = https://github.com/SamirPaulb/FixIt.git
