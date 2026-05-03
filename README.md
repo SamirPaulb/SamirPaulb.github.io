@@ -109,7 +109,7 @@ git push origin main
 ### Reset Submodules
 ```bash
 # Remove submodules
-git rm -f themes/FixIt content
+git rm -rf themes content
 rm -rf .git/modules/themes/FixIt .git/modules/content
 git config -f .gitmodules --remove-section submodule.themes/FixIt || true
 git config -f .gitmodules --remove-section submodule.content || true
