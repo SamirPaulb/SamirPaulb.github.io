@@ -44,7 +44,8 @@ jobs:
 
       - name: Install Dart Sass
         run: |
-          curl -sL "https://github.com/sass/dart-sass/releases/download/1.85.0/dart-sass-1.85.0-linux-x64.tar.gz" | tar -xz -C /usr/local
+          curl -sL "https://github.com/sass/dart-sass/releases/download/1.85.0/dart-sass-1.85.0-linux-x64.tar.gz" -o /tmp/dart-sass.tar.gz
+          sudo tar -xzf /tmp/dart-sass.tar.gz -C /usr/local
           echo "/usr/local/dart-sass" >> $GITHUB_PATH
 
       # Clone repo with content submodule (requires SSH key for private content repo)
