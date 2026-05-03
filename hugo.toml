@@ -323,7 +323,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
       subtitle = "I'm Samir. This is my little hypertext garden on the Internet - make yourself at home!"
       typeit = true
       social = true
-      disclaimer = '<style>[data-theme="dark"] .home-banner-img{filter:invert(1)}</style><div style="margin-top:0.7rem;max-width:700px;width:100%;margin-left:auto;margin-right:auto"><img class="home-banner-img" src="/banner.svg" alt="Welcome banner" loading="lazy" decoding="async" width="701" height="183" style="width:100%;height:auto;border-radius:4px"></div>'
+      disclaimer = '<style>[data-theme="dark"] .home-banner-img{filter:invert(1)}</style><div style="margin-top:0.7rem;max-width:700px;width:100%;margin-left:auto;margin-right:auto"><img class="home-banner-img" src="/banner.svg" alt="Welcome banner" loading="lazy" decoding="async" width="701" height="183" style="width:100%;height:auto;border-radius:4px;pointer-events:none;user-select:none" draggable="false" oncontextmenu="return false"></div>'
     [params.home.posts]
       enable = true
       paginate = 7
