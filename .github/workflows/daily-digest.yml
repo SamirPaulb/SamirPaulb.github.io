@@ -26,7 +26,7 @@ name: Daily Digest Generator
 #     GITHUB_MODEL               — update when GitHub Models changes available models
 #     (all optional — script has safe defaults if variable is not set)
 #
-# NOTE: GITHUB_TOKEN is automatic — models: read permission enables GitHub Models.
+# NOTE: GITHUB_TOKEN is automatic — used by the Level 2 GitHub Models urllib fallback.
 # WHEN A MODEL IS DEPRECATED: update the GitHub Variable. No code change.
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -37,7 +37,6 @@ on:
 
 permissions:
   contents: write           # needed to push to main repo
-  models: read              # required for actions/ai-inference@v1 (GitHub Models)
 
 jobs:
   generate:
@@ -77,71 +76,12 @@ jobs:
           echo "DIGEST_DATE=$(TZ='Asia/Kolkata' date '+%B %d, %Y')" >> "$GITHUB_ENV"
           echo "DIGEST_FRONT=$(TZ='Asia/Kolkata' date '+%Y-%m-%dT07:00:00+05:30')" >> "$GITHUB_ENV"
 
-      # ── Level 0: GitHub Models via official action (no extra secrets) ──────
-      # Uses GITHUB_TOKEN automatically — only models: read permission needed.
-      # continue-on-error: true ensures failure here doesn't skip Level 1-4.
-      - name: Try GitHub Models (Level 0)
-        id: gh_ai
-        continue-on-error: true
-        uses: actions/ai-inference@v1
-        with:
-          model: ${{ vars.GITHUB_MODEL || 'openai/gpt-4o-mini' }}
-          max-tokens: 2048
-          prompt: |
-            You are a daily digest writer for an Indian finance and tech blog.
-            Today is ${{ env.DIGEST_DATE }}.
-
-            Write a daily digest with today's real data. Include:
-            - Nifty 50 and Sensex closing prices and % change
-            - 2-3 major global news stories
-            - 2-3 India stories (economy, policy, business)
-            - 2-3 Jobs & Tech stories (AI, startups, hiring)
-
-            Output ONLY the following Hugo markdown — no preamble, no explanation, no code fences:
-
-            ---
-            title: "Daily Digest — ${{ env.DIGEST_DATE }}"
-            date: ${{ env.DIGEST_FRONT }}
-            summary: "One sentence covering the 3-4 top stories of today"
-            ---
-
-            ## Markets
-
-            | Index | Price | Change |
-            |-------|-------|--------|
-            | Nifty 50 | ... | ...% |
-            | Sensex | ... | ...% |
-
-            One or two sentences of market commentary.
-
-            ---
-
-            ## Global News
-
-            - **Headline** — brief detail.
-            - **Headline** — brief detail.
-
-            ---
-
-            ## India
-
-            - **Headline** — brief detail.
-            - **Headline** — brief detail.
-
-            ---
-
-            ## Jobs & Tech
-
-            - **Headline** — brief detail.
-            - **Headline** — brief detail.
-
       # ── Generate digest ────────────────────────────────────────────────────
       # Script exits 0 in all cases (Level 4 template is the final guarantee).
-      # GH_AI_RESPONSE is set if Level 0 succeeded; Python validates it first.
+      # Fallback order: Level 1 (AI+search) → Level 2 (AI+real data) →
+      # Level 2.5 (Ollama) → Level 3 (data template) → Level 4 (blank template)
       - name: Generate digest
         env:
-          # Level 0 response from GitHub Models action (may be empty on failure)
-          GH_AI_RESPONSE: ${{ steps.gh_ai.outputs.response }}
           # API keys — from Secrets (masked in logs)
           ANTHROPIC_API_KEY:  ${{ secrets.ANTHROPIC_API_KEY }}
           OPENAI_API_KEY:     ${{ secrets.OPENAI_API_KEY }}
@@ -232,8 +172,8 @@ jobs:
           CONTENT_DIGEST_WRITE_SSH_PRIVATE_KEY: ${{ secrets.CONTENT_DIGEST_WRITE_SSH_PRIVATE_KEY }}
         run: |
           cd content
-          git config user.name  "Daily Digest Bot"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "SamirPaulb"
+          git config user.email "77569653+SamirPaulb@users.noreply.github.com"
           # Fetch latest — the submodule is pinned to an old commit; new blog
           # posts may have been pushed since then. Reset to latest to avoid
           # non-fast-forward push failures.
@@ -263,8 +203,8 @@ jobs:
       - name: Update submodule reference in main repo
         if: steps.submodule_commit.outputs.nothing_new != 'true'
         run: |
-          git config user.name  "Daily Digest Bot"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "SamirPaulb"
+          git config user.email "77569653+SamirPaulb@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
           git add content
           if git diff --staged --quiet; then
