@@ -118,7 +118,8 @@ jobs:
           key: hugo-public-${{ runner.os }}-${{ github.run_id }}
 
       - name: Log build mode
-        run: echo "Build mode: $BUILD_MODE"
+        run: |
+          echo "Build mode: $BUILD_MODE"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
