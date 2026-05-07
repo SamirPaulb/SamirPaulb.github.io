@@ -172,7 +172,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   # ----------------------------------------------------------------------------
   [params.author]
     name = "Samir Paul"
-    email = "www.netproxy+website@gmail.com"
+    email = "netproxy@duck.com"
     link = "/about/"
     avatar = "/avatar.webp"
 
