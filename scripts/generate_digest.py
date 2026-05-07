@@ -1,11 +1,9 @@
 """
-generate_digest.py — Daily Digest with 6-level fallback
+generate_digest.py — Daily Digest with 5-level fallback
 ========================================================
 Designed to run unchanged for 10+ years.
 
 FALLBACK LEVELS (tried in order):
-  Level 0    GitHub Models via actions/ai-inference@v1 (GH_AI_RESPONSE env var)
-               — always available, uses GITHUB_TOKEN automatically, no extra secrets
   Level 1    AI + live web search  (Claude → OpenAI → Gemini → OpenRouter)
   Level 2    AI + pre-fetched data (same four providers + GitHub Models via urllib)
   Level 2.5  Local Ollama model    (qwen2.5:0.5b — set OLLAMA_MODEL env var to enable)
@@ -30,10 +28,8 @@ API KEYS — set as GitHub Secrets:
   ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, OPENROUTER_API_KEY
   (set any subset — only providers with keys are tried)
 
-NOTE: GitHub Models runs as Level 0 via the official actions/ai-inference@v1
-  action BEFORE this script. The workflow passes GH_AI_RESPONSE as an env var.
-  models: read permission must be set in the workflow permissions block.
-  GITHUB_TOKEN is passed explicitly so the Level 2 urllib fallback also works.
+NOTE: GITHUB_TOKEN is auto-injected in Actions and used by the Level 2
+  urllib fallback (GitHub Models). No extra secrets needed for that level.
 """
 
 from __future__ import annotations
@@ -211,7 +207,6 @@ def _clean(text: str) -> str:
 # Map source identifiers → human-readable author label for front matter.
 # Data-only and blank-template levels produce no AI author, so they are omitted.
 _SOURCE_AUTHOR: dict[str, str] = {
-    "github-models-action": "GitHub Models",
     "claude":               "Claude",
     "claude+data":          "Claude",
     "openai":               "OpenAI",
@@ -613,21 +608,6 @@ def main() -> None:
     source: str = "unknown"
     market: Optional[dict] = None
     hn: Optional[list] = None
-
-    # ── Level 0: GitHub Models via actions/ai-inference@v1 ─────────────────
-    # The workflow runs the official action BEFORE this script and passes the
-    # response as GH_AI_RESPONSE. No API keys required — uses GITHUB_TOKEN.
-    _log("INFO", "─── Level 0: GitHub Models (actions/ai-inference) ────────")
-    gh_ai = os.environ.get("GH_AI_RESPONSE", "")
-    if gh_ai and _validate(gh_ai):
-        result, source = gh_ai, "github-models-action"
-        _log("OK", "github-models-action ✓")
-    else:
-        if gh_ai:
-            snippet = (_normalize(gh_ai) or "")[:100].replace("\n", "↵")
-            _log("FAIL", f"github-models-action — invalid output: {snippet!r}")
-        else:
-            _log("SKIP", "github-models-action — GH_AI_RESPONSE not set")
 
     # ── Level 1: AI + live web search ──────────────────────────────────────
     if not result:
