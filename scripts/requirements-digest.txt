@@ -1,0 +1,8 @@
+# Daily Digest generator dependencies
+# Pinned to major version — allows all bug-fix/security updates,
+# blocks breaking major-version changes.
+# Update upper bound only when the new major version is confirmed
+# backwards-compatible with this script.
+anthropic>=0.20,<2
+openai>=1.0,<2
+google-genai>=0.8,<2
