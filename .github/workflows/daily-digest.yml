@@ -85,6 +85,7 @@ jobs:
         uses: actions/ai-inference@v1
         with:
           model: ${{ vars.GITHUB_MODEL || 'openai/gpt-4o-mini' }}
+          max-tokens: 2048
           prompt: |
             You are a daily digest writer for an Indian finance and tech blog.
             Today is ${{ env.DIGEST_DATE }}.
@@ -236,7 +237,7 @@ jobs:
             echo "Nothing new in content submodule — skipping."
           else
             git commit -m "Daily Digest — $(TZ='Asia/Kolkata' date '+%B %d, %Y')"
-            git push
+            git push origin HEAD:main
             echo "nothing_new=false" >> "$GITHUB_OUTPUT"
           fi
 
@@ -261,4 +262,5 @@ jobs:
             git push
             echo "✅ Pushed [digest-only] commit — hugo-digest-only.yml will build"
           fi
+
 
