@@ -80,7 +80,7 @@ CFG = {
     "GEMINI_MODEL":            _env("GEMINI_MODEL",            "gemini-2.0-flash"),
     "OPENROUTER_SEARCH_MODEL": _env("OPENROUTER_SEARCH_MODEL", "perplexity/llama-3.1-sonar-small-128k-online"),
     "OPENROUTER_FREE_MODEL":   _env("OPENROUTER_FREE_MODEL",   "google/gemini-2.0-flash-exp:free"),
-    "GITHUB_MODEL":            _env("GITHUB_MODEL",            "openai/gpt-4o-mini"),
+    "GITHUB_MODEL":            _env("GITHUB_MODEL",            "gpt-4o-mini"),
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -385,8 +385,11 @@ def _github_models_call(prompt: str) -> str:
     token = os.environ.get("GITHUB_TOKEN", "")
     if not token:
         return ""
+    # The REST API uses the bare model ID (e.g. "gpt-4o-mini"), not the
+    # publisher-prefixed catalog ID ("openai/gpt-4o-mini") used by actions/ai-inference.
+    model_id = CFG["GITHUB_MODEL"].split("/")[-1]
     body = json.dumps({
-        "model": CFG["GITHUB_MODEL"],
+        "model": model_id,
         "messages": [{"role": "user", "content": prompt}],
         "max_tokens": 2048,
     }).encode()
@@ -667,6 +670,7 @@ def main() -> None:
                     "model": ollama_model,
                     "prompt": prompt,
                     "stream": False,
+                    "options": {"temperature": 0.1, "num_predict": 1024},
                 }).encode()
                 req = urllib.request.Request(
                     "http://localhost:11434/api/generate",
@@ -715,3 +719,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
