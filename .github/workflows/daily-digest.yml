@@ -11,7 +11,8 @@ name: Daily Digest Generator
 #     OPENAI_API_KEY             — platform.openai.com API key
 #     GEMINI_API_KEY             — aistudio.google.com API key
 #     OPENROUTER_API_KEY         — openrouter.ai API key
-#     CONTENT_SUBMODULE_SSH_PRIVATE_KEY  — deploy key WITH WRITE ACCESS to content repo
+#     CONTENT_SUBMODULE_SSH_PRIVATE_KEY  — read-only deploy key for cloning content repo (also used by Cloudflare)
+#     CONTENT_DIGEST_WRITE_SSH_PRIVATE_KEY           — separate deploy key WITH write access to content repo (digest push only)
 #     (set any subset — only providers with keys are tried)
 #
 #   GitHub Variables  (Settings → Variables → Actions)
@@ -227,17 +228,30 @@ jobs:
       # ── Commit digest to content submodule ─────────────────────────────────
       - name: Commit digest to content submodule
         id: submodule_commit
+        env:
+          CONTENT_DIGEST_WRITE_SSH_PRIVATE_KEY: ${{ secrets.CONTENT_DIGEST_WRITE_SSH_PRIVATE_KEY }}
         run: |
           cd content
           git config user.name  "Daily Digest Bot"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Fetch latest — the submodule is pinned to an old commit; new blog
+          # posts may have been pushed since then. Reset to latest to avoid
+          # non-fast-forward push failures.
+          git fetch origin main
+          git checkout -B main origin/main
           git add daily-digest/
           if git diff --staged --quiet; then
             echo "nothing_new=true" >> "$GITHUB_OUTPUT"
             echo "Nothing new in content submodule — skipping."
           else
             git commit -m "Daily Digest — $(TZ='Asia/Kolkata' date '+%B %d, %Y')"
-            git push origin HEAD:main
+            # Use the write deploy key only for the push step.
+            # The checkout used the read-only key (shared with Cloudflare).
+            install -m 600 /dev/null /tmp/digest_write_key
+            echo "$CONTENT_DIGEST_WRITE_SSH_PRIVATE_KEY" > /tmp/digest_write_key
+            GIT_SSH_COMMAND="ssh -i /tmp/digest_write_key -o StrictHostKeyChecking=no" \
+              git push origin main
+            rm -f /tmp/digest_write_key
             echo "nothing_new=false" >> "$GITHUB_OUTPUT"
           fi
 
