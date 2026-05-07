@@ -1,0 +1,264 @@
+name: Daily Digest Generator
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Runs daily at 07:30 IST (02:00 UTC).
+# Falls back through 6 levels — always produces a file, never fails the job.
+#
+# INITIAL SETUP (one-time, no code changes ever needed after this):
+#
+#   GitHub Secrets  (Settings → Secrets → Actions)
+#     ANTHROPIC_API_KEY          — claude.ai API key
+#     OPENAI_API_KEY             — platform.openai.com API key
+#     GEMINI_API_KEY             — aistudio.google.com API key
+#     OPENROUTER_API_KEY         — openrouter.ai API key
+#     CONTENT_SUBMODULE_SSH_PRIVATE_KEY  — deploy key WITH WRITE ACCESS to content repo
+#     (set any subset — only providers with keys are tried)
+#
+#   GitHub Variables  (Settings → Variables → Actions)
+#     CLAUDE_MODEL               — update when Anthropic deprecates the model
+#     CLAUDE_SEARCH_TOOL         — update when search tool version changes
+#     OPENAI_SEARCH_MODEL        — update when OpenAI renames the search model
+#     OPENAI_MODEL               — update when OpenAI deprecates the model
+#     GEMINI_MODEL               — update when Google deprecates the model
+#     OPENROUTER_SEARCH_MODEL    — update to any Perplexity/online model
+#     OPENROUTER_FREE_MODEL      — update to any free model on OpenRouter
+#     GITHUB_MODEL               — update when GitHub Models changes available models
+#     (all optional — script has safe defaults if variable is not set)
+#
+# NOTE: GITHUB_TOKEN is automatic — models: read permission enables GitHub Models.
+# WHEN A MODEL IS DEPRECATED: update the GitHub Variable. No code change.
+# ──────────────────────────────────────────────────────────────────────────────
+
+on:
+  schedule:
+    - cron: '0 2 * * *'    # 07:30 IST = 02:00 UTC
+  workflow_dispatch:        # manual trigger from Actions tab
+
+permissions:
+  contents: write           # needed to push to main repo
+  models: read              # required for actions/ai-inference@v1 (GitHub Models)
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      # ── Checkout blog repo + content submodule ─────────────────────────────
+      # CONTENT_SUBMODULE_SSH_PRIVATE_KEY must be a deploy key with WRITE access
+      # to the private content repo.
+      - name: Checkout blog with content submodule
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+          ssh-key: ${{ secrets.CONTENT_SUBMODULE_SSH_PRIVATE_KEY }}
+
+      # ── Python setup ───────────────────────────────────────────────────────
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'   # always latest stable Python 3
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: digest-pip-${{ hashFiles('scripts/requirements-digest.txt') }}
+          restore-keys: digest-pip-
+
+      - name: Install provider packages
+        run: pip install -r scripts/requirements-digest.txt
+
+      # ── Set date env vars (used in the Level 0 prompt) ─────────────────────
+      - name: Set date variables
+        run: |
+          echo "DIGEST_DATE=$(TZ='Asia/Kolkata' date '+%B %d, %Y')" >> "$GITHUB_ENV"
+          echo "DIGEST_FRONT=$(TZ='Asia/Kolkata' date '+%Y-%m-%dT07:00:00+05:30')" >> "$GITHUB_ENV"
+
+      # ── Level 0: GitHub Models via official action (no extra secrets) ──────
+      # Uses GITHUB_TOKEN automatically — only models: read permission needed.
+      # continue-on-error: true ensures failure here doesn't skip Level 1-4.
+      - name: Try GitHub Models (Level 0)
+        id: gh_ai
+        continue-on-error: true
+        uses: actions/ai-inference@v1
+        with:
+          model: ${{ vars.GITHUB_MODEL || 'openai/gpt-4o-mini' }}
+          prompt: |
+            You are a daily digest writer for an Indian finance and tech blog.
+            Today is ${{ env.DIGEST_DATE }}.
+
+            Write a daily digest with today's real data. Include:
+            - Nifty 50 and Sensex closing prices and % change
+            - 2-3 major global news stories
+            - 2-3 India stories (economy, policy, business)
+            - 2-3 Jobs & Tech stories (AI, startups, hiring)
+
+            Output ONLY the following Hugo markdown — no preamble, no explanation, no code fences:
+
+            ---
+            title: "Daily Digest — ${{ env.DIGEST_DATE }}"
+            date: ${{ env.DIGEST_FRONT }}
+            summary: "One sentence covering the 3-4 top stories of today"
+            ---
+
+            ## Markets
+
+            | Index | Price | Change |
+            |-------|-------|--------|
+            | Nifty 50 | ... | ...% |
+            | Sensex | ... | ...% |
+
+            One or two sentences of market commentary.
+
+            ---
+
+            ## Global News
+
+            - **Headline** — brief detail.
+            - **Headline** — brief detail.
+
+            ---
+
+            ## India
+
+            - **Headline** — brief detail.
+            - **Headline** — brief detail.
+
+            ---
+
+            ## Jobs & Tech
+
+            - **Headline** — brief detail.
+            - **Headline** — brief detail.
+
+      # ── Generate digest ────────────────────────────────────────────────────
+      # Script exits 0 in all cases (Level 4 template is the final guarantee).
+      # GH_AI_RESPONSE is set if Level 0 succeeded; Python validates it first.
+      - name: Generate digest
+        env:
+          # Level 0 response from GitHub Models action (may be empty on failure)
+          GH_AI_RESPONSE: ${{ steps.gh_ai.outputs.response }}
+          # API keys — from Secrets (masked in logs)
+          ANTHROPIC_API_KEY:  ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY:     ${{ secrets.OPENAI_API_KEY }}
+          GEMINI_API_KEY:     ${{ secrets.GEMINI_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          # Model names — from Variables (visible, updateable without code change)
+          CLAUDE_MODEL:             ${{ vars.CLAUDE_MODEL }}
+          CLAUDE_SEARCH_TOOL:       ${{ vars.CLAUDE_SEARCH_TOOL }}
+          OPENAI_SEARCH_MODEL:      ${{ vars.OPENAI_SEARCH_MODEL }}
+          OPENAI_MODEL:             ${{ vars.OPENAI_MODEL }}
+          GEMINI_MODEL:             ${{ vars.GEMINI_MODEL }}
+          OPENROUTER_SEARCH_MODEL:  ${{ vars.OPENROUTER_SEARCH_MODEL }}
+          OPENROUTER_FREE_MODEL:    ${{ vars.OPENROUTER_FREE_MODEL }}
+          GITHUB_MODEL:             ${{ vars.GITHUB_MODEL }}
+          # Needed for the urllib-based GitHub Models fallback in Level 2
+          GITHUB_TOKEN:             ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/generate_digest.py
+
+      # ── Ollama local AI fallback (Level 2.5) ───────────────────────────────
+      # Runs only when all cloud AI failed and the output is a data-only or blank
+      # template (detected by [verify] / [DRAFT markers).
+      # Zero overhead on normal runs — all three steps are skipped when cloud AI works.
+      # On first cold run: Ollama binary install (~10s) + model pull (~2min, 350MB).
+      # Subsequent fallback runs: model restored from cache → only binary install.
+      - name: Check if local AI fallback (Ollama) needed
+        id: ollama_check
+        run: |
+          DATE_ISO=$(TZ='Asia/Kolkata' date '+%Y-%m-%d')
+          FILE="content/daily-digest/${DATE_ISO}.md"
+          if [ -f "$FILE" ] && grep -qE '\[verify\]|\[DRAFT' "$FILE"; then
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+            echo "⚠️  All cloud AI failed — activating local Ollama fallback"
+          else
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+            echo "✅ Cloud AI succeeded — Ollama not needed"
+          fi
+
+      - name: Restore Ollama model cache
+        if: steps.ollama_check.outputs.needed == 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.ollama
+          key: ollama-qwen2.5-0.5b-${{ runner.os }}
+
+      - name: Install Ollama + regenerate with local model
+        if: steps.ollama_check.outputs.needed == 'true'
+        env:
+          CLAUDE_MODEL:             ${{ vars.CLAUDE_MODEL }}
+          CLAUDE_SEARCH_TOOL:       ${{ vars.CLAUDE_SEARCH_TOOL }}
+          OPENAI_SEARCH_MODEL:      ${{ vars.OPENAI_SEARCH_MODEL }}
+          OPENAI_MODEL:             ${{ vars.OPENAI_MODEL }}
+          GEMINI_MODEL:             ${{ vars.GEMINI_MODEL }}
+          OPENROUTER_SEARCH_MODEL:  ${{ vars.OPENROUTER_SEARCH_MODEL }}
+          OPENROUTER_FREE_MODEL:    ${{ vars.OPENROUTER_FREE_MODEL }}
+          GITHUB_MODEL:             ${{ vars.GITHUB_MODEL }}
+          GITHUB_TOKEN:             ${{ secrets.GITHUB_TOKEN }}
+          OLLAMA_MODEL:             qwen2.5:0.5b
+        run: |
+          # Install Ollama binary
+          curl -fsSL https://ollama.ai/install.sh | sh
+          # Start server in background, wait for it to be ready
+          ollama serve &
+          OLLAMA_PID=$!
+          for i in $(seq 1 10); do
+            curl -s http://localhost:11434 > /dev/null 2>&1 && break || sleep 1
+          done
+          # Pull model (instant from cache, ~2 min on cold start)
+          ollama pull qwen2.5:0.5b
+          # Delete the placeholder output so the script regenerates
+          DATE_ISO=$(TZ='Asia/Kolkata' date '+%Y-%m-%d')
+          rm -f "content/daily-digest/${DATE_ISO}.md"
+          # Regenerate — Level 2.5 will now use Ollama
+          python scripts/generate_digest.py
+          # Shut down Ollama server
+          kill $OLLAMA_PID 2>/dev/null || true
+
+      - name: Save Ollama model cache
+        if: steps.ollama_check.outputs.needed == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.ollama
+          key: ollama-qwen2.5-0.5b-${{ runner.os }}
+
+      # ── Commit digest to content submodule ─────────────────────────────────
+      - name: Commit digest to content submodule
+        id: submodule_commit
+        run: |
+          cd content
+          git config user.name  "Daily Digest Bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add daily-digest/
+          if git diff --staged --quiet; then
+            echo "nothing_new=true" >> "$GITHUB_OUTPUT"
+            echo "Nothing new in content submodule — skipping."
+          else
+            git commit -m "Daily Digest — $(TZ='Asia/Kolkata' date '+%B %d, %Y')"
+            git push
+            echo "nothing_new=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ── Update main repo's submodule pointer ───────────────────────────────
+      # The [digest-only] tag causes hugo.yml to skip a full build and
+      # hugo-digest-only.yml to run instead (triggered directly by this push).
+      # notify-parent.yml in the private content repo is NOT triggered here —
+      # no private repo Actions minutes are used for daily digest.
+      - name: Update submodule reference in main repo
+        if: steps.submodule_commit.outputs.nothing_new != 'true'
+        run: |
+          git config user.name  "Daily Digest Bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git add content
+          if git diff --staged --quiet; then
+            echo "Submodule pointer already up to date."
+          else
+            git commit -m "chore: daily digest [digest-only]"
+            # Pull rebase before push to handle rare concurrent pushes to main
+            git pull --rebase origin main
+            git push
+            echo "✅ Pushed [digest-only] commit — hugo-digest-only.yml will build"
+          fi
+
