@@ -11,6 +11,8 @@ name: Daily Digest Generator
 #     OPENAI_API_KEY             — platform.openai.com API key
 #     GEMINI_API_KEY             — aistudio.google.com API key
 #     OPENROUTER_API_KEY         — openrouter.ai API key
+#     TAVILY_API_KEY             — tavily.com API key (Level 1.5 + Level 3 news)
+#     EXA_API_KEY                — exa.ai API key (fallback when Tavily section is empty)
 #     CONTENT_SUBMODULE_SSH_PRIVATE_KEY  — read-only deploy key for cloning content repo (also used by Cloudflare)
 #     CONTENT_DIGEST_WRITE_SSH_PRIVATE_KEY           — separate deploy key WITH write access to content repo (digest push only)
 #     (set any subset — only providers with keys are tried)
@@ -41,13 +43,14 @@ permissions:
 jobs:
   generate:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 90
 
     steps:
       # ── Checkout blog repo + content submodule ─────────────────────────────
       # CONTENT_SUBMODULE_SSH_PRIVATE_KEY must be a deploy key with WRITE access
       # to the private content repo.
       - name: Checkout blog with content submodule
+        timeout-minutes: 10
         uses: actions/checkout@v4
         with:
           submodules: recursive
@@ -68,6 +71,7 @@ jobs:
           restore-keys: digest-pip-
 
       - name: Install provider packages
+        timeout-minutes: 10
         run: pip install -r scripts/requirements-digest.txt
 
       # ── Set date env vars (used in the Level 0 prompt) ─────────────────────
@@ -78,15 +82,19 @@ jobs:
 
       # ── Generate digest ────────────────────────────────────────────────────
       # Script exits 0 in all cases (Level 4 template is the final guarantee).
-      # Fallback order: Level 1 (AI+search) → Level 2 (AI+real data) →
-      # Level 2.5 (Ollama) → Level 3 (data template) → Level 4 (blank template)
+      # Fallback order: Level 1 (AI+search) → Level 1.5 (Tavily+GitHub Models) →
+      # Level 2 (AI+real data) → Level 2.5 (Ollama) →
+      # Level 3 (data template) → Level 4 (blank template)
       - name: Generate digest
+        timeout-minutes: 45
         env:
           # API keys — from Secrets (masked in logs)
           ANTHROPIC_API_KEY:  ${{ secrets.ANTHROPIC_API_KEY }}
           OPENAI_API_KEY:     ${{ secrets.OPENAI_API_KEY }}
           GEMINI_API_KEY:     ${{ secrets.GEMINI_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          TAVILY_API_KEY:     ${{ secrets.TAVILY_API_KEY }}
+          EXA_API_KEY:        ${{ secrets.EXA_API_KEY }}
           # Model names — from Variables (visible, updateable without code change)
           CLAUDE_MODEL:             ${{ vars.CLAUDE_MODEL }}
           CLAUDE_SEARCH_TOOL:       ${{ vars.CLAUDE_SEARCH_TOOL }}
@@ -96,7 +104,7 @@ jobs:
           OPENROUTER_SEARCH_MODEL:  ${{ vars.OPENROUTER_SEARCH_MODEL }}
           OPENROUTER_FREE_MODEL:    ${{ vars.OPENROUTER_FREE_MODEL }}
           GITHUB_MODEL:             ${{ vars.GITHUB_MODEL }}
-          # Needed for the urllib-based GitHub Models fallback in Level 2
+          # Needed for the urllib-based GitHub Models fallback (Level 1.5 + Level 2)
           GITHUB_TOKEN:             ${{ secrets.GITHUB_TOKEN }}
         run: python scripts/generate_digest.py
 
@@ -104,10 +112,11 @@ jobs:
       # Runs only when all cloud AI failed and the output is a data-only or blank
       # template (detected by [verify] / [DRAFT markers).
       # Zero overhead on normal runs — all three steps are skipped when cloud AI works.
-      # On first cold run: Ollama binary install (~10s) + model pull (~2min, 350MB).
+      # On first cold run: Ollama binary install (~10s) + model pull (~2min, ~2.3GB).
       # Subsequent fallback runs: model restored from cache → only binary install.
       - name: Check if local AI fallback (Ollama) needed
         id: ollama_check
+        timeout-minutes: 2
         run: |
           DATE_ISO=$(TZ='Asia/Kolkata' date '+%Y-%m-%d')
           FILE="content/daily-digest/${DATE_ISO}.md"
@@ -121,13 +130,15 @@ jobs:
 
       - name: Restore Ollama model cache
         if: steps.ollama_check.outputs.needed == 'true'
+        timeout-minutes: 5
         uses: actions/cache/restore@v4
         with:
           path: ~/.ollama
-          key: ollama-qwen2.5-0.5b-${{ runner.os }}
+          key: ollama-gemma2-2b-q8-${{ runner.os }}
 
       - name: Install Ollama + regenerate with local model
         if: steps.ollama_check.outputs.needed == 'true'
+        timeout-minutes: 35
         env:
           CLAUDE_MODEL:             ${{ vars.CLAUDE_MODEL }}
           CLAUDE_SEARCH_TOOL:       ${{ vars.CLAUDE_SEARCH_TOOL }}
@@ -138,18 +149,34 @@ jobs:
           OPENROUTER_FREE_MODEL:    ${{ vars.OPENROUTER_FREE_MODEL }}
           GITHUB_MODEL:             ${{ vars.GITHUB_MODEL }}
           GITHUB_TOKEN:             ${{ secrets.GITHUB_TOKEN }}
-          OLLAMA_MODEL:             qwen2.5:0.5b
+          TAVILY_API_KEY:           ${{ secrets.TAVILY_API_KEY }}
+          EXA_API_KEY:              ${{ secrets.EXA_API_KEY }}
+          OLLAMA_MODEL:             gemma2:2b-instruct-q8_0
         run: |
           # Install Ollama binary
           curl -fsSL https://ollama.ai/install.sh | sh
           # Start server in background, wait for it to be ready
           ollama serve &
           OLLAMA_PID=$!
-          for i in $(seq 1 10); do
-            curl -s http://localhost:11434 > /dev/null 2>&1 && break || sleep 1
+          # Poll /api/tags (proper health endpoint) — fail fast if server never starts
+          OLLAMA_READY=false
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:11434/api/tags > /dev/null 2>&1; then
+              echo "✅ Ollama ready after ${i}s"
+              OLLAMA_READY=true
+              break
+            fi
+            sleep 1
           done
-          # Pull model (instant from cache, ~2 min on cold start)
-          ollama pull qwen2.5:0.5b
+          if [ "$OLLAMA_READY" != "true" ]; then
+            echo "❌ Ollama did not start in 30s — aborting local fallback"
+            kill $OLLAMA_PID 2>/dev/null || true
+            exit 1
+          fi
+          # Distilled + quantized model from Ollama registry (stable, immutable tag).
+          # gemma2:2b-instruct-q8_0 — Google Gemma 2 2B distilled from 9B.
+          # Q8_0 = near-lossless precision. ~2.3 GB, faster than 4B-q4 on 2-vCPU runners.
+          ollama pull gemma2:2b-instruct-q8_0
           # Delete the placeholder output so the script regenerates
           DATE_ISO=$(TZ='Asia/Kolkata' date '+%Y-%m-%d')
           rm -f "content/daily-digest/${DATE_ISO}.md"
@@ -160,14 +187,16 @@ jobs:
 
       - name: Save Ollama model cache
         if: steps.ollama_check.outputs.needed == 'true'
+        timeout-minutes: 5
         uses: actions/cache/save@v4
         with:
           path: ~/.ollama
-          key: ollama-qwen2.5-0.5b-${{ runner.os }}
+          key: ollama-gemma2-2b-q8-${{ runner.os }}
 
       # ── Commit digest to content submodule ─────────────────────────────────
       - name: Commit digest to content submodule
         id: submodule_commit
+        timeout-minutes: 10
         env:
           CONTENT_DIGEST_WRITE_SSH_PRIVATE_KEY: ${{ secrets.CONTENT_DIGEST_WRITE_SSH_PRIVATE_KEY }}
         run: |
@@ -190,7 +219,7 @@ jobs:
             install -m 600 /dev/null /tmp/digest_write_key
             echo "$CONTENT_DIGEST_WRITE_SSH_PRIVATE_KEY" > /tmp/digest_write_key
             GIT_SSH_COMMAND="ssh -i /tmp/digest_write_key -o StrictHostKeyChecking=no" \
-              git push origin main
+              git push origin main || { rm -f /tmp/digest_write_key; exit 1; }
             rm -f /tmp/digest_write_key
             echo "nothing_new=false" >> "$GITHUB_OUTPUT"
           fi
@@ -202,6 +231,7 @@ jobs:
       # no private repo Actions minutes are used for daily digest.
       - name: Update submodule reference in main repo
         if: steps.submodule_commit.outputs.nothing_new != 'true'
+        timeout-minutes: 10
         run: |
           git config user.name  "SamirPaulb"
           git config user.email "77569653+SamirPaulb@users.noreply.github.com"
