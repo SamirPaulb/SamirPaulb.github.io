@@ -244,7 +244,7 @@ jobs:
             echo "nothing_new=true" >> "$GITHUB_OUTPUT"
             echo "Nothing new in content submodule — skipping."
           else
-            git commit -m "Daily Digest — $(TZ='Asia/Kolkata' date '+%B %d, %Y')"
+            git commit -m "Daily Digest — $(TZ='Asia/Kolkata' date '+%B %d, %Y') [skip ci]"
             # Use the write deploy key only for the push step.
             # The checkout used the read-only key (shared with Cloudflare).
             install -m 600 /dev/null /tmp/digest_write_key
