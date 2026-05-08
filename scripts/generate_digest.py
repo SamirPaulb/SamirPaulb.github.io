@@ -46,13 +46,16 @@ NOTE: GITHUB_TOKEN is auto-injected in Actions and used by the Level 2
 
 from __future__ import annotations
 
+import html as html_lib
 import json
 import os
+import re
 import sys
 import time
 import urllib.parse
 import urllib.request
 import urllib.error
+import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -129,6 +132,56 @@ _HN_META_PREFIXES = ("ask hn:", "show hn:", "tell hn:", "launch hn:")
 # Placeholder markers that indicate an AI returned template content, not real data.
 # _validate() rejects any output containing these strings.
 _PLACEHOLDER_PATTERNS = ("[DRAFT", "[verify]", "[Headline]", "[price]")
+
+# Substrings that identify generic news-site homepage titles scraped from DDG/Mojeek.
+# These are meta-titles like "Latest News Today, Top Headlines & Live Updates — News24",
+# not actual article headlines. Filtered out before storing results.
+_JUNK_TITLE_FRAGMENTS = (
+    "latest news today",
+    "breaking news",
+    "top headlines",
+    "live updates",
+    "live news",
+    "top news stories",
+    "news today",
+    "today's news",
+    "today news",
+    "latest updates",
+    "all news",
+    "news live",
+    "samachar",         # Hindi: "news" — generic aggregator titles
+    "ताजा समाचार",      # Hindi: "latest news"
+)
+
+# RSS feeds per section — tried in order when Exa has no key / returns nothing.
+# Uses free, well-known feeds; no API key required.  Pure stdlib XML parsing.
+# Multiple feeds per section provide redundancy if one URL changes.
+# First URL that returns non-empty results wins; the rest serve as fallback.
+_RSS_SECTION_FEEDS: dict[str, list[str]] = {
+    "global": [
+        "https://feeds.bbci.co.uk/news/world/rss.xml",           # BBC World (stable since ~2000)
+        "https://feeds.reuters.com/reuters/worldNews",            # Reuters World
+        "https://feeds.reuters.com/reuters/topNews",              # Reuters Top
+        "https://feeds.a.dj.com/rss/RSSWorldNews.xml",           # Wall Street Journal / Dow Jones World
+        "https://feeds.hbr.org/harvardbusiness",                  # Harvard Business Review
+        "https://www.businessinsider.in/rssfeedstopstories.cms",  # Business Insider India
+    ],
+    "india": [
+        "https://timesofindia.indiatimes.com/rssfeedsdefault.cms",    # Times of India top stories
+        "https://www.thehindu.com/feedly/s1/india/feedly.rss",        # The Hindu India
+        "https://economictimes.indiatimes.com/rssfeed/1977021501.cms", # Economic Times
+        "https://feeds.feedburner.com/NdtvProfit-LatestNews",          # NDTV Profit
+        "https://www.livemint.com/rss/news",                           # Livemint
+        "https://www.moneycontrol.com/rss/lateststories.xml",          # MoneyControl
+    ],
+    "tech": [
+        "https://feeds.arstechnica.com/arstechnica/index",        # Ars Technica
+        "https://techcrunch.com/feed/",                           # TechCrunch
+        "https://www.theverge.com/rss/index.xml",                 # The Verge (Atom)
+        "https://www.wired.com/feed/rss",                         # Wired
+        "https://www.technologyreview.com/feed/",                 # MIT Technology Review
+    ],
+}
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Output format template (embedded here so no external file dependency)
@@ -370,16 +423,84 @@ _YAHOO_ENDPOINTS = [
 ]
 
 
-def _fetch_market_data() -> dict:
+def _fetch_nse_nifty() -> Optional[dict]:
     """
-    Yahoo Finance unofficial endpoint.
-    Tries query1 first, falls back to query2 on any error.
-    Each URL is retried up to 2 times with exponential back-off.
-    Falls back gracefully per symbol on all errors.
+    Official Nifty 50 data from NSE's niftyindices.com CDN blob.
+    Updated every few minutes during market hours; no API key or login required.
+    Returns {"price": "...", "change": "..."} or None on any error.
     """
-    symbols = {"Nifty 50": "^NSEI", "Sensex": "^BSESN"}
-    result: dict = {}
+    try:
+        url = (
+            "https://iislliveblob.niftyindices.com/jsonfiles/liveembeddeddata/"
+            "EQIndex_NIFTY%2050.json"
+        )
+        req = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (digest-bot/1.0)",
+                "Referer": "https://www.nseindia.com/",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.load(resp)
+        # Response: {"data": [{"indexName": "NIFTY 50", "last": "23456.78",
+        #                       "percentChange": "0.45", ...}]}
+        for rec in (data.get("data") or []):
+            name = (rec.get("indexName") or "").upper()
+            if "NIFTY 50" in name or "NIFTY50" in name:
+                price = float(rec.get("last") or 0)
+                perc  = float(
+                    str(rec.get("percentChange") or rec.get("percChange") or "0")
+                    .replace("%", "").replace("+", "")
+                )
+                return {"price": f"{price:,.2f}", "change": f"{perc:+.2f}%"}
+    except Exception as exc:
+        _log("WARN", f"  NSE official failed: {exc}")
+    return None
 
+
+def _fetch_bse_sensex() -> Optional[dict]:
+    """
+    Official Sensex data from BSE India's public REST API.
+    Returns {"price": "...", "change": "..."} or None on any error.
+    """
+    try:
+        url = (
+            "https://api.bseindia.com/BseIndiaAPI/api/GetIndexData/w"
+            "?indexnm=BSE%20SENSEX"
+        )
+        req = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (digest-bot/1.0)",
+                "Referer": "https://www.bseindia.com/",
+                "Origin": "https://www.bseindia.com",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.load(resp)
+        # Response: {"Data": [{"IndexName": "BSE SENSEX", "CurrValue": "77123.45",
+        #                       "PercChange": "0.31", ...}]}
+        for rec in (data.get("Data") or []):
+            idx = (rec.get("IndexName") or "").upper()
+            if "SENSEX" in idx:
+                price = float(rec.get("CurrValue") or 0)
+                perc  = float(
+                    str(rec.get("PercChange") or "0")
+                    .replace("%", "").replace("+", "")
+                )
+                return {"price": f"{price:,.2f}", "change": f"{perc:+.2f}%"}
+    except Exception as exc:
+        _log("WARN", f"  BSE official failed: {exc}")
+    return None
+
+
+def _fetch_yahoo_quote(sym: str) -> Optional[dict]:
+    """
+    Fetch a single symbol from Yahoo Finance.
+    Tries query1 first, falls back to query2.  Each host retried twice.
+    Returns {"price": "...", "change": "..."} or None on all errors.
+    """
     def _fetch_url(url: str) -> dict:
         req = urllib.request.Request(
             url, headers={"User-Agent": "Mozilla/5.0 (digest-bot/1.0)"},
@@ -387,33 +508,60 @@ def _fetch_market_data() -> dict:
         with urllib.request.urlopen(req, timeout=10) as resp:
             return json.load(resp)
 
-    for name, sym in symbols.items():
-        sym_enc = urllib.parse.quote(sym)
-        data = None
-        for url_tmpl in _YAHOO_ENDPOINTS:
-            url = url_tmpl.format(sym=sym_enc)
-            try:
-                data = _retry(lambda u=url: _fetch_url(u), attempts=2, base_delay=2.0)
-                break  # success — no need to try query2
-            except Exception as exc:
-                _log("WARN", f"  {name} {url_tmpl.split('/')[2]} failed: {exc}")
+    sym_enc = urllib.parse.quote(sym)
+    for url_tmpl in _YAHOO_ENDPOINTS:
+        url = url_tmpl.format(sym=sym_enc)
+        try:
+            data = _retry(lambda u=url: _fetch_url(u), attempts=2, base_delay=2.0)
+            meta  = data["chart"]["result"][0]["meta"]
+            price = float(meta.get("regularMarketPrice") or 0)
+            prev  = float(meta.get("chartPreviousClose") or price) or price
+            chg   = ((price - prev) / prev * 100) if prev else 0.0
+            return {"price": f"{price:,.2f}", "change": f"{chg:+.2f}%"}
+        except Exception as exc:
+            _log("WARN", f"  Yahoo {url_tmpl.split('/')[2]} ({sym}) failed: {exc}")
+    return None
 
-        if data:
-            try:
-                meta  = data["chart"]["result"][0]["meta"]
-                price = float(meta.get("regularMarketPrice") or 0)
-                prev  = float(meta.get("chartPreviousClose") or price) or price
-                chg   = ((price - prev) / prev * 100) if prev else 0.0
-                result[name] = {
-                    "price":  f"{price:,.2f}",
-                    "change": f"{chg:+.2f}%",
-                }
-                _log("DATA", f"  {name}: {result[name]['price']} ({result[name]['change']})")
-            except Exception as exc:
-                _log("WARN", f"  {name} parse failed: {exc}")
-                result[name] = {"price": "[N/A]", "change": "[N/A]"}
+
+def _fetch_market_data() -> dict:
+    """
+    Market data with official exchange sources as primary, Yahoo Finance as fallback.
+
+    Nifty 50:  NSE niftyindices.com CDN (official) → Yahoo Finance (^NSEI)
+    Sensex:    BSE India REST API (official)        → Yahoo Finance (^BSESN)
+
+    Official sources are more reliable during Indian market hours and have
+    no rate limits.  Yahoo Finance serves as backup for off-hours or API downtime.
+    """
+    result: dict = {}
+
+    # ── Nifty 50 ────────────────────────────────────────────────────────────
+    nifty = _fetch_nse_nifty()
+    if nifty:
+        result["Nifty 50"] = nifty
+        _log("DATA", f"  Nifty 50 (NSE official): {nifty['price']} ({nifty['change']})")
+    else:
+        _log("INFO", "  NSE official unavailable — trying Yahoo Finance for Nifty ...")
+        nifty = _fetch_yahoo_quote("^NSEI")
+        if nifty:
+            result["Nifty 50"] = nifty
+            _log("DATA", f"  Nifty 50 (Yahoo): {nifty['price']} ({nifty['change']})")
         else:
-            result[name] = {"price": "[N/A]", "change": "[N/A]"}
+            result["Nifty 50"] = {"price": "[N/A]", "change": "[N/A]"}
+
+    # ── Sensex ───────────────────────────────────────────────────────────────
+    sensex = _fetch_bse_sensex()
+    if sensex:
+        result["Sensex"] = sensex
+        _log("DATA", f"  Sensex (BSE official): {sensex['price']} ({sensex['change']})")
+    else:
+        _log("INFO", "  BSE official unavailable — trying Yahoo Finance for Sensex ...")
+        sensex = _fetch_yahoo_quote("^BSESN")
+        if sensex:
+            result["Sensex"] = sensex
+            _log("DATA", f"  Sensex (Yahoo): {sensex['price']} ({sensex['change']})")
+        else:
+            result["Sensex"] = {"price": "[N/A]", "change": "[N/A]"}
 
     return result
 
@@ -466,10 +614,94 @@ def _fetch_hn_headlines(n: int = 8) -> list:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Search fallbacks — per-section chain: Exa → DDG Lite → Mojeek
-# Exa is a paid API (EXA_API_KEY); DDG and Mojeek need no key.
-# All three are tried in order; _fetch_free_search() encapsulates the chain.
+# Search fallbacks — per-section chain: Exa → RSS → DDG Lite → Mojeek
+# Exa is a paid API (EXA_API_KEY); RSS/DDG/Mojeek need no key.
+# _fetch_free_search() encapsulates the full chain.
 # ──────────────────────────────────────────────────────────────────────────────
+
+def _is_junk_title(title: str) -> bool:
+    """
+    Return True if a search result title is a generic news-site homepage title
+    rather than an actual article headline.
+    Examples of junk: "Latest News Today, Top Headlines & Live Updates — News24"
+    """
+    t = title.lower()
+    return any(frag in t for frag in _JUNK_TITLE_FRAGMENTS)
+
+
+def _strip_html_brief(raw: str) -> str:
+    """Strip HTML tags and entities from a short snippet string."""
+    text = re.sub(r"<[^>]+>", " ", raw)
+    text = html_lib.unescape(text)
+    return " ".join(text.split())[:150]
+
+
+def _fetch_rss_headlines(url: str, n: int = 4) -> list:
+    """
+    Fetch article headlines from an RSS 2.0 or Atom feed.
+    Pure stdlib — no packages required.
+    Returns list of "**Title** — brief snippet." strings.
+    Falls back to [] on any error.
+    """
+    try:
+        req = urllib.request.Request(
+            url, headers={"User-Agent": "Mozilla/5.0 (digest-bot/1.0)"}
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            xml_data = resp.read()
+        root = ET.fromstring(xml_data)
+    except Exception as exc:
+        _log("WARN", f"  RSS {url}: {exc}")
+        return []
+
+    items: list[str] = []
+
+    # RSS 2.0 — <channel><item><title>...</title><description>...</description>
+    channel = root.find("channel")
+    if channel is not None:
+        for elem in channel.findall("item"):
+            if len(items) >= n:
+                break
+            title = (elem.findtext("title") or "").strip()
+            if not title or _is_junk_title(title):
+                continue
+            desc_raw = (elem.findtext("description") or "").strip()
+            brief = _strip_html_brief(desc_raw).split(". ")[0] if desc_raw else ""
+            items.append(f"**{title}** — {brief}." if brief else f"**{title}**")
+        if items:
+            _log("DATA", f"  RSS (RSS2): {len(items)} results — {url.split('/')[2]}")
+            return items
+
+    # Atom — <feed><entry><title>...</title><summary>...</summary>
+    atom_ns = "http://www.w3.org/2005/Atom"
+    for entry in root.findall(f"{{{atom_ns}}}entry"):
+        if len(items) >= n:
+            break
+        title_el  = entry.find(f"{{{atom_ns}}}title")
+        summary_el = entry.find(f"{{{atom_ns}}}summary")
+        title = (title_el.text or "").strip() if title_el is not None else ""
+        if not title or _is_junk_title(title):
+            continue
+        brief_raw = (summary_el.text or "").strip() if summary_el is not None else ""
+        brief = _strip_html_brief(brief_raw).split(". ")[0] if brief_raw else ""
+        items.append(f"**{title}** — {brief}." if brief else f"**{title}**")
+
+    if items:
+        _log("DATA", f"  RSS (Atom): {len(items)} results — {url.split('/')[2]}")
+    return items
+
+
+def _fetch_rss_section(section: str, n: int = 4) -> list:
+    """
+    Try each RSS feed URL for the given section in order.
+    Returns the first non-empty result list, or [] if all fail.
+    """
+    for url in _RSS_SECTION_FEEDS.get(section, []):
+        results = _fetch_rss_headlines(url, n)
+        if results:
+            return results
+    return []
+
 
 def _fetch_ddg_headlines(query: str, n: int = 4) -> list:
     """
@@ -502,7 +734,7 @@ def _fetch_ddg_headlines(query: str, n: int = 4) -> list:
             if len(items) >= n:
                 break
             title = link.get_text(strip=True)
-            if not title:
+            if not title or _is_junk_title(title):
                 continue
             snippet = ""
             row = link.find_parent("tr")
@@ -516,7 +748,7 @@ def _fetch_ddg_headlines(query: str, n: int = 4) -> list:
                         if text and not text.startswith(("http", "www.")):
                             snippet = text[:150]
             items.append(f"**{title}** — {snippet}." if snippet else f"**{title}**")
-        _log("DATA", f"  DDG: {len(items)} results")
+        _log("DATA", f"  DDG: {len(items)} results (after junk filter)")
         return items
     except Exception as exc:
         _log("WARN", f"  DDG search failed: {exc}")
@@ -557,11 +789,13 @@ def _fetch_mojeek_headlines(query: str, n: int = 4) -> list:
             if span:
                 span.decompose()
             title = title_el.get_text(strip=True)
+            if _is_junk_title(title):
+                continue
             snippet_el = item.select_one("p.s")
             snippet = snippet_el.get_text(strip=True)[:150] if snippet_el else ""
             if title:
                 items.append(f"**{title}** — {snippet}." if snippet else f"**{title}**")
-        _log("DATA", f"  Mojeek: {len(items)} results")
+        _log("DATA", f"  Mojeek: {len(items)} results (after junk filter)")
         return items
     except Exception as exc:
         _log("WARN", f"  Mojeek search failed: {exc}")
@@ -583,15 +817,15 @@ def _fetch_exa_headlines(query: str, n: int = 4) -> list:
         client = Exa(api_key)
         # yesterday as start date to filter to today's news only
         yesterday = (_now - timedelta(hours=36)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
-        resp = client.search(
+        # search_and_contents() fetches text/highlights alongside results in one call.
+        # text=True and highlights=True use SDK defaults (500 chars, 2 sentences).
+        resp = client.search_and_contents(
             query,
             category="news",
             num_results=n + 2,
             type="deep",
-            contents={
-                "text": {"max_characters": 500},
-                "highlights": True,
-            },
+            text=True,
+            highlights=True,
             start_published_date=yesterday,
         )
         items = []
@@ -603,10 +837,12 @@ def _fetch_exa_headlines(query: str, n: int = 4) -> list:
                 continue
             # prefer first highlight snippet over raw text (more relevant)
             brief = ""
-            if r.highlights:
-                brief = r.highlights[0].strip()[:150]
-            elif r.text:
-                brief = r.text.split(". ")[0].strip()[:150]
+            highlights = getattr(r, "highlights", None) or []
+            text = getattr(r, "text", None) or ""
+            if highlights:
+                brief = str(highlights[0]).strip()[:150]
+            elif text:
+                brief = text.split(". ")[0].strip()[:150]
             items.append(f"**{title}** — {brief}." if brief else f"**{title}**")
         _log("DATA", f"  Exa: {len(items)} results")
         return items
@@ -615,17 +851,24 @@ def _fetch_exa_headlines(query: str, n: int = 4) -> list:
         return []
 
 
-def _fetch_free_search(query: str, n: int = 4) -> list:
+def _fetch_free_search(query: str, n: int = 4, section: str = "global") -> list:
     """
     Per-section search fallback chain (no LLM):
-      Exa (paid, deep neural) → DDG Lite (free) → Mojeek (free, independent index).
+      Exa (paid, deep neural) → RSS feeds (free, real articles) →
+      DDG Lite (free, scraping) → Mojeek (free, independent index).
     Returns the first non-empty result list.
+    `section` is used to select the right RSS feed list ("global", "india", "tech").
     """
     # Exa: best quality, requires EXA_API_KEY
     results = _fetch_exa_headlines(query, n)
     if results:
         return results
-    # DDG Lite: free, no key
+    # RSS: free, no key, real article titles from reputable sources
+    results = _fetch_rss_section(section, n)
+    if results:
+        return results
+    _log("INFO", f"  RSS empty for [{section}] — trying DDG ...")
+    # DDG Lite: free, scraping — junk titles are filtered
     results = _fetch_ddg_headlines(query, n)
     if results:
         return results
@@ -648,7 +891,7 @@ def _fetch_tavily_section(label: str, query: str,
         return "", []
     try:
         from tavily import TavilyClient
-        client = TavilyClient(api_key=api_key, timeout=30)
+        client = TavilyClient(api_key=api_key)
         resp = client.search(
             query=query,
             topic=topic,
@@ -1164,15 +1407,15 @@ def main() -> None:
     sections_needing_fallback: dict[str, Callable] = {}
     if not glob_news:
         sections_needing_fallback["glob"]  = lambda: _fetch_free_search(
-            f"world news today {DATE_HUMAN}"
+            f"world news today {DATE_HUMAN}", section="global"
         )
     if not india_news:
         sections_needing_fallback["india"] = lambda: _fetch_free_search(
-            f"India news today {DATE_HUMAN}"
+            f"India news today {DATE_HUMAN}", section="india"
         )
     if not tech_news:
         sections_needing_fallback["tech"]  = lambda: _fetch_free_search(
-            f"AI technology news today {DATE_HUMAN}"
+            f"AI technology news today {DATE_HUMAN}", section="tech"
         )
 
     if sections_needing_fallback:

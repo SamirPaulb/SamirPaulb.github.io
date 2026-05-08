@@ -77,15 +77,6 @@ jobs:
             git checkout origin/main
             cd ..
 
-            # Detect if ONLY daily-digest files changed — enables partial build
-            changed_tops=$(cd content && git diff --name-only ${CONTENT_OLD} ${CONTENT_NEW} \
-              | awk -F'/' '{print $1}' | sort -u | paste -sd,)
-            if [ "$changed_tops" = "daily-digest" ]; then
-              echo "digest_only=true" >> $GITHUB_OUTPUT
-            else
-              echo "digest_only=false" >> $GITHUB_OUTPUT
-            fi
-
             # Create commit message with changelog
             echo "## Content Update" > summary.md
             echo "Updated from \`${CONTENT_OLD:0:7}\` to \`${CONTENT_NEW:0:7}\`" >> summary.md
@@ -102,14 +93,7 @@ jobs:
         run: |
           git add content
 
-          # Tag digest-only commits so hugo-digest-only.yml handles them
-          # instead of hugo.yml doing a full rebuild
-          if [ "${{ steps.check_updates.outputs.digest_only }}" = "true" ]; then
-            COMMIT_TAG=" [digest-only]"
-          else
-            COMMIT_TAG=""
-          fi
-          git commit -m "UPDATE_CONTENT_SUBMODULE${COMMIT_TAG}" -m "$(cat summary.md)"
+          git commit -m "UPDATE_CONTENT_SUBMODULE" -m "$(cat summary.md)"
 
           # Push to main (downstream workflows triggered by workflow_run, not by push event)
           git push origin main

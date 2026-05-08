@@ -225,10 +225,9 @@ jobs:
           fi
 
       # ── Update main repo's submodule pointer ───────────────────────────────
-      # The [digest-only] tag causes hugo.yml to skip a full build and
-      # hugo-digest-only.yml to run instead (triggered directly by this push).
-      # notify-parent.yml in the private content repo is NOT triggered here —
-      # no private repo Actions minutes are used for daily digest.
+      # Push updated submodule pointer to main repo.
+      # hugo.yml does a full build for GitHub Pages.
+      # sync-cloudflare-pages-branch.yml builds and pushes to Cloudflare Pages.
       - name: Update submodule reference in main repo
         if: steps.submodule_commit.outputs.nothing_new != 'true'
         timeout-minutes: 10
@@ -240,10 +239,10 @@ jobs:
           if git diff --staged --quiet; then
             echo "Submodule pointer already up to date."
           else
-            git commit -m "chore: daily digest [digest-only]"
+            git commit -m "chore: daily digest"
             # Pull rebase before push to handle rare concurrent pushes to main
             git pull --rebase origin main
             git push
-            echo "✅ Pushed [digest-only] commit — hugo-digest-only.yml will build"
+            echo "✅ Pushed digest commit — hugo.yml will trigger a full build"
           fi
 
