@@ -38,18 +38,6 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   noJSConfigInAssets = true
   useResourceCacheWhen = "fallback"
 
-# ============================================================================
-# SEGMENTS — Partial builds (Hugo 0.156+)
-# Usage: hugo --renderSegments digest
-# Only builds /daily-digest/* pages — skips all posts, taxonomies, etc.
-# Used by the daily-digest-only workflow to avoid a full site rebuild.
-# ============================================================================
-
-[segments]
-  [segments.digest]
-    [[segments.digest.includes]]
-      path = "/daily-digest/**"
-
 [minify]
   disableCSS = false
   disableHTML = false
@@ -116,16 +104,16 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   name = "About"
   url = "/about/"
   title = ""
-  weight = 4
+  weight = 5
   [menus.main.params]
     icon = "fa-solid fa-user"
 
 [[menus.main]]
   identifier = "daily-digest"
-  name = "Daily Digest"
+  name = "Daily"
   url = "/daily-digest/"
   title = ""
-  weight = 5
+  weight = 4
   [menus.main.params]
     icon = "fa-solid fa-newspaper"
 

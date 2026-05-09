@@ -36,8 +36,12 @@ CONFIGURATION — set as GitHub Variables (not Secrets):
 
 API KEYS — set as GitHub Secrets:
   ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, OPENROUTER_API_KEY
-  TAVILY_API_KEY  — tavily.com (used at Level 1.5 and Level 3, news + finance)
-  EXA_API_KEY     — exa.ai (fallback when Tavily section returns empty)
+  TAVILY_API_KEY   — tavily.com (used at Level 1.5 and Level 3, news + finance)
+  EXA_API_KEY      — exa.ai (fallback when Tavily section returns empty)
+  NEWS_API_KEY     — newsapi.org (primary per-section news fallback)
+  GNEWS_API_KEY    — gnews.io (secondary per-section news fallback)
+  CURRENTS_API_KEY — currentsapi.services (tertiary per-section news fallback)
+  FINNHUB_API_KEY  — finnhub.io (Finnhub market news + quote fallback for indices)
   (set any subset — only providers with keys are tried)
 
 NOTE: GITHUB_TOKEN is auto-injected in Actions and used by the Level 2
@@ -55,7 +59,7 @@ import time
 import urllib.parse
 import urllib.request
 import urllib.error
-import xml.etree.ElementTree as ET
+import feedparser
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -154,7 +158,8 @@ _JUNK_TITLE_FRAGMENTS = (
 )
 
 # RSS feeds per section — tried in order when Exa has no key / returns nothing.
-# Uses free, well-known feeds; no API key required.  Pure stdlib XML parsing.
+# Uses free, well-known feeds; no API key required.  feedparser handles RSS 2.0,
+# Atom, encoding issues, and malformed XML entities automatically.
 # Multiple feeds per section provide redundancy if one URL changes.
 # First URL that returns non-empty results wins; the rest serve as fallback.
 _RSS_SECTION_FEEDS: dict[str, list[str]] = {
@@ -162,19 +167,26 @@ _RSS_SECTION_FEEDS: dict[str, list[str]] = {
         "https://feeds.bbci.co.uk/news/world/rss.xml",           # BBC World (stable since ~2000)
         "https://feeds.reuters.com/reuters/worldNews",            # Reuters World
         "https://feeds.reuters.com/reuters/topNews",              # Reuters Top
-        "https://feeds.a.dj.com/rss/RSSWorldNews.xml",           # Wall Street Journal / Dow Jones World
-        "https://feeds.hbr.org/harvardbusiness",                  # Harvard Business Review
-        "https://www.businessinsider.in/rssfeedstopstories.cms",  # Business Insider India
+        "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",  # NYT Top Stories
+        "https://www.theguardian.com/world/rss",                  # The Guardian World (free)
+        "https://feeds.washingtonpost.com/rss/world",             # Washington Post World
+        "https://feeds.bloomberg.com/markets/news.rss",           # Bloomberg Markets
+        "https://feeds.bloomberg.com/politics/news.rss",          # Bloomberg Politics
+        "https://www.cnbc.com/id/100003114/device/rss/rss.html", # CNBC Top News
+        "https://www.thehindu.com/feeder/default.rss",            # The Hindu (international perspective)
+        "https://www.ft.com/rss/home/international",              # Financial Times International
     ],
     "india": [
         "https://timesofindia.indiatimes.com/rssfeedsdefault.cms",    # Times of India top stories
-        "https://www.thehindu.com/feedly/s1/india/feedly.rss",        # The Hindu India
+        "https://www.thehindu.com/feeder/default.rss",                 # The Hindu (main feed)
+        "https://www.thehindu.com/feedly/s1/india/feedly.rss",        # The Hindu India section
         "https://economictimes.indiatimes.com/rssfeed/1977021501.cms", # Economic Times
         "https://feeds.feedburner.com/NdtvProfit-LatestNews",          # NDTV Profit
         "https://www.livemint.com/rss/news",                           # Livemint
         "https://www.moneycontrol.com/rss/lateststories.xml",          # MoneyControl
     ],
     "tech": [
+        "https://feeds.bloomberg.com/technology/news.rss",        # Bloomberg Technology
         "https://feeds.arstechnica.com/arstechnica/index",        # Ars Technica
         "https://techcrunch.com/feed/",                           # TechCrunch
         "https://www.theverge.com/rss/index.xml",                 # The Verge (Atom)
@@ -199,10 +211,32 @@ summary: "One sentence covering the 3-4 top stories of today"
 
 ## Markets
 
+**India**
+
 | Index | Price | Change |
 |-------|-------|--------|
 | Nifty 50 | ... | ...% |
 | Sensex | ... | ...% |
+
+**Global**
+
+| Index | Price | Change |
+|-------|-------|--------|
+| S&P 500 | ... | ...% |
+| NASDAQ | ... | ...% |
+| Dow Jones | ... | ...% |
+| Nikkei 225 | ... | ...% |
+| FTSE 100 | ... | ...% |
+| DAX | ... | ...% |
+
+**Commodities & Crypto**
+
+| Asset | Price | Change |
+|-------|-------|--------|
+| Gold | ... | ...% |
+| Silver | ... | ...% |
+| Crude Oil | ... | ...% |
+| Bitcoin | ... | ...% |
 
 One or two sentences of market commentary.
 
@@ -423,39 +457,71 @@ _YAHOO_ENDPOINTS = [
 ]
 
 
+_NSE_HEADERS: dict = {
+    "User-Agent": (
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    ),
+    "Referer": "https://www.nseindia.com/",
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "en-US,en;q=0.9",
+}
+
+
 def _fetch_nse_nifty() -> Optional[dict]:
     """
-    Official Nifty 50 data from NSE's niftyindices.com CDN blob.
-    Updated every few minutes during market hours; no API key or login required.
+    Official Nifty 50 daily change from NSE India.
+
+    Primary:  Historical EOD API — queries last 10 calendar days to span
+              weekends/holidays; takes the two most recent sessions to compute
+              daily % change = (close_today - close_prev) / close_prev * 100.
+    Fallback: Intraday API — returns lastPrice + pChange (% vs prev close)
+              directly; useful when the EOD data isn't published yet.
+
     Returns {"price": "...", "change": "..."} or None on any error.
     """
+    # ── Primary: historical EOD ───────────────────────────────────────────────
+    try:
+        to_date   = _now.strftime("%d-%m-%Y")
+        from_date = (_now - timedelta(days=10)).strftime("%d-%m-%Y")
+        url = (
+            "https://www.nseindia.com/api/historicalOR/indicesHistory"
+            f"?indexType=NIFTY%2050&from={from_date}&to={to_date}"
+        )
+        req = urllib.request.Request(url, headers=_NSE_HEADERS)
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            records = (json.load(resp).get("data") or [])
+        if records:
+            close = float(records[-1].get("EOD_CLOSE_INDEX_VAL") or 0)
+            if close:
+                if len(records) >= 2:
+                    prev  = float(records[-2].get("EOD_CLOSE_INDEX_VAL") or close)
+                    perc  = ((close - prev) / prev * 100) if prev else 0.0
+                else:
+                    perc = 0.0
+                _log("DATA", f"  Nifty 50 (NSE EOD): {close:,.2f} ({perc:+.2f}%)")
+                return {"price": f"{close:,.2f}", "change": f"{perc:+.2f}%"}
+    except Exception as exc:
+        _log("WARN", f"  NSE historical failed: {exc}")
+
+    # ── Fallback: intraday API ────────────────────────────────────────────────
     try:
         url = (
-            "https://iislliveblob.niftyindices.com/jsonfiles/liveembeddeddata/"
-            "EQIndex_NIFTY%2050.json"
+            "https://www.nseindia.com/api/equity-stockIndices"
+            "?index=NIFTY%2050"
         )
-        req = urllib.request.Request(
-            url,
-            headers={
-                "User-Agent": "Mozilla/5.0 (digest-bot/1.0)",
-                "Referer": "https://www.nseindia.com/",
-            },
-        )
+        req = urllib.request.Request(url, headers=_NSE_HEADERS)
         with urllib.request.urlopen(req, timeout=10) as resp:
             data = json.load(resp)
-        # Response: {"data": [{"indexName": "NIFTY 50", "last": "23456.78",
-        #                       "percentChange": "0.45", ...}]}
         for rec in (data.get("data") or []):
-            name = (rec.get("indexName") or "").upper()
-            if "NIFTY 50" in name or "NIFTY50" in name:
-                price = float(rec.get("last") or 0)
-                perc  = float(
-                    str(rec.get("percentChange") or rec.get("percChange") or "0")
-                    .replace("%", "").replace("+", "")
-                )
+            if (rec.get("symbol") or "").upper() in ("NIFTY 50", "NIFTY50"):
+                price = float(rec.get("lastPrice") or rec.get("last") or 0)
+                perc  = float(rec.get("pChange") or rec.get("percentChange") or 0)
+                _log("DATA", f"  Nifty 50 (NSE intraday): {price:,.2f} ({perc:+.2f}%)")
                 return {"price": f"{price:,.2f}", "change": f"{perc:+.2f}%"}
     except Exception as exc:
-        _log("WARN", f"  NSE official failed: {exc}")
+        _log("WARN", f"  NSE intraday failed: {exc}")
+
     return None
 
 
@@ -523,47 +589,121 @@ def _fetch_yahoo_quote(sym: str) -> Optional[dict]:
     return None
 
 
+def _fetch_finnhub_quote(sym: str) -> Optional[dict]:
+    """
+    Fetch a quote from Finnhub — fallback when Yahoo Finance fails.
+    Supports major US indices (^GSPC, ^IXIC, ^DJI), stocks, crypto.
+
+    Returns {"price": "...", "change": "..."} or None on error/missing key.
+    Ref: https://finnhub.io/docs/api/quote
+    Response: {"c": current_price, "d": abs_change, "dp": pct_change, "pc": prev_close}
+    """
+    api_key = os.environ.get("FINNHUB_API_KEY", "")
+    if not api_key:
+        return None
+    try:
+        url = (
+            "https://finnhub.io/api/v1/quote"
+            f"?symbol={urllib.parse.quote(sym)}&token={api_key}"
+        )
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "Mozilla/5.0 (digest-bot/1.0)"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.load(resp)
+        price = float(data.get("c") or 0)
+        perc  = float(data.get("dp") or 0)
+        if price:
+            return {"price": f"{price:,.2f}", "change": f"{perc:+.2f}%"}
+    except Exception as exc:
+        _log("WARN", f"  Finnhub quote ({sym}) failed: {exc}")
+    return None
+
+
 def _fetch_market_data() -> dict:
     """
-    Market data with official exchange sources as primary, Yahoo Finance as fallback.
+    Fetch all market data in parallel.
 
-    Nifty 50:  NSE niftyindices.com CDN (official) → Yahoo Finance (^NSEI)
-    Sensex:    BSE India REST API (official)        → Yahoo Finance (^BSESN)
+    India:       NSE historical EOD → NSE intraday → Yahoo Finance → Finnhub
+    Everything else: Yahoo Finance → Finnhub (parallel)
 
-    Official sources are more reliable during Indian market hours and have
-    no rate limits.  Yahoo Finance serves as backup for off-hours or API downtime.
+    Result keys (in display order):
+      India:       "Nifty 50", "Sensex"
+      US:          "S&P 500", "NASDAQ", "Dow Jones"
+      Asia/Europe: "Nikkei 225", "FTSE 100", "DAX"
+      Commodities: "Gold", "Silver", "Crude Oil"
+      Crypto:      "Bitcoin"
     """
     result: dict = {}
+    _NA = {"price": "[N/A]", "change": "[N/A]"}
 
-    # ── Nifty 50 ────────────────────────────────────────────────────────────
+    # ── India: official exchange APIs first ──────────────────────────────────
     nifty = _fetch_nse_nifty()
     if nifty:
         result["Nifty 50"] = nifty
-        _log("DATA", f"  Nifty 50 (NSE official): {nifty['price']} ({nifty['change']})")
     else:
-        _log("INFO", "  NSE official unavailable — trying Yahoo Finance for Nifty ...")
-        nifty = _fetch_yahoo_quote("^NSEI")
-        if nifty:
-            result["Nifty 50"] = nifty
-            _log("DATA", f"  Nifty 50 (Yahoo): {nifty['price']} ({nifty['change']})")
-        else:
-            result["Nifty 50"] = {"price": "[N/A]", "change": "[N/A]"}
+        _log("INFO", "  NSE unavailable — trying Yahoo → Finnhub for Nifty ...")
+        q = _fetch_yahoo_quote("^NSEI") or _fetch_finnhub_quote("^NSEI")
+        result["Nifty 50"] = q or _NA
+        if q:
+            _log("DATA", f"  Nifty 50 (fallback): {q['price']} ({q['change']})")
 
-    # ── Sensex ───────────────────────────────────────────────────────────────
     sensex = _fetch_bse_sensex()
     if sensex:
         result["Sensex"] = sensex
-        _log("DATA", f"  Sensex (BSE official): {sensex['price']} ({sensex['change']})")
+        _log("DATA", f"  Sensex (BSE): {sensex['price']} ({sensex['change']})")
     else:
-        _log("INFO", "  BSE official unavailable — trying Yahoo Finance for Sensex ...")
-        sensex = _fetch_yahoo_quote("^BSESN")
-        if sensex:
-            result["Sensex"] = sensex
-            _log("DATA", f"  Sensex (Yahoo): {sensex['price']} ({sensex['change']})")
-        else:
-            result["Sensex"] = {"price": "[N/A]", "change": "[N/A]"}
+        _log("INFO", "  BSE unavailable — trying Yahoo → Finnhub for Sensex ...")
+        q = _fetch_yahoo_quote("^BSESN") or _fetch_finnhub_quote("^BSESN")
+        result["Sensex"] = q or _NA
+        if q:
+            _log("DATA", f"  Sensex (fallback): {q['price']} ({q['change']})")
 
-    return result
+    # ── Global indices + commodities + crypto (parallel) ────────────────────
+    _GLOBAL_SYMBOLS: list[tuple[str, str]] = [
+        ("S&P 500",    "^GSPC"),
+        ("NASDAQ",     "^IXIC"),
+        ("Dow Jones",  "^DJI"),
+        ("Nikkei 225", "^N225"),
+        ("FTSE 100",   "^FTSE"),
+        ("DAX",        "^GDAXI"),
+        ("Gold",       "GC=F"),
+        ("Silver",     "SI=F"),
+        ("Crude Oil",  "CL=F"),
+        ("Bitcoin",    "BTC-USD"),
+    ]
+
+    def _fetch_one(label: str, sym: str) -> tuple[str, Optional[dict]]:
+        q = _fetch_yahoo_quote(sym)
+        if q:
+            _log("DATA", f"  {label} (Yahoo): {q['price']} ({q['change']})")
+            return label, q
+        # Fallback: Finnhub quote (free tier supports ^GSPC, ^IXIC, ^DJI, crypto)
+        q = _fetch_finnhub_quote(sym)
+        if q:
+            _log("DATA", f"  {label} (Finnhub): {q['price']} ({q['change']})")
+        else:
+            _log("WARN", f"  {label} ({sym}): all sources failed")
+        return label, q
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        futures = {pool.submit(_fetch_one, lbl, sym): lbl for lbl, sym in _GLOBAL_SYMBOLS}
+        for fut in as_completed(futures):
+            label, q = fut.result()
+            result[label] = q or _NA
+
+    # Preserve display order
+    ordered: dict = {}
+    for key in [
+        "Nifty 50", "Sensex",
+        "S&P 500", "NASDAQ", "Dow Jones",
+        "Nikkei 225", "FTSE 100", "DAX",
+        "Gold", "Silver", "Crude Oil",
+        "Bitcoin",
+    ]:
+        ordered[key] = result.get(key, _NA)
+    return ordered
 
 
 def _fetch_hn_headlines(n: int = 8) -> list:
@@ -638,57 +778,36 @@ def _strip_html_brief(raw: str) -> str:
 
 def _fetch_rss_headlines(url: str, n: int = 4) -> list:
     """
-    Fetch article headlines from an RSS 2.0 or Atom feed.
-    Pure stdlib — no packages required.
+    Fetch article headlines from an RSS/Atom feed.
+    Uses feedparser — handles RSS 2.0, Atom, encoding issues, malformed XML.
     Returns list of "**Title** — brief snippet." strings.
     Falls back to [] on any error.
     """
     try:
-        req = urllib.request.Request(
-            url, headers={"User-Agent": "Mozilla/5.0 (digest-bot/1.0)"}
-        )
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            xml_data = resp.read()
-        root = ET.fromstring(xml_data)
-    except Exception as exc:
-        _log("WARN", f"  RSS {url}: {exc}")
-        return []
-
-    items: list[str] = []
-
-    # RSS 2.0 — <channel><item><title>...</title><description>...</description>
-    channel = root.find("channel")
-    if channel is not None:
-        for elem in channel.findall("item"):
+        d = feedparser.parse(url, agent="Mozilla/5.0 (digest-bot/1.0)")
+        if d.get("bozo") and not d.get("entries"):
+            _log("WARN", f"  RSS {url}: unparseable — {d.get('bozo_exception')}")
+            return []
+        items: list[str] = []
+        for entry in d.entries:
             if len(items) >= n:
                 break
-            title = (elem.findtext("title") or "").strip()
+            title = (entry.get("title") or "").strip()
             if not title or _is_junk_title(title):
                 continue
-            desc_raw = (elem.findtext("description") or "").strip()
+            desc_raw = (
+                entry.get("summary")
+                or (entry.get("content") or [{}])[0].get("value")
+                or ""
+            ).strip()
             brief = _strip_html_brief(desc_raw).split(". ")[0] if desc_raw else ""
             items.append(f"**{title}** — {brief}." if brief else f"**{title}**")
         if items:
-            _log("DATA", f"  RSS (RSS2): {len(items)} results — {url.split('/')[2]}")
-            return items
-
-    # Atom — <feed><entry><title>...</title><summary>...</summary>
-    atom_ns = "http://www.w3.org/2005/Atom"
-    for entry in root.findall(f"{{{atom_ns}}}entry"):
-        if len(items) >= n:
-            break
-        title_el  = entry.find(f"{{{atom_ns}}}title")
-        summary_el = entry.find(f"{{{atom_ns}}}summary")
-        title = (title_el.text or "").strip() if title_el is not None else ""
-        if not title or _is_junk_title(title):
-            continue
-        brief_raw = (summary_el.text or "").strip() if summary_el is not None else ""
-        brief = _strip_html_brief(brief_raw).split(". ")[0] if brief_raw else ""
-        items.append(f"**{title}** — {brief}." if brief else f"**{title}**")
-
-    if items:
-        _log("DATA", f"  RSS (Atom): {len(items)} results — {url.split('/')[2]}")
-    return items
+            _log("DATA", f"  RSS: {len(items)} results — {url.split('/')[2]}")
+        return items
+    except Exception as exc:
+        _log("WARN", f"  RSS {url}: {exc}")
+        return []
 
 
 def _fetch_rss_section(section: str, n: int = 4) -> list:
@@ -851,28 +970,276 @@ def _fetch_exa_headlines(query: str, n: int = 4) -> list:
         return []
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Third-party news APIs — four independent paid sources for max stability.
+# Chain position: NewsAPI → GNews → Currents → Finnhub News → Exa → RSS → DDG → Mojeek
+# All require API keys set as GitHub Secrets.
+# ──────────────────────────────────────────────────────────────────────────────
+
+def _fmt_headline(title: str, desc: str = "") -> str:
+    """
+    Format a title + description into a digest headline string.
+    Strips " - Source Name" suffixes that NewsAPI and others append to titles
+    (e.g. "Tesla cuts prices — Reuters" → "Tesla cuts prices").
+    """
+    # Strip trailing " - Source" / " | Source" / " – Source" suffix.
+    # Only strip if the part after the separator is ≤ 50 chars (source name, not content).
+    for sep in (" - ", " | ", " – ", " — "):
+        idx = title.rfind(sep)
+        if 0 < idx <= len(title) - len(sep) and len(title) - idx - len(sep) <= 50:
+            title = title[:idx].strip()
+            break
+    title = title.strip()
+    if not title:
+        return ""
+    brief = _strip_html_brief(desc).split(". ")[0][:150] if desc else ""
+    return f"**{title}** — {brief}." if brief else f"**{title}**"
+
+
+# Section → NewsAPI /v2/top-headlines query parameters.
+# Ref: https://newsapi.org/docs/endpoints/top-headlines
+# country and category may be combined; cannot mix with sources.
+_NEWSAPI_PARAMS: dict[str, dict] = {
+    "global": {"language": "en",                           "pageSize": "8"},
+    "india":  {"country": "in",                            "pageSize": "8"},
+    "tech":   {"category": "technology", "language": "en", "pageSize": "8"},
+}
+
+
+def _fetch_newsapi(section: str = "global", n: int = 4) -> list:
+    """
+    Fetch headlines from NewsAPI.org /v2/top-headlines.
+    Returns list of formatted headline strings, or [] on error/missing key.
+    Ref: https://newsapi.org/docs/endpoints/top-headlines
+    Response: {"status": "ok", "articles": [{"title", "description", "source", ...}]}
+    """
+    api_key = os.environ.get("NEWS_API_KEY", "")
+    if not api_key:
+        return []
+    params = dict(_NEWSAPI_PARAMS.get(section, _NEWSAPI_PARAMS["global"]))
+    params["apiKey"] = api_key
+    url = "https://newsapi.org/v2/top-headlines?" + urllib.parse.urlencode(params)
+    try:
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "Mozilla/5.0 (digest-bot/1.0)"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.load(resp)
+        if data.get("status") != "ok":
+            _log("WARN", f"  NewsAPI [{section}]: status={data.get('status')} "
+                         f"msg={data.get('message', '')[:80]}")
+            return []
+        items: list[str] = []
+        for art in (data.get("articles") or []):
+            if len(items) >= n:
+                break
+            title = (art.get("title") or "").strip()
+            desc  = (art.get("description") or "").strip()
+            if not title or _is_junk_title(title):
+                continue
+            h = _fmt_headline(title, desc)
+            if h:
+                items.append(h)
+        _log("DATA", f"  NewsAPI [{section}]: {len(items)} results")
+        return items
+    except Exception as exc:
+        _log("WARN", f"  NewsAPI [{section}] failed: {exc}")
+        return []
+
+
+# Section → GNews /api/v4/top-headlines query parameters.
+# Ref: https://gnews.io/docs/v4#top-headlines
+# category values: general, world, nation, business, technology,
+#                  entertainment, sports, science, health
+# country: ISO 3166-1 alpha-2 code; apikey: lowercase query param name
+_GNEWS_PARAMS: dict[str, dict] = {
+    "global": {"category": "world",                                   "lang": "en", "max": "8"},
+    "india":  {"category": "nation",  "country": "in",               "lang": "en", "max": "8"},
+    "tech":   {"category": "technology",                              "lang": "en", "max": "8"},
+}
+
+
+def _fetch_gnews(section: str = "global", n: int = 4) -> list:
+    """
+    Fetch headlines from GNews.io /api/v4/top-headlines.
+    Returns list of formatted headline strings, or [] on error/missing key.
+    Ref: https://gnews.io/docs/v4#top-headlines
+    Response: {"articles": [{"title", "description", "source": {"name"}, ...}]}
+    """
+    api_key = os.environ.get("GNEWS_API_KEY", "")
+    if not api_key:
+        return []
+    params = dict(_GNEWS_PARAMS.get(section, _GNEWS_PARAMS["global"]))
+    params["apikey"] = api_key  # GNews uses lowercase 'apikey'
+    url = "https://gnews.io/api/v4/top-headlines?" + urllib.parse.urlencode(params)
+    try:
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "Mozilla/5.0 (digest-bot/1.0)"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.load(resp)
+        items: list[str] = []
+        for art in (data.get("articles") or []):
+            if len(items) >= n:
+                break
+            title = (art.get("title") or "").strip()
+            desc  = (art.get("description") or "").strip()
+            if not title or _is_junk_title(title):
+                continue
+            h = _fmt_headline(title, desc)
+            if h:
+                items.append(h)
+        _log("DATA", f"  GNews [{section}]: {len(items)} results")
+        return items
+    except Exception as exc:
+        _log("WARN", f"  GNews [{section}] failed: {exc}")
+        return []
+
+
+# Section → Currents API /v1/latest-news query parameters.
+# Ref: https://currentsapi.services/en/docs/
+# category values: general, technology, national, world, finance,
+#                  politics, science, sports, health, entertainment
+# language: BCP 47 language tag (e.g. "en"); apiKey: mixed-case query param
+_CURRENTS_PARAMS: dict[str, dict] = {
+    "global": {"category": "world",    "language": "en", "page_size": "8"},
+    "india":  {"category": "national", "language": "en", "page_size": "8"},
+    "tech":   {"category": "technology","language": "en", "page_size": "8"},
+}
+
+
+def _fetch_currents(section: str = "global", n: int = 4) -> list:
+    """
+    Fetch headlines from Currents API /v1/latest-news.
+    Returns list of formatted headline strings, or [] on error/missing key.
+    Ref: https://currentsapi.services/en/docs/
+    Response: {"status": "ok", "news": [{"title", "description", "published", ...}]}
+    """
+    api_key = os.environ.get("CURRENTS_API_KEY", "")
+    if not api_key:
+        return []
+    params = dict(_CURRENTS_PARAMS.get(section, _CURRENTS_PARAMS["global"]))
+    params["apiKey"] = api_key  # Currents uses mixed-case 'apiKey'
+    url = "https://api.currentsapi.services/v1/latest-news?" + urllib.parse.urlencode(params)
+    try:
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "Mozilla/5.0 (digest-bot/1.0)"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.load(resp)
+        if data.get("status") != "ok":
+            _log("WARN", f"  Currents [{section}]: status={data.get('status')}")
+            return []
+        items: list[str] = []
+        for art in (data.get("news") or []):
+            if len(items) >= n:
+                break
+            title = (art.get("title") or "").strip()
+            desc  = (art.get("description") or "").strip()
+            if not title or _is_junk_title(title):
+                continue
+            h = _fmt_headline(title, desc)
+            if h:
+                items.append(h)
+        _log("DATA", f"  Currents [{section}]: {len(items)} results")
+        return items
+    except Exception as exc:
+        _log("WARN", f"  Currents [{section}] failed: {exc}")
+        return []
+
+
+# Finnhub market news categories.
+# Ref: https://finnhub.io/docs/api/market-news
+# Available categories: general, forex, crypto, merger
+# No dedicated technology category on Finnhub free tier.
+_FINNHUB_NEWS_CAT: dict[str, str] = {
+    "global": "general",
+    "india":  "general",
+    "tech":   "general",
+}
+
+
+def _fetch_finnhub_news(section: str = "global", n: int = 4) -> list:
+    """
+    Fetch market news from Finnhub /api/v1/news.
+    Returns list of formatted headline strings, or [] on error/missing key.
+    Ref: https://finnhub.io/docs/api/market-news
+    Response: array of {headline, summary, source, url, datetime, category}
+    """
+    api_key = os.environ.get("FINNHUB_API_KEY", "")
+    if not api_key:
+        return []
+    category = _FINNHUB_NEWS_CAT.get(section, "general")
+    url = f"https://finnhub.io/api/v1/news?category={category}&token={api_key}"
+    try:
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "Mozilla/5.0 (digest-bot/1.0)"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            articles = json.load(resp)
+        items: list[str] = []
+        for art in (articles or []):
+            if len(items) >= n:
+                break
+            title = (art.get("headline") or "").strip()
+            desc  = (art.get("summary") or "").strip()
+            if not title or _is_junk_title(title):
+                continue
+            h = _fmt_headline(title, desc)
+            if h:
+                items.append(h)
+        _log("DATA", f"  Finnhub news [{section}]: {len(items)} results")
+        return items
+    except Exception as exc:
+        _log("WARN", f"  Finnhub news [{section}] failed: {exc}")
+        return []
+
+
 def _fetch_free_search(query: str, n: int = 4, section: str = "global") -> list:
     """
-    Per-section search fallback chain (no LLM):
-      Exa (paid, deep neural) → RSS feeds (free, real articles) →
-      DDG Lite (free, scraping) → Mojeek (free, independent index).
-    Returns the first non-empty result list.
-    `section` is used to select the right RSS feed list ("global", "india", "tech").
+    Per-section search fallback chain (no LLM).  Returns first non-empty result.
+
+    Tier 1 — paid APIs (best freshness, structured data):
+      NewsAPI → GNews → Currents → Finnhub News
+    Tier 2 — Exa deep neural search (paid, requires EXA_API_KEY):
+      Exa
+    Tier 3 — free, no key (RSS feeds from reputable sources):
+      RSS feeds
+    Tier 4 — free scraping (quality lower, junk-filtered):
+      DDG Lite → Mojeek
+
+    `section` selects the right RSS feed list and API category params.
     """
-    # Exa: best quality, requires EXA_API_KEY
+    # Tier 1: third-party news APIs — all keyed, most reliable when available
+    results = _fetch_newsapi(section, n)
+    if results:
+        return results
+    results = _fetch_gnews(section, n)
+    if results:
+        return results
+    results = _fetch_currents(section, n)
+    if results:
+        return results
+    results = _fetch_finnhub_news(section, n)
+    if results:
+        return results
+    # Tier 2: Exa — requires EXA_API_KEY
     results = _fetch_exa_headlines(query, n)
     if results:
         return results
-    # RSS: free, no key, real article titles from reputable sources
+    # Tier 3: RSS — free, no key, real article titles from reputable sources
     results = _fetch_rss_section(section, n)
     if results:
         return results
     _log("INFO", f"  RSS empty for [{section}] — trying DDG ...")
-    # DDG Lite: free, scraping — junk titles are filtered
+    # Tier 4: DDG Lite → Mojeek — free scraping, junk titles filtered
     results = _fetch_ddg_headlines(query, n)
     if results:
         return results
-    # Mojeek: free, independent index
     _log("INFO", "  DDG empty — trying Mojeek ...")
     return _fetch_mojeek_headlines(query, n)
 
@@ -931,8 +1298,11 @@ def _build_direct(
         _log("SKIP", "data-direct — no news data available, skipping Level 1.5")
         return ""
 
+    def _mrow(key: str) -> str:
+        v = market.get(key, {"price": "[N/A]", "change": "[N/A]"})
+        return f"| {key} | {v['price']} | {v['change']} |"
+
     nifty  = market.get("Nifty 50", {"price": "[N/A]", "change": "[N/A]"})
-    sensex = market.get("Sensex",   {"price": "[N/A]", "change": "[N/A]"})
 
     def _section(items: list, placeholder: str) -> str:
         return ("\n".join(f"- {b}" for b in items[:3])
@@ -966,10 +1336,32 @@ summary: "{summary}"
 
 ## Markets
 
+**India**
+
 | Index | Price | Change |
 |-------|-------|--------|
-| Nifty 50 | {nifty['price']} | {nifty['change']} |
-| Sensex | {sensex['price']} | {sensex['change']} |
+{_mrow("Nifty 50")}
+{_mrow("Sensex")}
+
+**Global**
+
+| Index | Price | Change |
+|-------|-------|--------|
+{_mrow("S&P 500")}
+{_mrow("NASDAQ")}
+{_mrow("Dow Jones")}
+{_mrow("Nikkei 225")}
+{_mrow("FTSE 100")}
+{_mrow("DAX")}
+
+**Commodities & Crypto**
+
+| Asset | Price | Change |
+|-------|-------|--------|
+{_mrow("Gold")}
+{_mrow("Silver")}
+{_mrow("Crude Oil")}
+{_mrow("Bitcoin")}
 
 {mkt_comment}
 
@@ -1190,8 +1582,11 @@ def _data_only(market: dict, hn: list,
     When Tavily results are provided, all sections are filled with real news.
     When Tavily is absent, Global News and India sections show [verify] markers.
     """
-    nifty  = market.get("Nifty 50", {"price": "[N/A]", "change": "[N/A]"})
-    sensex = market.get("Sensex",   {"price": "[N/A]", "change": "[N/A]"})
+    def _mrow(key: str) -> str:
+        v = market.get(key, {"price": "[N/A]", "change": "[N/A]"})
+        return f"| {key} | {v['price']} | {v['change']} |"
+
+    nifty = market.get("Nifty 50", {"price": "[N/A]", "change": "[N/A]"})
 
     def _section_bullets(tavily: Optional[list], hn_items: list,
                          verify_msg: str) -> str:
@@ -1238,10 +1633,32 @@ summary: "{summary}"
 
 ## Markets
 
+**India**
+
 | Index | Price | Change |
 |-------|-------|--------|
-| Nifty 50 | {nifty['price']} | {nifty['change']} |
-| Sensex | {sensex['price']} | {sensex['change']} |
+{_mrow("Nifty 50")}
+{_mrow("Sensex")}
+
+**Global**
+
+| Index | Price | Change |
+|-------|-------|--------|
+{_mrow("S&P 500")}
+{_mrow("NASDAQ")}
+{_mrow("Dow Jones")}
+{_mrow("Nikkei 225")}
+{_mrow("FTSE 100")}
+{_mrow("DAX")}
+
+**Commodities & Crypto**
+
+| Asset | Price | Change |
+|-------|-------|--------|
+{_mrow("Gold")}
+{_mrow("Silver")}
+{_mrow("Crude Oil")}
+{_mrow("Bitcoin")}
 
 _Market data auto-fetched._
 
@@ -1278,10 +1695,32 @@ summary: "[DRAFT — fill in summary before publishing]"
 
 ## Markets
 
+**India**
+
 | Index | Price | Change |
 |-------|-------|--------|
 | Nifty 50 | [price] | [change]% |
 | Sensex | [price] | [change]% |
+
+**Global**
+
+| Index | Price | Change |
+|-------|-------|--------|
+| S&P 500 | [price] | [change]% |
+| NASDAQ | [price] | [change]% |
+| Dow Jones | [price] | [change]% |
+| Nikkei 225 | [price] | [change]% |
+| FTSE 100 | [price] | [change]% |
+| DAX | [price] | [change]% |
+
+**Commodities & Crypto**
+
+| Asset | Price | Change |
+|-------|-------|--------|
+| Gold | [price] | [change]% |
+| Silver | [price] | [change]% |
+| Crude Oil | [price] | [change]% |
+| Bitcoin | [price] | [change]% |
 
 [Market commentary]
 
