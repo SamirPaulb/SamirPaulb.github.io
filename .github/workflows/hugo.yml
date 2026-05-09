@@ -41,6 +41,7 @@ jobs:
        github.event.workflow_run.conclusion == 'success')
     env:
       HUGO_VERSION: 0.159.2
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # mandatory Node.js 24 migration before June 2 2026
     steps:
       # Setup Hugo environment
       - name: Install Hugo CLI
