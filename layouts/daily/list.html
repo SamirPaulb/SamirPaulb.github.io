@@ -219,33 +219,24 @@
     margin: 1rem 0 0.5rem;
     color: var(--dg-muted);
   }
-  /* Markets grid — tables side by side on desktop */
-  .digest-view-body .markets-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-  }
-  .digest-view-body .markets-grid > div {
-    min-width: 0;
-  }
   .digest-view-body table {
     width: 100%;
     border-collapse: collapse;
-    margin: 0.3rem 0 0.5rem;
-    font-size: 0.84rem;
+    margin: 0.3rem 0 0.75rem;
+    font-size: 0.88rem;
   }
   .digest-view-body th {
     text-align: left;
-    padding: 0.35rem 0.5rem;
+    padding: 0.4rem 0.6rem;
     border-bottom: 2px solid var(--dg-border);
     font-weight: 600;
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     text-transform: uppercase;
     letter-spacing: 0.03em;
     color: var(--dg-muted);
   }
   .digest-view-body td {
-    padding: 0.3rem 0.5rem;
+    padding: 0.35rem 0.6rem;
     border-bottom: 1px solid var(--dg-border);
   }
   .digest-view-body tr:last-child td { border-bottom: none; }
@@ -302,12 +293,6 @@
   }
   .digest-view-body table {
     min-width: 320px;
-  }
-
-  @media (max-width: 768px) {
-    .digest-view-body .markets-grid {
-      grid-template-columns: 1fr;
-    }
   }
 
   /* Mobile adjustments */
@@ -398,38 +383,12 @@
       })
       .then(function(html) {
         viewBody.innerHTML = html;
-        // Wrap market tables into a 2-column grid layout
-        var firstH2 = viewBody.querySelector('h2');
-        if (firstH2 && firstH2.textContent.trim() === 'Markets') {
-          var grid = document.createElement('div');
-          grid.className = 'markets-grid';
-          // Collect all elements between Markets h2 and the next <hr> (section separator)
-          var sibling = firstH2.nextElementSibling;
-          var marketEls = [];
-          while (sibling && sibling.tagName !== 'HR' && sibling.tagName !== 'H2') {
-            marketEls.push(sibling);
-            sibling = sibling.nextElementSibling;
-          }
-          // Group by sub-section: each <p><strong>...</strong></p> starts a group
-          var currentGroup = null;
-          marketEls.forEach(function(el) {
-            if (el.tagName === 'P' && el.querySelector('strong')) {
-              currentGroup = document.createElement('div');
-              grid.appendChild(currentGroup);
-            }
-            if (currentGroup) currentGroup.appendChild(el);
-          });
-          // Insert grid after h2
-          firstH2.after(grid);
-        }
-        // Wrap tables for mobile scroll
+        // Wrap tables for mobile horizontal scroll
         viewBody.querySelectorAll('table').forEach(function(t) {
-          if (!t.parentElement.classList.contains('table-wrapper')) {
-            var wrap = document.createElement('div');
-            wrap.className = 'table-wrapper';
-            t.parentNode.insertBefore(wrap, t);
-            wrap.appendChild(t);
-          }
+          var wrap = document.createElement('div');
+          wrap.className = 'table-wrapper';
+          t.parentNode.insertBefore(wrap, t);
+          wrap.appendChild(t);
         });
       })
       .catch(function() {
@@ -572,31 +531,63 @@
 
   // ── Init ───────────────────────────────────────────────────────────────────
 
-  fetch(DATA_BASE + '/manifest.json', { cache: 'no-cache' })
-    .then(function(r) {
-      if (!r.ok) throw new Error('Manifest not found');
-      return r.json();
-    })
-    .then(function(manifest) {
-      manifest.sort(function(a,b) { return b.date.localeCompare(a.date); });
-
-      cachedManifest = manifest;
-
-      // If URL has #date, show only that digest — no timeline DOM built
-      var hash = window.location.hash.replace('#', '');
-      if (hash) {
-        var entry = manifest.find(function(e) { return e.date === hash; });
-        if (entry) {
-          timeline.style.display = 'none';
-          showDigest(entry);
-          return;
-        }
+  // Robust fetch with retry and fallback
+  function fetchWithRetry(url, opts, retries) {
+    retries = retries || 2;
+    return fetch(url, opts).then(function(r) {
+      if (!r.ok) throw new Error(r.status);
+      return r;
+    }).catch(function(err) {
+      if (retries > 0) {
+        return new Promise(function(resolve) { setTimeout(resolve, 1000); })
+          .then(function() { return fetchWithRetry(url, opts, retries - 1); });
       }
-      buildTimeline(manifest);
-    })
-    .catch(function() {
-      timeline.innerHTML = '<div class="digest-error">Could not load digest archive.</div>';
+      throw err;
     });
+  }
+
+  // If URL has #date, try loading that digest directly (skip manifest for speed)
+  var hash = window.location.hash.replace('#', '');
+  if (hash && /^\d{4}-\d{2}-\d{2}$/.test(hash)) {
+    timeline.style.display = 'none';
+    view.classList.add('active');
+    viewTitle.textContent = 'Daily Digest \u2014 ' + formatDate(hash);
+    viewBody.innerHTML = '<div class="digest-loading">Loading</div>';
+    fetchWithRetry(DATA_BASE + '/digests/' + hash + '.html', { cache: 'default' })
+      .then(function(r) { return r.text(); })
+      .then(function(html) {
+        viewBody.innerHTML = html;
+        viewBody.querySelectorAll('table').forEach(function(t) {
+          var wrap = document.createElement('div');
+          wrap.className = 'table-wrapper';
+          t.parentNode.insertBefore(wrap, t);
+          wrap.appendChild(t);
+        });
+      })
+      .catch(function() {
+        viewBody.innerHTML = '<div class="digest-error">Could not load digest for ' + hash + '</div>';
+      });
+    // Load manifest in background for Back button
+    fetchWithRetry(DATA_BASE + '/manifest.json', { cache: 'no-cache' })
+      .then(function(r) { return r.json(); })
+      .then(function(manifest) {
+        manifest.sort(function(a,b) { return b.date.localeCompare(a.date); });
+        cachedManifest = manifest;
+      })
+      .catch(function() {});
+  } else {
+    // Normal load: fetch manifest and build timeline
+    fetchWithRetry(DATA_BASE + '/manifest.json', { cache: 'no-cache' })
+      .then(function(r) { return r.json(); })
+      .then(function(manifest) {
+        manifest.sort(function(a,b) { return b.date.localeCompare(a.date); });
+        cachedManifest = manifest;
+        buildTimeline(manifest);
+      })
+      .catch(function() {
+        timeline.innerHTML = '<div class="digest-error">Could not load digest archive. Try refreshing the page.</div>';
+      });
+  }
 })();
 </script>
 {{- end -}}
