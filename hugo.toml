@@ -109,9 +109,9 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
     icon = "fa-solid fa-user"
 
 [[menus.main]]
-  identifier = "daily-digest"
+  identifier = "daily"
   name = "Daily"
-  url = "/daily-digest/"
+  url = "/daily/"
   title = ""
   weight = 4
   [menus.main.params]
@@ -734,3 +734,23 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
     name = "fragmentrefs"
     type = "fragments"
     weight = 80
+
+# -------------------------------------------------------------------------------------
+# Module Mounts — merge extra-content with content submodule
+# -------------------------------------------------------------------------------------
+[module]
+  [[module.mounts]]
+    source = "content"
+    target = "content"
+  [[module.mounts]]
+    source = "extra-content"
+    target = "content"
+  [[module.mounts]]
+    source = "static"
+    target = "static"
+  [[module.mounts]]
+    source = "layouts"
+    target = "layouts"
+  [[module.mounts]]
+    source = "assets"
+    target = "assets"

@@ -1,0 +1,448 @@
+{{- define "title" -}}Daily Digest | {{ .Site.Title }}{{- end -}}
+
+{{- define "custom-head" -}}
+<style>
+  .digest-header,
+  .digest-timeline,
+  .digest-year-group,
+  .digest-month-group,
+  .digest-post-card,
+  .digest-view {
+    --dg-border: var(--fi-global-border-color);
+    --dg-link:   var(--fi-single-link-color);
+    --dg-font:   var(--fi-global-font-color);
+    --dg-muted:  var(--fi-global-placeholder-color);
+    --dg-bg:     var(--fi-global-background-color);
+    --dg-radius: var(--fi-global-border-radius, 6px);
+  }
+
+  /* Page header */
+  .digest-header {
+    margin: 2rem 0 2.5rem;
+    text-align: center;
+  }
+  .digest-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+  }
+  .digest-header p {
+    color: var(--dg-muted);
+    font-size: 0.95rem;
+  }
+
+  /* Timeline wrapper */
+  .digest-timeline {
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1rem 3rem;
+    text-align: left;
+    min-height: 40vh;
+  }
+  .digest-timeline::before {
+    content: '';
+    position: absolute;
+    left: calc(1rem + 6px);
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--dg-border);
+  }
+
+  /* Card row */
+  .digest-card {
+    position: relative;
+    margin-left: 2.5rem;
+    margin-bottom: 0.4rem;
+  }
+  .digest-card::before {
+    content: '';
+    position: absolute;
+    left: -1.75rem;
+    top: 1.1rem;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--dg-link);
+    border: 2px solid var(--dg-bg);
+    box-shadow: 0 0 0 2px var(--dg-link);
+    z-index: 1;
+  }
+
+  .digest-post-card {
+    position: relative;
+    margin: 0;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid var(--dg-border);
+    border-radius: var(--dg-radius);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+  }
+  .digest-post-card:hover {
+    border-color: var(--dg-link);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .digest-card-title {
+    font-size: 0.9rem;
+    margin: 0 0 0.15rem;
+    line-height: 1.4;
+    font-weight: 600;
+    color: var(--dg-link);
+  }
+  .digest-card-meta {
+    font-size: 0.72rem;
+    color: var(--dg-muted);
+    margin: 0 0 0.2rem;
+  }
+  .digest-card-summary {
+    font-size: 0.78rem;
+    line-height: 1.45;
+    margin: 0;
+    color: var(--dg-muted);
+  }
+
+  /* Collapsible year groups */
+  .digest-year-group {
+    margin-left: 0;
+    margin-bottom: 0.75rem;
+  }
+  .digest-year-group > summary {
+    cursor: pointer;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--dg-font);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0 0.35rem calc(1rem + 18px);
+    user-select: none;
+  }
+  .digest-year-group > summary::-webkit-details-marker { display: none; }
+  .digest-year-group > summary::before {
+    content: '\25B6';
+    font-size: 0.65rem;
+    transition: transform 0.2s;
+    color: var(--dg-link);
+    flex-shrink: 0;
+  }
+  .digest-year-group[open] > summary::before { transform: rotate(90deg); }
+  .digest-year-group > summary:hover { color: var(--dg-link); }
+  .digest-year-group > summary span {
+    font-size: 0.82rem;
+    font-weight: 400;
+    color: var(--dg-muted);
+  }
+  .digest-year-items { margin-top: 0.25rem; }
+
+  /* Collapsible month groups */
+  .digest-month-group {
+    margin-left: 0;
+    margin-bottom: 0.6rem;
+  }
+  .digest-month-group summary {
+    cursor: pointer;
+    font-size: 1.0rem;
+    font-weight: 700;
+    color: var(--dg-font);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0 0.25rem calc(1.5rem + 18px);
+    user-select: none;
+  }
+  .digest-month-group summary::-webkit-details-marker { display: none; }
+  .digest-month-group summary::before {
+    content: '\25B6';
+    font-size: 0.55rem;
+    transition: transform 0.2s;
+    color: var(--dg-link);
+    flex-shrink: 0;
+  }
+  .digest-month-group[open] summary::before { transform: rotate(90deg); }
+  .digest-month-group summary:hover { color: var(--dg-link); }
+  .digest-month-group summary span {
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--dg-muted);
+  }
+  .digest-month-items { margin-top: 0.35rem; }
+
+  /* Digest content view (when user clicks a card) */
+  .digest-view {
+    display: none;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1rem 3rem;
+  }
+  .digest-view.active {
+    display: block;
+  }
+  .digest-view-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--dg-border);
+  }
+  .digest-back-btn {
+    background: none;
+    border: 1px solid var(--dg-border);
+    border-radius: var(--dg-radius);
+    padding: 0.35rem 0.75rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: var(--dg-font);
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .digest-back-btn:hover { border-color: var(--dg-link); color: var(--dg-link); }
+  .digest-view-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0;
+  }
+  .digest-view-body {
+    line-height: 1.7;
+  }
+  .digest-view-body h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 1.5rem 0 0.75rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 2px solid var(--dg-border);
+  }
+  .digest-view-body h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 1rem 0 0.5rem;
+    color: var(--dg-muted);
+  }
+  .digest-view-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.5rem 0 1rem;
+    font-size: 0.88rem;
+  }
+  .digest-view-body th {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 2px solid var(--dg-border);
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--dg-muted);
+  }
+  .digest-view-body td {
+    padding: 0.45rem 0.75rem;
+    border-bottom: 1px solid var(--dg-border);
+  }
+  .digest-view-body tr:last-child td { border-bottom: none; }
+  .digest-view-body ul {
+    list-style: none;
+    padding: 0;
+  }
+  .digest-view-body li {
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--dg-border);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  .digest-view-body li:last-child { border-bottom: none; }
+  .digest-view-body hr {
+    border: none;
+    border-top: 1px solid var(--dg-border);
+    margin: 1.5rem 0;
+  }
+  .digest-view-body .change-positive { color: #16a34a; font-weight: 600; }
+  .digest-view-body .change-negative { color: #dc2626; font-weight: 600; }
+  [data-theme="dark"] .digest-view-body .change-positive { color: #4ade80; }
+  [data-theme="dark"] .digest-view-body .change-negative { color: #f87171; }
+
+  /* Loading state */
+  .digest-loading {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--dg-muted);
+  }
+  .digest-loading::after {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--dg-border);
+    border-top-color: var(--dg-link);
+    border-radius: 50%;
+    animation: dg-spin 0.8s linear infinite;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+  }
+  @keyframes dg-spin { to { transform: rotate(360deg); } }
+  .digest-error {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--dg-muted);
+  }
+</style>
+{{- end -}}
+
+{{- define "content" -}}
+<article class="fi-page">
+  <div class="digest-header">
+    <h1>Daily Digest</h1>
+    <p>Markets, global news, India &amp; tech &mdash; every day</p>
+  </div>
+
+  <!-- Timeline view (archive list) -->
+  <div class="digest-timeline" id="digestTimeline">
+    <div class="digest-loading">Loading archive</div>
+  </div>
+
+  <!-- Single digest view (shown when user clicks a card) -->
+  <div class="digest-view" id="digestView">
+    <div class="digest-view-header">
+      <button class="digest-back-btn" id="digestBack">&larr; Back</button>
+      <h2 class="digest-view-title" id="digestViewTitle"></h2>
+    </div>
+    <div class="digest-view-body" id="digestViewBody"></div>
+  </div>
+</article>
+
+<script>
+(function() {
+  'use strict';
+
+  var DATA_BASE = 'https://raw.githubusercontent.com/SamirPaulb/daily-digest/main';
+  var timeline = document.getElementById('digestTimeline');
+  var view = document.getElementById('digestView');
+  var viewTitle = document.getElementById('digestViewTitle');
+  var viewBody = document.getElementById('digestViewBody');
+
+  var months = ['January','February','March','April','May','June',
+                'July','August','September','October','November','December'];
+
+  function formatDate(dateStr) {
+    var d = new Date(dateStr + 'T07:00:00+05:30');
+    var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    return days[d.getDay()] + ', ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  }
+
+  function showTimeline() {
+    timeline.style.display = '';
+    view.classList.remove('active');
+    window.history.replaceState(null, '', window.location.pathname);
+  }
+
+  function showDigest(entry) {
+    timeline.style.display = 'none';
+    view.classList.add('active');
+    viewTitle.textContent = entry.title || ('Daily Digest — ' + formatDate(entry.date));
+    viewBody.innerHTML = '<div class="digest-loading">Loading</div>';
+    window.history.replaceState(null, '', window.location.pathname + '#' + entry.date);
+
+    fetch(DATA_BASE + '/digests/' + entry.date + '.html', { cache: 'default' })
+      .then(function(r) {
+        if (!r.ok) throw new Error('Not found');
+        return r.text();
+      })
+      .then(function(html) { viewBody.innerHTML = html; })
+      .catch(function() {
+        viewBody.innerHTML = '<div class="digest-error">Could not load digest for ' + entry.date + '</div>';
+      });
+  }
+
+  document.getElementById('digestBack').addEventListener('click', showTimeline);
+
+  function buildTimeline(manifest) {
+    if (!manifest.length) {
+      timeline.innerHTML = '<div class="digest-error">No digests available yet. Check back tomorrow!</div>';
+      return;
+    }
+
+    // Group by year then month
+    var years = {};
+    manifest.forEach(function(entry) {
+      var d = new Date(entry.date + 'T07:00:00+05:30');
+      var y = d.getFullYear();
+      var m = d.getMonth();
+      if (!years[y]) years[y] = {};
+      if (!years[y][m]) years[y][m] = [];
+      years[y][m].push(entry);
+    });
+
+    var currentYear = new Date().getFullYear();
+    var currentMonth = new Date().getMonth();
+    var html = '';
+
+    // Sort years descending
+    Object.keys(years).sort(function(a,b){return b-a;}).forEach(function(year) {
+      var yCount = Object.values(years[year]).reduce(function(s,a){return s+a.length;}, 0);
+      var yOpen = (parseInt(year) === currentYear) ? ' open' : '';
+      html += '<details class="digest-year-group"' + yOpen + '>';
+      html += '<summary>' + year + ' <span>(' + yCount + ')</span></summary>';
+      html += '<div class="digest-year-items">';
+
+      // Sort months descending
+      Object.keys(years[year]).sort(function(a,b){return b-a;}).forEach(function(month) {
+        var entries = years[year][month];
+        var mOpen = (parseInt(year) === currentYear && parseInt(month) === currentMonth) ? ' open' : '';
+        html += '<details class="digest-month-group"' + mOpen + '>';
+        html += '<summary>' + months[month] + ' ' + year + ' <span>(' + entries.length + ')</span></summary>';
+        html += '<div class="digest-month-items">';
+
+        entries.forEach(function(entry) {
+          html += '<div class="digest-card">';
+          html += '<article class="digest-post-card" data-date="' + entry.date + '">';
+          html += '<h2 class="digest-card-title">' + (entry.title || 'Daily Digest') + '</h2>';
+          html += '<div class="digest-card-meta">' + formatDate(entry.date) + '</div>';
+          if (entry.summary) {
+            html += '<div class="digest-card-summary">' + entry.summary + '</div>';
+          }
+          html += '</article></div>';
+        });
+
+        html += '</div></details>';
+      });
+
+      html += '</div></details>';
+    });
+
+    timeline.innerHTML = html;
+
+    // Click handlers
+    timeline.querySelectorAll('.digest-post-card').forEach(function(card) {
+      card.addEventListener('click', function() {
+        var date = this.dataset.date;
+        var entry = manifest.find(function(e) { return e.date === date; });
+        if (entry) showDigest(entry);
+      });
+    });
+  }
+
+  // Init
+  fetch(DATA_BASE + '/manifest.json', { cache: 'no-cache' })
+    .then(function(r) {
+      if (!r.ok) throw new Error('Manifest not found');
+      return r.json();
+    })
+    .then(function(manifest) {
+      manifest.sort(function(a,b) { return b.date.localeCompare(a.date); });
+      buildTimeline(manifest);
+
+      // Check URL hash for direct link
+      var hash = window.location.hash.replace('#', '');
+      if (hash) {
+        var entry = manifest.find(function(e) { return e.date === hash; });
+        if (entry) showDigest(entry);
+      }
+    })
+    .catch(function() {
+      timeline.innerHTML = '<div class="digest-error">Could not load digest archive.</div>';
+    });
+})();
+</script>
+{{- end -}}
