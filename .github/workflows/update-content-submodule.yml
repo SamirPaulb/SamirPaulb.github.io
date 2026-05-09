@@ -21,6 +21,8 @@ jobs:
   update-content:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # mandatory Node.js 24 migration before June 2 2026
     steps:
       # Log which repo triggered this update
       - name: Log trigger source
@@ -33,7 +35,7 @@ jobs:
 
       # Clone blog repo with submodules (SSH key for private content, GITHUB_TOKEN for checkout)
       - name: Checkout blog repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           submodules: recursive
           token: ${{ secrets.GITHUB_TOKEN }}
