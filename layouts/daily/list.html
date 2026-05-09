@@ -31,10 +31,9 @@
     font-size: 0.95rem;
   }
 
-  /* Timeline wrapper */
+  /* Timeline wrapper — inherits page width from .fi-page parent */
   .digest-timeline {
     position: relative;
-    max-width: 800px;
     margin: 0 auto;
     padding: 0 1rem 3rem;
     text-align: left;
@@ -173,7 +172,6 @@
   /* Digest content view (when user clicks a card) */
   .digest-view {
     display: none;
-    max-width: 800px;
     margin: 0 auto;
     padding: 0 1rem 3rem;
   }
@@ -221,24 +219,33 @@
     margin: 1rem 0 0.5rem;
     color: var(--dg-muted);
   }
+  /* Markets grid — tables side by side on desktop */
+  .digest-view-body .markets-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .digest-view-body .markets-grid > div {
+    min-width: 0;
+  }
   .digest-view-body table {
     width: 100%;
     border-collapse: collapse;
-    margin: 0.5rem 0 1rem;
-    font-size: 0.88rem;
+    margin: 0.3rem 0 0.5rem;
+    font-size: 0.84rem;
   }
   .digest-view-body th {
     text-align: left;
-    padding: 0.5rem 0.75rem;
+    padding: 0.35rem 0.5rem;
     border-bottom: 2px solid var(--dg-border);
     font-weight: 600;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.03em;
     color: var(--dg-muted);
   }
   .digest-view-body td {
-    padding: 0.45rem 0.75rem;
+    padding: 0.3rem 0.5rem;
     border-bottom: 1px solid var(--dg-border);
   }
   .digest-view-body tr:last-child td { border-bottom: none; }
@@ -287,6 +294,43 @@
     padding: 2rem 1rem;
     color: var(--dg-muted);
   }
+
+  /* Table scroll on mobile */
+  .digest-view-body .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .digest-view-body table {
+    min-width: 320px;
+  }
+
+  @media (max-width: 768px) {
+    .digest-view-body .markets-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Mobile adjustments */
+  @media (max-width: 680px) {
+    .digest-header { margin: 1.5rem 0 1.5rem; }
+    .digest-header h1 { font-size: 1.5rem; }
+    .digest-timeline { padding: 0 0.5rem 2rem; }
+    .digest-timeline::before { left: calc(0.5rem + 6px); }
+    .digest-card { margin-left: 2rem; }
+    .digest-card::before { left: -1.5rem; }
+    .digest-post-card { padding: 0.4rem 0.7rem; }
+    .digest-card-title { font-size: 0.85rem; }
+    .digest-view { padding: 0 0.5rem 2rem; }
+    .digest-view-header { flex-wrap: wrap; gap: 0.5rem; }
+    .digest-view-title { font-size: 1.1rem; }
+    .digest-view-body h2 { font-size: 1.1rem; }
+    .digest-view-body table { font-size: 0.8rem; }
+    .digest-view-body th,
+    .digest-view-body td { padding: 0.35rem 0.5rem; }
+    .digest-view-body li { font-size: 0.85rem; }
+    .digest-year-group > summary { padding-left: calc(0.5rem + 18px); font-size: 1.1rem; }
+    .digest-month-group summary { padding-left: calc(1rem + 18px); font-size: 0.9rem; }
+  }
 </style>
 {{- end -}}
 
@@ -321,15 +365,18 @@
   var view = document.getElementById('digestView');
   var viewTitle = document.getElementById('digestViewTitle');
   var viewBody = document.getElementById('digestViewBody');
+  var grouped = {};  // { year: { month: [entries] } } — built once from manifest
 
-  var months = ['January','February','March','April','May','June',
+  var MONTHS = ['January','February','March','April','May','June',
                 'July','August','September','October','November','December'];
 
   function formatDate(dateStr) {
     var d = new Date(dateStr + 'T07:00:00+05:30');
     var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    return days[d.getDay()] + ', ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+    return days[d.getDay()] + ', ' + MONTHS[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
   }
+
+  // ── Views ──────────────────────────────────────────────────────────────────
 
   function showTimeline() {
     timeline.style.display = '';
@@ -340,7 +387,7 @@
   function showDigest(entry) {
     timeline.style.display = 'none';
     view.classList.add('active');
-    viewTitle.textContent = entry.title || ('Daily Digest — ' + formatDate(entry.date));
+    viewTitle.textContent = entry.title || ('Daily Digest \u2014 ' + formatDate(entry.date));
     viewBody.innerHTML = '<div class="digest-loading">Loading</div>';
     window.history.replaceState(null, '', window.location.pathname + '#' + entry.date);
 
@@ -349,81 +396,182 @@
         if (!r.ok) throw new Error('Not found');
         return r.text();
       })
-      .then(function(html) { viewBody.innerHTML = html; })
+      .then(function(html) {
+        viewBody.innerHTML = html;
+        // Wrap market tables into a 2-column grid layout
+        var firstH2 = viewBody.querySelector('h2');
+        if (firstH2 && firstH2.textContent.trim() === 'Markets') {
+          var grid = document.createElement('div');
+          grid.className = 'markets-grid';
+          // Collect all elements between Markets h2 and the next <hr> (section separator)
+          var sibling = firstH2.nextElementSibling;
+          var marketEls = [];
+          while (sibling && sibling.tagName !== 'HR' && sibling.tagName !== 'H2') {
+            marketEls.push(sibling);
+            sibling = sibling.nextElementSibling;
+          }
+          // Group by sub-section: each <p><strong>...</strong></p> starts a group
+          var currentGroup = null;
+          marketEls.forEach(function(el) {
+            if (el.tagName === 'P' && el.querySelector('strong')) {
+              currentGroup = document.createElement('div');
+              grid.appendChild(currentGroup);
+            }
+            if (currentGroup) currentGroup.appendChild(el);
+          });
+          // Insert grid after h2
+          firstH2.after(grid);
+        }
+        // Wrap tables for mobile scroll
+        viewBody.querySelectorAll('table').forEach(function(t) {
+          if (!t.parentElement.classList.contains('table-wrapper')) {
+            var wrap = document.createElement('div');
+            wrap.className = 'table-wrapper';
+            t.parentNode.insertBefore(wrap, t);
+            wrap.appendChild(t);
+          }
+        });
+      })
       .catch(function() {
         viewBody.innerHTML = '<div class="digest-error">Could not load digest for ' + entry.date + '</div>';
       });
   }
 
-  document.getElementById('digestBack').addEventListener('click', showTimeline);
+  var timelineBuilt = false;
+  var cachedManifest = null;
 
-  function buildTimeline(manifest) {
-    if (!manifest.length) {
-      timeline.innerHTML = '<div class="digest-error">No digests available yet. Check back tomorrow!</div>';
-      return;
+  document.getElementById('digestBack').addEventListener('click', function() {
+    // Build timeline lazily on first Back click (for direct #date links)
+    if (!timelineBuilt && cachedManifest) {
+      buildTimeline(cachedManifest);
     }
+    showTimeline();
+  });
 
-    // Group by year then month
-    var years = {};
-    manifest.forEach(function(entry) {
-      var d = new Date(entry.date + 'T07:00:00+05:30');
-      var y = d.getFullYear();
-      var m = d.getMonth();
-      if (!years[y]) years[y] = {};
-      if (!years[y][m]) years[y][m] = [];
-      years[y][m].push(entry);
-    });
+  // ── Lazy DOM: render cards only when month is opened ───────────────────────
 
-    var currentYear = new Date().getFullYear();
-    var currentMonth = new Date().getMonth();
+  function renderMonthCards(container, year, month) {
+    if (container.dataset.loaded) return;
+    container.dataset.loaded = '1';
+    var entries = grouped[year][month];
     var html = '';
-
-    // Sort years descending
-    Object.keys(years).sort(function(a,b){return b-a;}).forEach(function(year) {
-      var yCount = Object.values(years[year]).reduce(function(s,a){return s+a.length;}, 0);
-      var yOpen = (parseInt(year) === currentYear) ? ' open' : '';
-      html += '<details class="digest-year-group"' + yOpen + '>';
-      html += '<summary>' + year + ' <span>(' + yCount + ')</span></summary>';
-      html += '<div class="digest-year-items">';
-
-      // Sort months descending
-      Object.keys(years[year]).sort(function(a,b){return b-a;}).forEach(function(month) {
-        var entries = years[year][month];
-        var mOpen = (parseInt(year) === currentYear && parseInt(month) === currentMonth) ? ' open' : '';
-        html += '<details class="digest-month-group"' + mOpen + '>';
-        html += '<summary>' + months[month] + ' ' + year + ' <span>(' + entries.length + ')</span></summary>';
-        html += '<div class="digest-month-items">';
-
-        entries.forEach(function(entry) {
-          html += '<div class="digest-card">';
-          html += '<article class="digest-post-card" data-date="' + entry.date + '">';
-          html += '<h2 class="digest-card-title">' + (entry.title || 'Daily Digest') + '</h2>';
-          html += '<div class="digest-card-meta">' + formatDate(entry.date) + '</div>';
-          if (entry.summary) {
-            html += '<div class="digest-card-summary">' + entry.summary + '</div>';
-          }
-          html += '</article></div>';
-        });
-
-        html += '</div></details>';
-      });
-
-      html += '</div></details>';
+    entries.forEach(function(entry) {
+      html += '<div class="digest-card">';
+      html += '<article class="digest-post-card" data-date="' + entry.date + '">';
+      html += '<h2 class="digest-card-title">' + (entry.title || 'Daily Digest') + '</h2>';
+      html += '<div class="digest-card-meta">' + formatDate(entry.date) + '</div>';
+      if (entry.summary) {
+        html += '<div class="digest-card-summary">' + entry.summary + '</div>';
+      }
+      html += '</article></div>';
     });
-
-    timeline.innerHTML = html;
-
-    // Click handlers
-    timeline.querySelectorAll('.digest-post-card').forEach(function(card) {
+    container.innerHTML = html;
+    // Attach click handlers to newly rendered cards
+    container.querySelectorAll('.digest-post-card').forEach(function(card) {
       card.addEventListener('click', function() {
         var date = this.dataset.date;
-        var entry = manifest.find(function(e) { return e.date === date; });
+        var entry = entries.find(function(e) { return e.date === date; });
         if (entry) showDigest(entry);
       });
     });
   }
 
-  // Init
+  // ── Lazy DOM: render months only when year is opened ───────────────────────
+
+  function renderYearMonths(container, year) {
+    if (container.dataset.loaded) return;
+    container.dataset.loaded = '1';
+    var currentYear = new Date().getFullYear();
+    var currentMonth = new Date().getMonth();
+    var monthKeys = Object.keys(grouped[year]).sort(function(a,b){return b-a;});
+    var html = '';
+
+    monthKeys.forEach(function(month) {
+      var count = grouped[year][month].length;
+      var mOpen = (parseInt(year) === currentYear && parseInt(month) === currentMonth) ? ' open' : '';
+      html += '<details class="digest-month-group"' + mOpen + ' data-year="' + year + '" data-month="' + month + '">';
+      html += '<summary>' + MONTHS[month] + ' ' + year + ' <span>(' + count + ')</span></summary>';
+      html += '<div class="digest-month-items"></div>';
+      html += '</details>';
+    });
+    container.innerHTML = html;
+
+    // Lazy-render cards when month is toggled open
+    container.querySelectorAll('.digest-month-group').forEach(function(det) {
+      det.addEventListener('toggle', function() {
+        if (this.open) {
+          renderMonthCards(
+            this.querySelector('.digest-month-items'),
+            this.dataset.year,
+            this.dataset.month
+          );
+        }
+      });
+      // If already open (current month), render immediately
+      if (det.open) {
+        renderMonthCards(
+          det.querySelector('.digest-month-items'),
+          det.dataset.year,
+          det.dataset.month
+        );
+      }
+    });
+  }
+
+  // ── Build timeline: only year summaries rendered initially ──────────────────
+
+  function buildTimeline(manifest) {
+    if (timelineBuilt) return;
+    timelineBuilt = true;
+    if (!manifest.length) {
+      timeline.innerHTML = '<div class="digest-error">No digests available yet. Check back tomorrow!</div>';
+      return;
+    }
+
+    // Group into { year: { month: [entries] } }
+    manifest.forEach(function(entry) {
+      var d = new Date(entry.date + 'T07:00:00+05:30');
+      var y = d.getFullYear();
+      var m = d.getMonth();
+      if (!grouped[y]) grouped[y] = {};
+      if (!grouped[y][m]) grouped[y][m] = [];
+      grouped[y][m].push(entry);
+    });
+
+    var currentYear = new Date().getFullYear();
+    var yearKeys = Object.keys(grouped).sort(function(a,b){return b-a;});
+    var html = '';
+
+    // Render ONLY year summaries — months/cards loaded lazily on toggle
+    yearKeys.forEach(function(year) {
+      var yCount = Object.keys(grouped[year]).reduce(function(s, m) {
+        return s + grouped[year][m].length;
+      }, 0);
+      var yOpen = (parseInt(year) === currentYear) ? ' open' : '';
+      html += '<details class="digest-year-group"' + yOpen + ' data-year="' + year + '">';
+      html += '<summary>' + year + ' <span>(' + yCount + ')</span></summary>';
+      html += '<div class="digest-year-items"></div>';
+      html += '</details>';
+    });
+
+    timeline.innerHTML = html;
+
+    // Lazy-render months when year is toggled open
+    timeline.querySelectorAll('.digest-year-group').forEach(function(det) {
+      det.addEventListener('toggle', function() {
+        if (this.open) {
+          renderYearMonths(this.querySelector('.digest-year-items'), this.dataset.year);
+        }
+      });
+      // If already open (current year), render immediately
+      if (det.open) {
+        renderYearMonths(det.querySelector('.digest-year-items'), det.dataset.year);
+      }
+    });
+  }
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+
   fetch(DATA_BASE + '/manifest.json', { cache: 'no-cache' })
     .then(function(r) {
       if (!r.ok) throw new Error('Manifest not found');
@@ -431,14 +579,20 @@
     })
     .then(function(manifest) {
       manifest.sort(function(a,b) { return b.date.localeCompare(a.date); });
-      buildTimeline(manifest);
 
-      // Check URL hash for direct link
+      cachedManifest = manifest;
+
+      // If URL has #date, show only that digest — no timeline DOM built
       var hash = window.location.hash.replace('#', '');
       if (hash) {
         var entry = manifest.find(function(e) { return e.date === hash; });
-        if (entry) showDigest(entry);
+        if (entry) {
+          timeline.style.display = 'none';
+          showDigest(entry);
+          return;
+        }
       }
+      buildTimeline(manifest);
     })
     .catch(function() {
       timeline.innerHTML = '<div class="digest-error">Could not load digest archive.</div>';
