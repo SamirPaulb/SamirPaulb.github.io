@@ -48,18 +48,21 @@ git add content
 git commit -m "UPDATE_CONTENT_SUBMODULE"
 git push origin main
 
-# Reset submodules
-git rm -f themes/FixIt content
+# Reset submodules safely
+git rm --cached themes/FixIt || true
+git rm --cached content || true
+rm -rf themes/FixIt content
 rm -rf .git/modules/themes/FixIt .git/modules/content
-git config -f .gitmodules --remove-section submodule.themes/FixIt || true
-git config -f .gitmodules --remove-section submodule.content || true
-git add -A && git commit -m "Remove submodules"
+git config --remove-section submodule.themes/FixIt 2>/dev/null
+git config --remove-section submodule.content 2>/dev/null
+rm -f .gitmodules
+git rm --cached .gitmodules || true
 
 git submodule add https://github.com/SamirPaulb/FixIt.git themes/FixIt
-git submodule add [git@github.com:SamirPaulb/content.git](https://github.com/SamirPaulb/content) content
+git submodule add git@github.com:SamirPaulb/content.git content
 git submodule sync --recursive
 git submodule update --init --recursive
-git add -A && git commit -m "Re-add submodules"
+git add . && git commit -m "chore: cleanly re-add FixIt and content submodules"
 ```
 
 ## Secrets
