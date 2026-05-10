@@ -348,6 +348,12 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
     Instagram = "SamirPaulb"
     RSS = true
 
+  [params.social.weight]
+    Linkedin = 1
+    GitHub = 2
+    Twitter = 3
+    Instagram = 4
+
   # ----------------------------------------------------------------------------
   # TypeIt Animation Configuration
   # ----------------------------------------------------------------------------
