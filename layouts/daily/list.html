@@ -1,6 +1,6 @@
 {{- define "title" -}}Daily Digest | {{ .Site.Title }}{{- end -}}
 
-{{- define "custom-head" -}}
+{{- define "content" -}}
 <style>
   .digest-header,
   .digest-timeline,
@@ -315,9 +315,6 @@
     .digest-month-group summary { padding-left: calc(1rem + 18px); font-size: 0.9rem; }
   }
 </style>
-{{- end -}}
-
-{{- define "content" -}}
 <article class="fi-page">
   <div class="digest-header">
     <h1>Daily Digest</h1>
