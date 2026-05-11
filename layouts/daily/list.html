@@ -1,6 +1,6 @@
 {{- define "title" -}}Daily Digest - {{ .Site.Title }}{{- end -}}
 
-{{- define "custom-head" -}}
+{{- define "content" -}}
 <style>
   /* Design tokens — reads FixIt theme vars with hardcoded fallbacks.
      If the theme renames or removes --fi-* vars, the page still renders
@@ -363,10 +363,6 @@
     #dailyDigest .digest-month-group summary { padding-left: calc(1rem + 18px); font-size: 0.9rem; }
   }
 </style>
-<meta name="description" content="Daily digest of global news, India, markets, AI and tech — curated every morning.">
-{{- end -}}
-
-{{- define "content" -}}
 <article class="fi-page" id="dailyDigest" data-site-title="{{ .Site.Title }}">
   <div class="digest-header">
     <h1>Daily Digest</h1>
