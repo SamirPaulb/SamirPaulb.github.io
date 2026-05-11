@@ -1,45 +1,60 @@
-{{- define "title" -}}Daily Digest | {{ .Site.Title }}{{- end -}}
+{{- define "title" -}}Daily Digest - {{ .Site.Title }}{{- end -}}
 
-{{- define "content" -}}
+{{- define "custom-head" -}}
 <style>
-  .digest-header,
-  .digest-timeline,
-  .digest-year-group,
-  .digest-month-group,
-  .digest-post-card,
-  .digest-view {
-    --dg-border: var(--fi-global-border-color);
-    --dg-link:   var(--fi-single-link-color);
-    --dg-font:   var(--fi-global-font-color);
-    --dg-muted:  var(--fi-global-placeholder-color);
-    --dg-bg:     var(--fi-global-background-color);
+  /* Design tokens — reads FixIt theme vars with hardcoded fallbacks.
+     If the theme renames or removes --fi-* vars, the page still renders
+     correctly with sensible light/dark defaults (GitHub-style palette). */
+  #dailyDigest {
+    --dg-border: var(--fi-global-border-color, #e5e7eb);
+    --dg-link:   var(--fi-single-link-color, #0969da);
+    --dg-font:   var(--fi-global-font-color, #24292f);
+    --dg-muted:  var(--fi-global-placeholder-color, #656d76);
+    --dg-bg:     var(--fi-global-background-color, #ffffff);
     --dg-radius: var(--fi-global-border-radius, 6px);
+  }
+  [data-theme="dark"] #dailyDigest {
+    --dg-border: var(--fi-global-border-color, #30363d);
+    --dg-link:   var(--fi-single-link-color, #58a6ff);
+    --dg-font:   var(--fi-global-font-color, #e6edf3);
+    --dg-muted:  var(--fi-global-placeholder-color, #8b949e);
+    --dg-bg:     var(--fi-global-background-color, #0d1117);
+  }
+  /* Auto theme: respect OS preference when FixIt is in auto mode */
+  @media (prefers-color-scheme: dark) {
+    [data-theme="auto"] #dailyDigest {
+      --dg-border: var(--fi-global-border-color, #30363d);
+      --dg-link:   var(--fi-single-link-color, #58a6ff);
+      --dg-font:   var(--fi-global-font-color, #e6edf3);
+      --dg-muted:  var(--fi-global-placeholder-color, #8b949e);
+      --dg-bg:     var(--fi-global-background-color, #0d1117);
+    }
   }
 
   /* Page header */
-  .digest-header {
+  #dailyDigest .digest-header {
     margin: 2rem 0 2.5rem;
     text-align: center;
   }
-  .digest-header h1 {
+  #dailyDigest .digest-header h1 {
     font-size: 2rem;
     font-weight: 700;
     margin-bottom: 0.4rem;
   }
-  .digest-header p {
+  #dailyDigest .digest-header p {
     color: var(--dg-muted);
     font-size: 0.95rem;
   }
 
-  /* Timeline wrapper — inherits page width from .fi-page parent */
-  .digest-timeline {
+  /* Timeline wrapper */
+  #dailyDigest .digest-timeline {
     position: relative;
     margin: 0 auto;
     padding: 0 1rem 3rem;
     text-align: left;
     min-height: 40vh;
   }
-  .digest-timeline::before {
+  #dailyDigest .digest-timeline::before {
     content: '';
     position: absolute;
     left: calc(1rem + 6px);
@@ -50,12 +65,12 @@
   }
 
   /* Card row */
-  .digest-card {
+  #dailyDigest .digest-card {
     position: relative;
     margin-left: 2.5rem;
     margin-bottom: 0.4rem;
   }
-  .digest-card::before {
+  #dailyDigest .digest-card::before {
     content: '';
     position: absolute;
     left: -1.75rem;
@@ -69,7 +84,7 @@
     z-index: 1;
   }
 
-  .digest-post-card {
+  #dailyDigest .digest-post-card {
     position: relative;
     margin: 0;
     padding: 0.45rem 0.9rem;
@@ -78,23 +93,23 @@
     transition: border-color 0.2s, box-shadow 0.2s;
     cursor: pointer;
   }
-  .digest-post-card:hover {
+  #dailyDigest .digest-post-card:hover {
     border-color: var(--dg-link);
     box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   }
-  .digest-card-title {
+  #dailyDigest .digest-card-title {
     font-size: 0.9rem;
     margin: 0 0 0.15rem;
     line-height: 1.4;
     font-weight: 600;
     color: var(--dg-link);
   }
-  .digest-card-meta {
+  #dailyDigest .digest-card-meta {
     font-size: 0.72rem;
     color: var(--dg-muted);
     margin: 0 0 0.2rem;
   }
-  .digest-card-summary {
+  #dailyDigest .digest-card-summary {
     font-size: 0.78rem;
     line-height: 1.45;
     margin: 0;
@@ -102,11 +117,11 @@
   }
 
   /* Collapsible year groups */
-  .digest-year-group {
+  #dailyDigest .digest-year-group {
     margin-left: 0;
     margin-bottom: 0.75rem;
   }
-  .digest-year-group > summary {
+  #dailyDigest .digest-year-group > summary {
     cursor: pointer;
     font-size: 1.2rem;
     font-weight: 800;
@@ -118,29 +133,29 @@
     padding: 0.35rem 0 0.35rem calc(1rem + 18px);
     user-select: none;
   }
-  .digest-year-group > summary::-webkit-details-marker { display: none; }
-  .digest-year-group > summary::before {
+  #dailyDigest .digest-year-group > summary::-webkit-details-marker { display: none; }
+  #dailyDigest .digest-year-group > summary::before {
     content: '\25B6';
     font-size: 0.65rem;
     transition: transform 0.2s;
     color: var(--dg-link);
     flex-shrink: 0;
   }
-  .digest-year-group[open] > summary::before { transform: rotate(90deg); }
-  .digest-year-group > summary:hover { color: var(--dg-link); }
-  .digest-year-group > summary span {
+  #dailyDigest .digest-year-group[open] > summary::before { transform: rotate(90deg); }
+  #dailyDigest .digest-year-group > summary:hover { color: var(--dg-link); }
+  #dailyDigest .digest-year-group > summary span {
     font-size: 0.82rem;
     font-weight: 400;
     color: var(--dg-muted);
   }
-  .digest-year-items { margin-top: 0.25rem; }
+  #dailyDigest .digest-year-items { margin-top: 0.25rem; }
 
   /* Collapsible month groups */
-  .digest-month-group {
+  #dailyDigest .digest-month-group {
     margin-left: 0;
     margin-bottom: 0.6rem;
   }
-  .digest-month-group summary {
+  #dailyDigest .digest-month-group summary {
     cursor: pointer;
     font-size: 1.0rem;
     font-weight: 700;
@@ -152,41 +167,37 @@
     padding: 0.25rem 0 0.25rem calc(1.5rem + 18px);
     user-select: none;
   }
-  .digest-month-group summary::-webkit-details-marker { display: none; }
-  .digest-month-group summary::before {
+  #dailyDigest .digest-month-group summary::-webkit-details-marker { display: none; }
+  #dailyDigest .digest-month-group summary::before {
     content: '\25B6';
     font-size: 0.55rem;
     transition: transform 0.2s;
     color: var(--dg-link);
     flex-shrink: 0;
   }
-  .digest-month-group[open] summary::before { transform: rotate(90deg); }
-  .digest-month-group summary:hover { color: var(--dg-link); }
-  .digest-month-group summary span {
+  #dailyDigest .digest-month-group[open] summary::before { transform: rotate(90deg); }
+  #dailyDigest .digest-month-group summary:hover { color: var(--dg-link); }
+  #dailyDigest .digest-month-group summary span {
     font-size: 0.78rem;
     font-weight: 400;
     color: var(--dg-muted);
   }
-  .digest-month-items { margin-top: 0.35rem; }
+  #dailyDigest .digest-month-items { margin-top: 0.35rem; }
 
   /* Digest content view (when user clicks a card) */
-  .digest-view {
+  #dailyDigest .digest-view {
     display: none;
     margin: 0 auto;
     padding: 0 1rem 3rem;
   }
-  .digest-view.active {
+  #dailyDigest .digest-view.active {
     display: block;
   }
-  .digest-view-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--dg-border);
+  #dailyDigest .digest-view-nav {
+    margin-bottom: 1rem;
+    text-align: center;
   }
-  .digest-back-btn {
+  #dailyDigest .digest-back-btn {
     background: none;
     border: 1px solid var(--dg-border);
     border-radius: var(--dg-radius);
@@ -197,35 +208,48 @@
     transition: all 0.15s;
     white-space: nowrap;
   }
-  .digest-back-btn:hover { border-color: var(--dg-link); color: var(--dg-link); }
-  .digest-view-title {
-    font-size: 1.3rem;
+  #dailyDigest .digest-back-btn:hover { border-color: var(--dg-link); color: var(--dg-link); }
+  #dailyDigest .digest-view-heading {
+    text-align: center;
+    font-size: 1.5rem;
     font-weight: 700;
-    margin: 0;
+    margin: 0 0 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--dg-border);
   }
-  .digest-view-body {
+  #dailyDigest .digest-view-body {
     line-height: 1.7;
+    color: var(--dg-font);
   }
-  .digest-view-body h2 {
+  #dailyDigest .digest-view-body a {
+    color: var(--dg-link);
+    text-decoration: none;
+  }
+  #dailyDigest .digest-view-body a:hover {
+    text-decoration: underline;
+  }
+  #dailyDigest .digest-view-body h1,
+  #dailyDigest .digest-view-body h2 {
     font-size: 1.25rem;
     font-weight: 700;
     margin: 1.5rem 0 0.75rem;
     padding-bottom: 0.3rem;
     border-bottom: 2px solid var(--dg-border);
   }
-  .digest-view-body h3 {
+  #dailyDigest .digest-view-body h3,
+  #dailyDigest .digest-view-body h4 {
     font-size: 1rem;
     font-weight: 600;
     margin: 1rem 0 0.5rem;
     color: var(--dg-muted);
   }
-  .digest-view-body table {
+  #dailyDigest .digest-view-body table {
     width: 100%;
     border-collapse: collapse;
     margin: 0.3rem 0 0.75rem;
     font-size: 0.88rem;
   }
-  .digest-view-body th {
+  #dailyDigest .digest-view-body th {
     text-align: left;
     padding: 0.4rem 0.6rem;
     border-bottom: 2px solid var(--dg-border);
@@ -235,37 +259,61 @@
     letter-spacing: 0.03em;
     color: var(--dg-muted);
   }
-  .digest-view-body td {
+  #dailyDigest .digest-view-body td {
     padding: 0.35rem 0.6rem;
     border-bottom: 1px solid var(--dg-border);
   }
-  .digest-view-body tr:last-child td { border-bottom: none; }
-  .digest-view-body ul {
-    list-style: disc;
+  #dailyDigest .digest-view-body tr:last-child td { border-bottom: none; }
+  #dailyDigest .digest-view-body ul,
+  #dailyDigest .digest-view-body ol {
     padding-left: 1.2rem;
   }
-  .digest-view-body li {
+  #dailyDigest .digest-view-body ul { list-style: disc; }
+  #dailyDigest .digest-view-body ol { list-style: decimal; }
+  #dailyDigest .digest-view-body li {
     padding: 0.35rem 0;
     font-size: 0.9rem;
     line-height: 1.5;
   }
-  .digest-view-body hr {
+  #dailyDigest .digest-view-body hr {
     border: none;
     border-top: 1px solid var(--dg-border);
     margin: 1.5rem 0;
   }
-  .digest-view-body .change-positive { color: #16a34a; font-weight: 600; }
-  .digest-view-body .change-negative { color: #dc2626; font-weight: 600; }
-  [data-theme="dark"] .digest-view-body .change-positive { color: #4ade80; }
-  [data-theme="dark"] .digest-view-body .change-negative { color: #f87171; }
+  #dailyDigest .digest-view-body .change-positive,
+  #dailyDigest .digest-view-body .change-up,
+  #dailyDigest .digest-view-body .positive,
+  #dailyDigest .digest-view-body .up { color: #16a34a; font-weight: 600; }
+  #dailyDigest .digest-view-body .change-negative,
+  #dailyDigest .digest-view-body .change-down,
+  #dailyDigest .digest-view-body .negative,
+  #dailyDigest .digest-view-body .down { color: #dc2626; font-weight: 600; }
+  [data-theme="dark"] #dailyDigest .digest-view-body .change-positive,
+  [data-theme="dark"] #dailyDigest .digest-view-body .change-up,
+  [data-theme="dark"] #dailyDigest .digest-view-body .positive,
+  [data-theme="dark"] #dailyDigest .digest-view-body .up { color: #4ade80; }
+  [data-theme="dark"] #dailyDigest .digest-view-body .change-negative,
+  [data-theme="dark"] #dailyDigest .digest-view-body .change-down,
+  [data-theme="dark"] #dailyDigest .digest-view-body .negative,
+  [data-theme="dark"] #dailyDigest .digest-view-body .down { color: #f87171; }
+  @media (prefers-color-scheme: dark) {
+    [data-theme="auto"] #dailyDigest .digest-view-body .change-positive,
+    [data-theme="auto"] #dailyDigest .digest-view-body .change-up,
+    [data-theme="auto"] #dailyDigest .digest-view-body .positive,
+    [data-theme="auto"] #dailyDigest .digest-view-body .up { color: #4ade80; }
+    [data-theme="auto"] #dailyDigest .digest-view-body .change-negative,
+    [data-theme="auto"] #dailyDigest .digest-view-body .change-down,
+    [data-theme="auto"] #dailyDigest .digest-view-body .negative,
+    [data-theme="auto"] #dailyDigest .digest-view-body .down { color: #f87171; }
+  }
 
   /* Loading state */
-  .digest-loading {
+  #dailyDigest .digest-loading {
     text-align: center;
     padding: 3rem 1rem;
     color: var(--dg-muted);
   }
-  .digest-loading::after {
+  #dailyDigest .digest-loading::after {
     content: '';
     display: inline-block;
     width: 16px;
@@ -278,44 +326,48 @@
     vertical-align: middle;
   }
   @keyframes dg-spin { to { transform: rotate(360deg); } }
-  .digest-error {
+  #dailyDigest .digest-error {
     text-align: center;
     padding: 2rem 1rem;
     color: var(--dg-muted);
   }
 
   /* Table scroll on mobile */
-  .digest-view-body .table-wrapper {
+  #dailyDigest .digest-view-body .table-wrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-  .digest-view-body table {
+  #dailyDigest .digest-view-body table {
     min-width: 320px;
   }
 
   /* Mobile adjustments */
   @media (max-width: 680px) {
-    .digest-header { margin: 1.5rem 0 1.5rem; }
-    .digest-header h1 { font-size: 1.5rem; }
-    .digest-timeline { padding: 0 0.5rem 2rem; }
-    .digest-timeline::before { left: calc(0.5rem + 6px); }
-    .digest-card { margin-left: 2rem; }
-    .digest-card::before { left: -1.5rem; }
-    .digest-post-card { padding: 0.4rem 0.7rem; }
-    .digest-card-title { font-size: 0.85rem; }
-    .digest-view { padding: 0 0.5rem 2rem; }
-    .digest-view-header { flex-wrap: wrap; gap: 0.5rem; }
-    .digest-view-title { font-size: 1.1rem; }
-    .digest-view-body h2 { font-size: 1.1rem; }
-    .digest-view-body table { font-size: 0.8rem; }
-    .digest-view-body th,
-    .digest-view-body td { padding: 0.35rem 0.5rem; }
-    .digest-view-body li { font-size: 0.85rem; }
-    .digest-year-group > summary { padding-left: calc(0.5rem + 18px); font-size: 1.1rem; }
-    .digest-month-group summary { padding-left: calc(1rem + 18px); font-size: 0.9rem; }
+    #dailyDigest .digest-header { margin: 1.5rem 0 1.5rem; }
+    #dailyDigest .digest-header h1 { font-size: 1.5rem; }
+    #dailyDigest .digest-timeline { padding: 0 0.5rem 2rem; }
+    #dailyDigest .digest-timeline::before { left: calc(0.5rem + 6px); }
+    #dailyDigest .digest-card { margin-left: 2rem; }
+    #dailyDigest .digest-card::before { left: -1.5rem; }
+    #dailyDigest .digest-post-card { padding: 0.4rem 0.7rem; }
+    #dailyDigest .digest-card-title { font-size: 0.85rem; }
+    #dailyDigest .digest-view { padding: 0 0.5rem 2rem; }
+    #dailyDigest .digest-view-heading { font-size: 1.2rem; margin-bottom: 1rem; }
+    #dailyDigest .digest-view-body h1,
+    #dailyDigest .digest-view-body h2 { font-size: 1.1rem; }
+    #dailyDigest .digest-view-body table { font-size: 0.8rem; }
+    #dailyDigest .digest-view-body th,
+    #dailyDigest .digest-view-body td { padding: 0.35rem 0.5rem; }
+    #dailyDigest .digest-view-body li { font-size: 0.85rem; }
+    #dailyDigest .digest-year-group > summary { padding-left: calc(0.5rem + 18px); font-size: 1.1rem; }
+    #dailyDigest .digest-month-group summary { padding-left: calc(1rem + 18px); font-size: 0.9rem; }
   }
 </style>
-<article class="fi-page">
+<meta name="description" content="Daily digest of global news, India, markets, AI and tech — curated every morning.">
+{{- end -}}
+
+{{- define "content" -}}
+<article class="fi-page" id="dailyDigest" data-site-title="{{ .Site.Title }}">
   <div class="digest-header">
     <h1>Daily Digest</h1>
     <p>Markets, global news, India &amp; tech &mdash; every day</p>
@@ -328,10 +380,10 @@
 
   <!-- Single digest view (shown when user clicks a card) -->
   <div class="digest-view" id="digestView">
-    <div class="digest-view-header">
+    <div class="digest-view-nav">
       <button class="digest-back-btn" id="digestBack">&larr; Back</button>
-      <h2 class="digest-view-title" id="digestViewTitle"></h2>
     </div>
+    <h2 class="digest-view-heading" id="digestViewTitle"></h2>
     <div class="digest-view-body" id="digestViewBody"></div>
   </div>
 </article>
@@ -340,20 +392,153 @@
 (function() {
   'use strict';
 
-  var DATA_BASE = 'https://raw.githubusercontent.com/SamirPaulb/daily-digest/main';
+  var DATA_BASE  = 'https://raw.githubusercontent.com/SamirPaulb/daily-digest/main';
+  var _siteTitle = (document.getElementById('dailyDigest') || {}).dataset.siteTitle || 'Samir Paul';
+  var _baseTitle = 'Daily Digest - ' + _siteTitle;
   var timeline = document.getElementById('digestTimeline');
-  var view = document.getElementById('digestView');
+  var view     = document.getElementById('digestView');
   var viewTitle = document.getElementById('digestViewTitle');
-  var viewBody = document.getElementById('digestViewBody');
-  var grouped = {};  // { year: { month: [entries] } } — built once from manifest
+  var viewBody  = document.getElementById('digestViewBody');
+  var grouped  = {};  // { year: { month: [entries] } }
 
   var MONTHS = ['January','February','March','April','May','June',
                 'July','August','September','October','November','December'];
 
+  // ── Date helpers (never throw) ─────────────────────────────────────────────
+
+  function safeDate(raw) {
+    if (!raw) return null;
+    try {
+      var s = String(raw).trim().substring(0, 10);
+      var d = new Date(s + 'T07:00:00+05:30');
+      if (isNaN(d.getTime())) d = new Date(s);
+      return isNaN(d.getTime()) ? null : d;
+    } catch (e) { return null; }
+  }
+
   function formatDate(dateStr) {
-    var d = new Date(dateStr + 'T07:00:00+05:30');
+    var d = safeDate(dateStr);
+    if (!d) return String(dateStr || '');
     var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     return days[d.getDay()] + ', ' + MONTHS[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  }
+
+  function formatDateShort(dateStr) {
+    var d = safeDate(dateStr);
+    if (!d) return String(dateStr || '');
+    return MONTHS[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  }
+
+  // ── Manifest normaliser ────────────────────────────────────────────────────
+  // Handles any shape the AI/script might produce:
+  // - Array of entries (current)
+  // - Object wrapping an array ({entries/data/items/digests/results:[...]})
+  // - Stringified JSON inside JSON (double-encoded)
+  // - Entries with varied field names
+
+  function normalizeManifest(data) {
+    // Handle double-encoded JSON string
+    if (typeof data === 'string') {
+      try { data = JSON.parse(data); } catch (e) { return []; }
+    }
+    // Extract array from known wrapper keys
+    var list = Array.isArray(data)                       ? data
+             : (data && Array.isArray(data.entries))     ? data.entries
+             : (data && Array.isArray(data.data))        ? data.data
+             : (data && Array.isArray(data.items))       ? data.items
+             : (data && Array.isArray(data.digests))     ? data.digests
+             : (data && Array.isArray(data.results))     ? data.results
+             : (data && Array.isArray(data.posts))       ? data.posts
+             : [];
+    // If still not an array, try finding first array property
+    if (!list.length && data && typeof data === 'object') {
+      var keys = Object.keys(data);
+      for (var i = 0; i < keys.length; i++) {
+        if (Array.isArray(data[keys[i]]) && data[keys[i]].length) {
+          list = data[keys[i]];
+          break;
+        }
+      }
+    }
+    return list
+      .filter(Boolean)
+      .map(function(e) {
+        if (typeof e === 'string') {
+          // Handle case where entry is just a date string
+          return { date: e.trim().substring(0, 10), title: '', summary: '' };
+        }
+        var raw = String(e.date || e.published_date || e.published || e.created_at || e.id || '').trim();
+        return {
+          date:    raw.substring(0, 10),
+          title:   String(e.title || e.heading || e.name || e.label || '').trim(),
+          summary: String(e.summary || e.description || e.excerpt || e.body || '').trim()
+        };
+      })
+      .filter(function(e) { return /^\d{4}-\d{2}-\d{2}$/.test(e.date); });
+  }
+
+  // ── HTML escape (for manifest data inserted into card markup) ─────────────
+
+  function esc(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Post-process fetched HTML content ─────────────────────────────────────
+  // Handles ANY AI-generated HTML structure: wraps tables, opens external
+  // links, fixes broken markup, sanitises stray scripts.
+
+  function renderContent(html) {
+    if (!html || !html.trim()) {
+      viewBody.innerHTML = '<div class="digest-error">No content in this digest.</div>';
+      return;
+    }
+
+    // Strip any <script> or <style> tags the AI might have injected
+    html = html.replace(/<script[\s\S]*?<\/script>/gi, '')
+               .replace(/<style[\s\S]*?<\/style>/gi, '');
+
+    viewBody.innerHTML = html;
+
+    // Wrap tables for horizontal scroll (skip already-wrapped)
+    viewBody.querySelectorAll('table').forEach(function(t) {
+      if (t.parentNode && t.parentNode.classList && t.parentNode.classList.contains('table-wrapper')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'table-wrapper';
+      t.parentNode.insertBefore(wrap, t);
+      wrap.appendChild(t);
+    });
+
+    // Open external links in new tab safely
+    viewBody.querySelectorAll('a[href]').forEach(function(a) {
+      var href = a.getAttribute('href') || '';
+      if (/^(https?:)?\/\//.test(href)) {
+        a.setAttribute('target', '_blank');
+        a.setAttribute('rel', 'noopener noreferrer');
+      }
+      // Fix empty or javascript: hrefs
+      if (!href || /^javascript:/i.test(href)) {
+        a.removeAttribute('href');
+        a.style.cursor = 'default';
+      }
+    });
+
+    // Remove any iframes the AI might have included
+    viewBody.querySelectorAll('iframe, object, embed').forEach(function(el) {
+      el.parentNode.removeChild(el);
+    });
+
+    // If the AI used h1 for section headings (instead of h2), demote to h2
+    // to keep visual consistency without overriding h1 sizing globally
+    var h1s = viewBody.querySelectorAll('h1');
+    if (h1s.length > 1) {
+      h1s.forEach(function(h1) {
+        var h2 = document.createElement('h2');
+        h2.innerHTML = h1.innerHTML;
+        h1.parentNode.replaceChild(h2, h1);
+      });
+    }
   }
 
   // ── Views ──────────────────────────────────────────────────────────────────
@@ -361,33 +546,25 @@
   function showTimeline() {
     timeline.style.display = '';
     view.classList.remove('active');
+    document.title = _baseTitle;
     window.history.replaceState(null, '', window.location.pathname);
   }
 
   function showDigest(entry) {
     timeline.style.display = 'none';
     view.classList.add('active');
-    viewTitle.textContent = entry.title || ('Daily Digest \u2014 ' + formatDate(entry.date));
+    var dateLabel = entry.date ? formatDateShort(entry.date) : '';
+    var heading = entry.title || (dateLabel ? 'Daily Digest \u2014 ' + dateLabel : 'Daily Digest');
+    viewTitle.textContent = heading;
+    document.title = heading + ' - ' + _siteTitle;
     viewBody.innerHTML = '<div class="digest-loading">Loading</div>';
-    window.history.replaceState(null, '', window.location.pathname + '#' + entry.date);
+    if (entry.date) window.history.replaceState(null, '', window.location.pathname + '#' + entry.date);
 
-    fetch(DATA_BASE + '/digests/' + entry.date + '.html', { cache: 'default' })
-      .then(function(r) {
-        if (!r.ok) throw new Error('Not found');
-        return r.text();
-      })
-      .then(function(html) {
-        viewBody.innerHTML = html;
-        // Wrap tables for mobile horizontal scroll
-        viewBody.querySelectorAll('table').forEach(function(t) {
-          var wrap = document.createElement('div');
-          wrap.className = 'table-wrapper';
-          t.parentNode.insertBefore(wrap, t);
-          wrap.appendChild(t);
-        });
-      })
+    fetchHTML(DATA_BASE + '/digests/' + entry.date + '.html', { cache: 'default' })
+      .then(renderContent)
       .catch(function() {
-        viewBody.innerHTML = '<div class="digest-error">Could not load digest for ' + entry.date + '</div>';
+        viewBody.innerHTML = '<div class="digest-error">Could not load digest'
+          + (entry.date ? ' for ' + entry.date : '') + '. Try refreshing.</div>';
       });
   }
 
@@ -395,32 +572,27 @@
   var cachedManifest = null;
 
   document.getElementById('digestBack').addEventListener('click', function() {
-    // Build timeline lazily on first Back click (for direct #date links)
-    if (!timelineBuilt && cachedManifest) {
-      buildTimeline(cachedManifest);
-    }
+    if (!timelineBuilt && cachedManifest) buildTimeline(cachedManifest);
     showTimeline();
   });
 
-  // ── Lazy DOM: render cards only when month is opened ───────────────────────
+  // ── Lazy DOM: cards ────────────────────────────────────────────────────────
 
   function renderMonthCards(container, year, month) {
     if (container.dataset.loaded) return;
     container.dataset.loaded = '1';
-    var entries = grouped[year][month];
+    var entries = (grouped[year] && grouped[year][month]) || [];
     var html = '';
     entries.forEach(function(entry) {
+      var title = entry.title || ('Daily Digest \u2014 ' + formatDateShort(entry.date));
       html += '<div class="digest-card">';
-      html += '<article class="digest-post-card" data-date="' + entry.date + '">';
-      html += '<h2 class="digest-card-title">' + (entry.title || 'Daily Digest') + '</h2>';
+      html += '<article class="digest-post-card" data-date="' + esc(entry.date) + '">';
+      html += '<h2 class="digest-card-title">' + esc(title) + '</h2>';
       html += '<div class="digest-card-meta">' + formatDate(entry.date) + '</div>';
-      if (entry.summary) {
-        html += '<div class="digest-card-summary">' + entry.summary + '</div>';
-      }
+      if (entry.summary) html += '<div class="digest-card-summary">' + esc(entry.summary) + '</div>';
       html += '</article></div>';
     });
     container.innerHTML = html;
-    // Attach click handlers to newly rendered cards
     container.querySelectorAll('.digest-post-card').forEach(function(card) {
       card.addEventListener('click', function() {
         var date = this.dataset.date;
@@ -430,154 +602,198 @@
     });
   }
 
-  // ── Lazy DOM: render months only when year is opened ───────────────────────
+  // ── Lazy DOM: months ───────────────────────────────────────────────────────
 
   function renderYearMonths(container, year) {
     if (container.dataset.loaded) return;
     container.dataset.loaded = '1';
-    var currentYear = new Date().getFullYear();
+    var currentYear  = new Date().getFullYear();
     var currentMonth = new Date().getMonth();
-    var monthKeys = Object.keys(grouped[year]).sort(function(a,b){return b-a;});
+    var monthKeys = Object.keys(grouped[year] || {}).map(Number).sort(function(a,b){return b-a;});
     var html = '';
-
     monthKeys.forEach(function(month) {
       var count = grouped[year][month].length;
-      var mOpen = (parseInt(year) === currentYear && parseInt(month) === currentMonth) ? ' open' : '';
+      var mOpen = (parseInt(year) === currentYear && month === currentMonth) ? ' open' : '';
       html += '<details class="digest-month-group"' + mOpen + ' data-year="' + year + '" data-month="' + month + '">';
       html += '<summary>' + MONTHS[month] + ' ' + year + ' <span>(' + count + ')</span></summary>';
       html += '<div class="digest-month-items"></div>';
       html += '</details>';
     });
     container.innerHTML = html;
-
-    // Lazy-render cards when month is toggled open
     container.querySelectorAll('.digest-month-group').forEach(function(det) {
       det.addEventListener('toggle', function() {
-        if (this.open) {
-          renderMonthCards(
-            this.querySelector('.digest-month-items'),
-            this.dataset.year,
-            this.dataset.month
-          );
-        }
+        if (this.open) renderMonthCards(this.querySelector('.digest-month-items'), this.dataset.year, this.dataset.month);
       });
-      // If already open (current month), render immediately
-      if (det.open) {
-        renderMonthCards(
-          det.querySelector('.digest-month-items'),
-          det.dataset.year,
-          det.dataset.month
-        );
-      }
+      if (det.open) renderMonthCards(det.querySelector('.digest-month-items'), det.dataset.year, det.dataset.month);
     });
   }
 
-  // ── Build timeline: only year summaries rendered initially ──────────────────
+  // ── Build timeline ─────────────────────────────────────────────────────────
 
   function buildTimeline(manifest) {
     if (timelineBuilt) return;
     timelineBuilt = true;
-    if (!manifest.length) {
+    if (!manifest || !manifest.length) {
       timeline.innerHTML = '<div class="digest-error">No digests available yet. Check back tomorrow!</div>';
       return;
     }
-
-    // Group into { year: { month: [entries] } }
     manifest.forEach(function(entry) {
-      var d = new Date(entry.date + 'T07:00:00+05:30');
-      var y = d.getFullYear();
-      var m = d.getMonth();
+      var d = safeDate(entry.date);
+      if (!d) return;
+      var y = d.getFullYear(), m = d.getMonth();
       if (!grouped[y]) grouped[y] = {};
       if (!grouped[y][m]) grouped[y][m] = [];
       grouped[y][m].push(entry);
     });
-
     var currentYear = new Date().getFullYear();
     var yearKeys = Object.keys(grouped).sort(function(a,b){return b-a;});
     var html = '';
-
-    // Render ONLY year summaries — months/cards loaded lazily on toggle
     yearKeys.forEach(function(year) {
-      var yCount = Object.keys(grouped[year]).reduce(function(s, m) {
-        return s + grouped[year][m].length;
-      }, 0);
+      var yCount = Object.keys(grouped[year]).reduce(function(s,m){return s+grouped[year][m].length;},0);
       var yOpen = (parseInt(year) === currentYear) ? ' open' : '';
       html += '<details class="digest-year-group"' + yOpen + ' data-year="' + year + '">';
       html += '<summary>' + year + ' <span>(' + yCount + ')</span></summary>';
       html += '<div class="digest-year-items"></div>';
       html += '</details>';
     });
-
     timeline.innerHTML = html;
-
-    // Lazy-render months when year is toggled open
     timeline.querySelectorAll('.digest-year-group').forEach(function(det) {
       det.addEventListener('toggle', function() {
-        if (this.open) {
-          renderYearMonths(this.querySelector('.digest-year-items'), this.dataset.year);
-        }
+        if (this.open) renderYearMonths(this.querySelector('.digest-year-items'), this.dataset.year);
       });
-      // If already open (current year), render immediately
-      if (det.open) {
-        renderYearMonths(det.querySelector('.digest-year-items'), det.dataset.year);
-      }
+      if (det.open) renderYearMonths(det.querySelector('.digest-year-items'), det.dataset.year);
     });
   }
 
-  // ── Init ───────────────────────────────────────────────────────────────────
+  // ── Session cache layer ────────────────────────────────────────────────────
+  // Caches manifest + individual digest HTML in sessionStorage.
+  // Avoids re-fetching when navigating back/forward within the same tab session.
 
-  // Robust fetch with retry and fallback
-  function fetchWithRetry(url, opts, retries) {
-    retries = retries || 2;
-    return fetch(url, opts).then(function(r) {
-      if (!r.ok) throw new Error(r.status);
+  var _cache = (function() {
+    var PREFIX = 'dg_';
+    var ok = false;
+    try { sessionStorage.setItem(PREFIX + 'test', '1'); sessionStorage.removeItem(PREFIX + 'test'); ok = true; }
+    catch (e) { /* private browsing or storage full */ }
+    return {
+      get: function(key) { if (!ok) return null; try { return sessionStorage.getItem(PREFIX + key); } catch (e) { return null; } },
+      set: function(key, val) { if (!ok) return; try { sessionStorage.setItem(PREFIX + key, val); } catch (e) { /* quota exceeded — clear old entries */ try { sessionStorage.clear(); sessionStorage.setItem(PREFIX + key, val); } catch (e2) {} } },
+      getJSON: function(key) { var v = this.get(key); if (!v) return null; try { return JSON.parse(v); } catch (e) { return null; } },
+      setJSON: function(key, val) { this.set(key, JSON.stringify(val)); }
+    };
+  })();
+
+  // ── Fetch layer: timeout + exponential backoff + parse retry ────────────────
+
+  function attemptFetch(url, opts) {
+    var timeout = 15000;
+    var controller, timer;
+    if (typeof AbortController !== 'undefined') {
+      controller = new AbortController();
+      timer = setTimeout(function() { controller.abort(); }, timeout);
+      var merged = {};
+      var src = opts || {};
+      for (var k in src) merged[k] = src[k];
+      merged.signal = controller.signal;
+      opts = merged;
+    }
+    return fetch(url, opts || {}).then(function(r) {
+      if (timer) clearTimeout(timer);
+      if (!r.ok) { var e = new Error('HTTP ' + r.status); e.status = r.status; throw e; }
       return r;
     }).catch(function(err) {
-      if (retries > 0) {
-        return new Promise(function(resolve) { setTimeout(resolve, 1000); })
-          .then(function() { return fetchWithRetry(url, opts, retries - 1); });
-      }
+      if (timer) clearTimeout(timer);
       throw err;
     });
   }
 
-  // If URL has #date, try loading that digest directly (skip manifest for speed)
+  // Fetch JSON with full retry + sessionStorage cache.
+  // skipCache: true for resources that change frequently (manifest).
+  function fetchJSON(url, opts, maxRetries, skipCache) {
+    var cacheKey = 'json_' + url.replace(/[^a-z0-9]/gi, '_');
+    if (!skipCache) {
+      var cached = _cache.getJSON(cacheKey);
+      if (cached) return Promise.resolve(cached);
+    }
+    maxRetries = (maxRetries === undefined) ? 3 : maxRetries;
+    var attempt = 0;
+    function tryOnce() {
+      attempt++;
+      return attemptFetch(url, opts)
+        .then(function(r) { return r.text(); })
+        .then(function(text) {
+          var data;
+          try { data = JSON.parse(text); }
+          catch (e) { throw new Error('JSON parse error'); }
+          _cache.setJSON(cacheKey, data);
+          return data;
+        })
+        .catch(function(err) {
+          if (err.status === 404) throw err;
+          if (attempt < maxRetries) {
+            var delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000);
+            return new Promise(function(r) { setTimeout(r, delay); }).then(tryOnce);
+          }
+          throw err;
+        });
+    }
+    return tryOnce();
+  }
+
+  // Fetch HTML with full retry + sessionStorage cache.
+  function fetchHTML(url, opts, maxRetries) {
+    var cacheKey = 'html_' + url.replace(/[^a-z0-9]/gi, '_');
+    var cached = _cache.get(cacheKey);
+    if (cached) return Promise.resolve(cached);
+    maxRetries = (maxRetries === undefined) ? 3 : maxRetries;
+    var attempt = 0;
+    function tryOnce() {
+      attempt++;
+      return attemptFetch(url, opts)
+        .then(function(r) { return r.text(); })
+        .then(function(text) {
+          if (!text || !text.trim()) throw new Error('Empty response');
+          _cache.set(cacheKey, text);
+          return text;
+        })
+        .catch(function(err) {
+          if (err.status === 404) throw err;
+          if (attempt < maxRetries) {
+            var delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000);
+            return new Promise(function(r) { setTimeout(r, delay); }).then(tryOnce);
+          }
+          throw err;
+        });
+    }
+    return tryOnce();
+  }
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+
   var hash = window.location.hash.replace('#', '');
   if (hash && /^\d{4}-\d{2}-\d{2}$/.test(hash)) {
+    // Direct link to a specific date — show it immediately, load manifest in background
     timeline.style.display = 'none';
     view.classList.add('active');
-    viewTitle.textContent = 'Daily Digest \u2014 ' + formatDate(hash);
+    var hashHeading = 'Daily Digest \u2014 ' + formatDateShort(hash);
+    viewTitle.textContent = hashHeading;
+    document.title = hashHeading + ' - ' + _siteTitle;
     viewBody.innerHTML = '<div class="digest-loading">Loading</div>';
-    fetchWithRetry(DATA_BASE + '/digests/' + hash + '.html', { cache: 'default' })
-      .then(function(r) { return r.text(); })
-      .then(function(html) {
-        viewBody.innerHTML = html;
-        viewBody.querySelectorAll('table').forEach(function(t) {
-          var wrap = document.createElement('div');
-          wrap.className = 'table-wrapper';
-          t.parentNode.insertBefore(wrap, t);
-          wrap.appendChild(t);
-        });
-      })
+    fetchHTML(DATA_BASE + '/digests/' + hash + '.html', { cache: 'default' })
+      .then(renderContent)
       .catch(function() {
-        viewBody.innerHTML = '<div class="digest-error">Could not load digest for ' + hash + '</div>';
+        viewBody.innerHTML = '<div class="digest-error">Could not load digest for ' + esc(hash) + '. Try refreshing.</div>';
       });
-    // Load manifest in background for Back button
-    fetchWithRetry(DATA_BASE + '/manifest.json', { cache: 'no-cache' })
-      .then(function(r) { return r.json(); })
-      .then(function(manifest) {
-        manifest.sort(function(a,b) { return b.date.localeCompare(a.date); });
-        cachedManifest = manifest;
+    // Manifest in background so Back button works
+    fetchJSON(DATA_BASE + '/manifest.json', { cache: 'no-cache' }, 3, true)
+      .then(function(data) {
+        cachedManifest = normalizeManifest(data).sort(function(a,b){return b.date.localeCompare(a.date);});
       })
       .catch(function() {});
   } else {
-    // Normal load: fetch manifest and build timeline
-    fetchWithRetry(DATA_BASE + '/manifest.json', { cache: 'no-cache' })
-      .then(function(r) { return r.json(); })
-      .then(function(manifest) {
-        manifest.sort(function(a,b) { return b.date.localeCompare(a.date); });
-        cachedManifest = manifest;
-        buildTimeline(manifest);
+    fetchJSON(DATA_BASE + '/manifest.json', { cache: 'no-cache' }, 3, true)
+      .then(function(data) {
+        cachedManifest = normalizeManifest(data).sort(function(a,b){return b.date.localeCompare(a.date);});
+        buildTimeline(cachedManifest);
       })
       .catch(function() {
         timeline.innerHTML = '<div class="digest-error">Could not load digest archive. Try refreshing the page.</div>';
