@@ -340,19 +340,26 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
 
   # ----------------------------------------------------------------------------
   # Social Media Links (Author Profile)
+  # weight controls left-to-right display order (lower = first)
   # ----------------------------------------------------------------------------
   [params.social]
-    GitHub = "SamirPaulb"
-    Linkedin = "samirpaul"
-    Twitter = "SamirPaulb"
-    Instagram = "SamirPaulb"
     RSS = true
 
-  [params.social.weight]
-    Linkedin = 1
-    GitHub = 2
-    Twitter = 3
-    Instagram = 4
+  [params.social.Linkedin]
+    id = "samirpaul"
+    weight = 1
+
+  [params.social.GitHub]
+    id = "SamirPaulb"
+    weight = 2
+
+  [params.social.Twitter]
+    id = "SamirPaulb"
+    weight = 3
+
+  [params.social.Instagram]
+    id = "SamirPaulb"
+    weight = 4
 
   # ----------------------------------------------------------------------------
   # TypeIt Animation Configuration
