@@ -1284,7 +1284,12 @@
         <div id="radioChannelRow" style="display:none; margin-top:10px; margin-bottom:8px;">
             <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
                 <select class="music-select" id="radioChannelSelect" onchange="changeRadioChannel()" style="flex:1; min-width:140px;">
-                    <option value="groovesalad">SomaFM Groove Salad</option>
+                    <optgroup label="SomaFM">
+                        <option value="groovesalad">Groove Salad</option>
+                    </optgroup>
+                    <optgroup label="Bloomberg">
+                        <option value="bloomberg">Bloomberg Radio</option>
+                    </optgroup>
                     <optgroup label="All India Radio">
                         <option value="vividh">Vividh Bharati</option>
                         <option value="raagam">Raagam</option>
@@ -1579,6 +1584,8 @@
         bangla:        'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio137/hlspbaudio137_Auto.m3u8', // Akashvani Bangla (Bengali, West Bengal)
         airnews:   'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio002/hlspbaudio002_Auto.m3u8',   // AIR Live News 24x7
         newsonair: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio233/hlspbaudio233_Auto.m3u8',   // News on AIR (newsonair.gov.in)
+        // --- Business News (StreamTheWorld CDN, direct AAC — verified via radio-browser.info) ---
+        bloomberg: 'https://playerservices.streamtheworld.com/api/livestream-redirect/WBBRAMAAC.aac',  // Bloomberg Radio (WBBR 1130 NY, business/markets, 3971 votes)
         // --- BBC (Akamai CDN, worldwide HLS — 128kbps, verified via radio-browser.info) ---
         bbcradio1: 'https://as-hls-ww-live.akamaized.net/pool_01505109/live/ww/bbc_radio_one/bbc_radio_one.isml/bbc_radio_one-audio%3d128000.norewind.m3u8',  // BBC Radio 1 (pop/dance)
         bbcradio2: 'https://as-hls-ww-live.akamaized.net/pool_74208725/live/ww/bbc_radio_two/bbc_radio_two.isml/bbc_radio_two-audio%3d128000.norewind.m3u8',  // BBC Radio 2 (pop/rock/soul)
@@ -1595,6 +1602,7 @@
         vividh: 'Vividh Bharati', raagam: 'Raagam', aaradhana: 'Akashvani Aaradhana',
         fmgold: 'FM Gold', bangla: 'Akashvani Bangla',
         airnews: 'All India Radio News', newsonair: 'News on AIR',
+        bloomberg: 'Bloomberg Radio',
         bbcradio1: 'BBC Radio 1', bbcradio2: 'BBC Radio 2', bbcradio3: 'BBC Radio 3',
         bbcradio4: 'BBC Radio 4', bbcworld: 'BBC World Service', bbcasian: 'BBC Asian Network',
     };
