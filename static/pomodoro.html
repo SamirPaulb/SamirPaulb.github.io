@@ -24,7 +24,7 @@
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
     <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
     <meta name="bingbot" content="index, follow">
-    <link rel="canonical" href="/focus">
+    <link rel="canonical" href="/pomodoro">
     <meta name="rating" content="General">
     <meta name="referrer" content="no-referrer-when-downgrade">
     <meta name="format-detection" content="telephone=no">
@@ -43,8 +43,8 @@
     <meta name="classification" content="Productivity/Timer/Focus">
     <meta name="category" content="Productivity">
     <meta name="pagename" content="Pomodoro Timer - Free Online Focus Timer">
-    <meta name="url" content="/focus">
-    <meta name="identifier-URL" content="/focus">
+    <meta name="url" content="/pomodoro">
+    <meta name="identifier-URL" content="/pomodoro">
     <meta name="directory" content="submission">
     <meta name="owner" content="Samir">
     <meta name="reply-to" content="netproxy@duck.com">
@@ -53,7 +53,7 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="/focus">
+    <meta property="og:url" content="/pomodoro">
     <meta property="og:title"
         content="Pomodoro Timer - Free Online Focus Timer with Lo-fi Music, Radio & Screen Wake Lock">
     <meta property="og:description"
@@ -66,7 +66,7 @@
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="/focus">
+    <meta name="twitter:url" content="/pomodoro">
     <meta name="twitter:title" content="Pomodoro Timer - Free Online Focus Timer with Lo-fi Music & Radio">
     <meta name="twitter:description"
         content="Best free Pomodoro Timer with 2000+ lo-fi songs, All India Radio, BBC Radio, SomaFM, screen wake lock, and customizable alarms. No ads, no login, works offline.">
@@ -88,7 +88,7 @@
     <meta name="application-name" content="Pomodoro Timer">
     <meta name="msapplication-TileColor" content="#1a0a3e">
     <meta name="msapplication-tooltip" content="Free Pomodoro Timer with Lo-fi Music and Radio">
-    <meta name="msapplication-starturl" content="/focus">
+    <meta name="msapplication-starturl" content="/pomodoro">
 
     <!-- AI Search / LLM Discovery Meta Tags (ChatGPT, Perplexity, Bing Chat, Google AI) -->
     <meta name="ai-description"
@@ -111,7 +111,7 @@
         "name": "Pomodoro Timer - Free Online Focus Timer with Lo-fi Music & Radio",
         "alternateName": ["Pomodoro Timer", "Free Pomodoro Timer", "Study Timer", "Focus Timer", "Tomato Timer", "Lo-fi Study Timer"],
         "description": "The best free Pomodoro Timer online. Features 2000+ shuffled lo-fi songs, All India Radio (Akashvani), BBC Radio, SomaFM, SoundCloud, screen wake lock, customizable alarm sounds (Beep or John Cena entrance theme), adjustable volume amplification (1x-7x), keyboard shortcuts, browser notifications, session tracking, and a beautiful dark aesthetic theme. No account, no ads, no tracking. Works on desktop, tablet, and mobile.",
-        "url": "/focus",
+        "url": "/pomodoro",
         "applicationCategory": "ProductivityApplication",
         "applicationSubCategory": "Timer",
         "operatingSystem": "Any (Web Browser)",
@@ -372,7 +372,7 @@
         "itemListElement": [
             { "@type": "ListItem", "position": 1, "name": "Home", "item": "/" },
             { "@type": "ListItem", "position": 2, "name": "Tools", "item": "/tools" },
-            { "@type": "ListItem", "position": 3, "name": "Pomodoro Timer", "item": "/focus" }
+            { "@type": "ListItem", "position": 3, "name": "Pomodoro Timer", "item": "/pomodoro" }
         ]
     }
     </script>
@@ -387,7 +387,7 @@
             "@type": "SpeakableSpecification",
             "cssSelector": ["title", "meta[name='description']"]
         },
-        "url": "/focus",
+        "url": "/pomodoro",
         "isPartOf": {
             "@type": "WebSite",
             "name": "Samir Paul",
@@ -1943,7 +1943,7 @@
                 raagam: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudioragam/hlspbaudioragam_Auto.m3u8', // Raagam
                 aaradhana: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio003/hlspbaudio003_Auto.m3u8',   // Akashvani Aaradhana
                 fmgold: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio008/hlspbaudio008_Auto.m3u8',   // AIR FM Gold (Hindi music)
-                bangla: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio137/hlspbaudio137_Auto.m3u8', // Akashvani Bangla (Bengali, West Bengal)
+                bangla: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio137/hlspbaudio137_Auto.m3u8', // Akashvani Bangla (Bengali)
                 airnews: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio002/hlspbaudio002_Auto.m3u8',   // AIR Live News 24x7
                 newsonair: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio233/hlspbaudio233_Auto.m3u8',   // News on AIR (newsonair.gov.in)
                 // --- Business News (StreamTheWorld CDN, direct AAC — verified via radio-browser.info) ---
@@ -2065,6 +2065,9 @@
                         if (!r.ok) throw new Error('HTTP ' + r.status);
                         return r.json();
                     }).then(function (stations) {
+                        // Abort if user changed mode or channel while fetching
+                        if (state.musicStation !== 'radio' || state.radioChannel !== channelKey) return;
+
                         // Build list of playable URLs (HTTPS, resolved, not already failed)
                         var urls = [];
                         for (var i = 0; i < stations.length; i++) {
@@ -2096,6 +2099,9 @@
                         }
                     }).catch(function (err) {
                         clearTimeout(timeout);
+                        // Abort if user changed mode or channel while fetching
+                        if (state.musicStation !== 'radio' || state.radioChannel !== channelKey) return;
+
                         console.warn('Radio Browser mirror ' + mirrorIdx + ' failed:', err.message);
                         tryMirror(mirrorIdx + 1);
                     });
@@ -2201,6 +2207,8 @@
             let ytPlayer = null;
             let hlsInstance = null;
             let hlsAudioEl = null;
+            let hlsStallTimer = null;       // Stall timeout for direct streams (cleared on stop/switch)
+            let radioGeneration = 0;        // Monotonic counter to detect stale error-handler closures
             let shuffledQueue = [];
             let currentVideoIndex = -1;
             let userHasInteracted = false;
@@ -3073,6 +3081,10 @@
             }
 
             function stopHlsRadio() {
+                if (hlsStallTimer) {
+                    clearTimeout(hlsStallTimer);
+                    hlsStallTimer = null;
+                }
                 if (hlsInstance) {
                     hlsInstance.destroy();
                     hlsInstance = null;
@@ -3089,11 +3101,18 @@
                 stopHlsRadio();
                 dom.autoMixControls.style.display = 'none';
 
+                radioGeneration++;
+                var myGen = radioGeneration;
+
                 // Track current URL so radioFallback knows what failed
                 if (channelKey) radioChannels[channelKey] = hlsUrl;
 
                 // Error handler — marks URL as failed, triggers self-healing fallback
                 function onStreamError(source) {
+                    if (myGen !== radioGeneration) {
+                        console.log('Ignored stale error from ' + source + ' (gen ' + myGen + ', current ' + radioGeneration + ')');
+                        return;
+                    }
                     console.warn(source + ' error for ' + (channelKey || 'unknown') + ': ' + hlsUrl);
                     stopHlsRadio();
                     if (channelKey) {
@@ -3127,15 +3146,20 @@
                         hlsInstance.loadSource(hlsUrl);
                         hlsInstance.attachMedia(audio);
                         hlsInstance.on(Hls.Events.MANIFEST_PARSED, function () {
+                            if (myGen !== radioGeneration) return;
                             audio.play().catch(function () { });
                         });
                         hlsInstance.on(Hls.Events.ERROR, function (event, data) {
+                            if (myGen !== radioGeneration) return;
                             if (data.fatal) onStreamError('HLS/' + data.type);
                         });
                     } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
                         // Safari native HLS
                         audio.src = hlsUrl;
-                        audio.addEventListener('error', function () { onStreamError('Safari HLS'); });
+                        audio.addEventListener('error', function () {
+                            if (myGen !== radioGeneration) return;
+                            onStreamError('Safari HLS');
+                        });
                         audio.play().catch(function () { });
                     } else {
                         dom.autoMixStatus.textContent = 'HLS not supported';
@@ -3144,24 +3168,36 @@
                 } else {
                     // Direct MP3/AAC/OGG Icecast stream — wait for data before playing
                     audio.preload = 'none';
-                    audio.addEventListener('error', function () { onStreamError('Direct stream'); });
+                    audio.addEventListener('error', function () {
+                        if (myGen !== radioGeneration) return;
+                        onStreamError('Direct stream');
+                    });
 
                     // Stall timeout: if no audio plays within 12 seconds, trigger fallback
-                    var stallTimer = setTimeout(function () {
+                    hlsStallTimer = setTimeout(function () {
+                        if (myGen !== radioGeneration) return;
                         if (audio.paused || audio.readyState < 3) {
                             onStreamError('Stalled (no data within 12s)');
                         }
                     }, 12000);
 
                     audio.addEventListener('canplay', function () {
-                        clearTimeout(stallTimer);
+                        if (myGen !== radioGeneration) return;
+                        if (hlsStallTimer) {
+                            clearTimeout(hlsStallTimer);
+                            hlsStallTimer = null;
+                        }
                         audio.play().catch(function () { });
                     }, { once: true });
 
                     // Also handle stalled event (Firefox fires this when stream hangs)
                     audio.addEventListener('stalled', function () {
+                        if (myGen !== radioGeneration) return;
                         if (audio.paused && audio.readyState < 3) {
-                            clearTimeout(stallTimer);
+                            if (hlsStallTimer) {
+                                clearTimeout(hlsStallTimer);
+                                hlsStallTimer = null;
+                            }
                             onStreamError('Stream stalled');
                         }
                     }, { once: true });
