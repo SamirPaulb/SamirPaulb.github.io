@@ -4,7 +4,7 @@ Hugo blog with [FixIt](https://github.com/SamirPaulb/FixIt) theme, automated dua
 
 ## Deployments
 
-- **GitHub Pages**: https://samirpaulb.github.io
+- **GitHub Pages**: https://samirpaulb.github.io <a href="#"> <img loading="lazy" alt="Build & Deploy Hugo Site" src="https://github.com/SamirPaulb/SamirPaulb.github.io/actions/workflows/hugo.yml/badge.svg"/> </a>
 - **Cloudflare Pages**: https://samir.pages.dev
 - **Daily Digest**: https://samirpaulb.github.io/daily/ (fetches from [daily-digest](https://github.com/SamirPaulb/daily-digest) repo)
 
