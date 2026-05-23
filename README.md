@@ -1,6 +1,6 @@
 # Samir's Blog
 
-Hugo blog with [FixIt](https://github.com/SamirPaulb/FixIt) theme, automated dual deployment (GitHub Pages + Cloudflare Pages).
+Hugo blog with [**Hugo FixIt**](https://github.com/SamirPaulb/FixIt) theme, automated dual deployment (GitHub Pages + Cloudflare Pages).
 
 ## Deployments
 
