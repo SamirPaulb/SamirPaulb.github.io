@@ -1361,6 +1361,7 @@
                     <option value="auto">Lofi AutoMix</option>
                     <!-- <option value="live">YouTube Live</option> -->
                     <option value="radio">Radio</option>
+                    <option value="tunein">TuneIn</option>
                 </select>
             </div>
 
@@ -1420,6 +1421,32 @@
                             <option value="bbcradio4">BBC Radio 4</option>
                             <option value="bbcworld">BBC World Service</option>
                             <option value="bbcasian">BBC Asian Network</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+
+            <!-- TuneIn: Channel selector -->
+            <div id="tuneinChannelRow" style="display:none; margin-top:10px; margin-bottom:8px;">
+                <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;">
+                    <select class="music-select" id="tuneinChannelSelect" onchange="changeTuneinChannel()"
+                        style="flex:1; min-width:140px;">
+                        <optgroup label="News & Business">
+                            <option value="ti_cnbc">CNBC</option>
+                            <option value="ti_bloomberg">Bloomberg Radio</option>
+                            <option value="ti_aljazeera">Al Jazeera English</option>
+                        </optgroup>
+                        <optgroup label="Focus & Sleep">
+                            <option value="ti_ambient">Ambient Sleeping Pill</option>
+                            <option value="ti_piano">SOLO PIANO</option>
+                            <option value="ti_sleep">SLEEP</option>
+                        </optgroup>
+                        <optgroup label="Podcasts">
+                            <option value="ti_globalnews">Global News Podcast (BBC)</option>
+                            <option value="ti_lexfridman">Lex Fridman Podcast</option>
+                            <option value="ti_jayshetty">On Purpose with Jay Shetty</option>
+                            <option value="ti_doac">The Diary Of A CEO</option>
+                            <option value="ti_economist">Economist Podcasts</option>
                         </optgroup>
                     </select>
                 </div>
@@ -1885,6 +1912,7 @@
                 musicStation: 'off',
                 liveChannel: 'lofi',
                 radioChannel: 'groovesalad',
+                tuneinChannel: 'ti_cnbc',
                 customMusicUrl: '',
                 alarmSound: 'beep30',     // 'beep15' | 'beep30' | 'cena'
                 alarmVolume: 2,           // 1-7
@@ -1909,6 +1937,8 @@
                 liveChannelRow: document.getElementById('liveChannelRow'),
                 radioChannelSelect: document.getElementById('radioChannelSelect'),
                 radioChannelRow: document.getElementById('radioChannelRow'),
+                tuneinChannelSelect: document.getElementById('tuneinChannelSelect'),
+                tuneinChannelRow: document.getElementById('tuneinChannelRow'),
                 autoMixControls: document.getElementById('autoMixControls'),
                 autoMixStatus: document.getElementById('autoMixStatus'),
                 musicPlayerWrapper: document.getElementById('musicPlayerWrapper'),
@@ -1967,6 +1997,21 @@
                 bloomberg: 'Bloomberg Radio',
                 bbcradio1: 'BBC Radio 1', bbcradio2: 'BBC Radio 2', bbcradio3: 'BBC Radio 3',
                 bbcradio4: 'BBC Radio 4', bbcworld: 'BBC World Service', bbcasian: 'BBC Asian Network',
+            };
+
+            // ===== TUNEIN EMBEDDED CHANNELS (iframe-based) =====
+            const tuneinChannels = {
+                ti_bloomberg: 'https://tunein.com/embed/player/s165740/',
+                ti_cnbc: 'https://tunein.com/embed/player/s110052/',
+                ti_aljazeera: 'https://tunein.com/embed/player/s108977/',
+                ti_ambient: 'https://tunein.com/embed/player/s190314/',
+                ti_piano: 'https://tunein.com/embed/player/s132816/',
+                ti_sleep: 'https://tunein.com/embed/player/s132812/',
+                ti_globalnews: 'https://tunein.com/embed/player/p134942/',
+                ti_lexfridman: 'https://tunein.com/embed/player/p1153019/',
+                ti_jayshetty: 'https://tunein.com/embed/player/p1189216/',
+                ti_doac: 'https://tunein.com/embed/player/p1250744/',
+                ti_economist: 'https://tunein.com/embed/player/p604262/',
             };
 
             // ===== SELF-HEALING RADIO WITH RADIO BROWSER API + LOCALSTORAGE CACHE =====
@@ -2314,6 +2359,9 @@
                     if (data.radioChannel) {
                         state.radioChannel = data.radioChannel;
                     }
+                    if (data.tuneinChannel) {
+                        state.tuneinChannel = data.tuneinChannel;
+                    }
                     if (data.customMusicUrl) {
                         state.customMusicUrl = data.customMusicUrl;
                     }
@@ -2334,6 +2382,7 @@
                         musicStation: state.musicStation,
                         liveChannel: state.liveChannel,
                         radioChannel: state.radioChannel,
+                        tuneinChannel: state.tuneinChannel,
                         customMusicUrl: state.customMusicUrl,
                         alarmSound: state.alarmSound,
                         alarmVolume: state.alarmVolume,
@@ -3286,7 +3335,11 @@
                 // Hide everything first
                 dom.liveChannelRow.style.display = 'none';
                 dom.radioChannelRow.style.display = 'none';
+                dom.tuneinChannelRow.style.display = 'none';
                 dom.autoMixControls.style.display = 'none';
+                dom.musicIframe.style.height = '';  // Reset to CSS default
+                dom.musicIframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+                dom.musicIframe.removeAttribute('scrolling');
 
                 if (mode !== 'auto') stopAutoMix();
                 stopHlsRadio();
@@ -3313,6 +3366,12 @@
                 if (mode === 'radio') {
                     dom.radioChannelRow.style.display = 'block';
                     changeRadioChannel();
+                    return;
+                }
+
+                if (mode === 'tunein') {
+                    dom.tuneinChannelRow.style.display = 'block';
+                    changeTuneinChannel();
                     return;
                 }
             };
@@ -3358,6 +3417,27 @@
                 if (hlsUrl) {
                     loadHlsRadioInPlayer(hlsUrl, channel);
                 }
+            };
+
+            window.changeTuneinChannel = function () {
+                var channel = dom.tuneinChannelSelect.value;
+                state.tuneinChannel = channel;
+                savePrefs();
+
+                stopAutoMix();
+                stopHlsRadio();
+                dom.autoMixControls.style.display = 'none';
+
+                var embedUrl = tuneinChannels[channel];
+                if (!embedUrl) return;
+
+                // TuneIn embeds need full referrer and no restrictions
+                dom.musicIframe.removeAttribute('referrerpolicy');
+                dom.musicIframe.setAttribute('scrolling', 'no');
+                dom.musicIframe.style.display = 'block';
+                dom.musicIframe.style.height = '100px';
+                dom.musicIframe.src = embedUrl;
+                dom.musicPlayerWrapper.classList.add('visible');
             };
 
             // ===== ALARM SETTINGS =====
@@ -3541,6 +3621,12 @@
                         state.radioChannel = 'groovesalad';
                     }
                     dom.radioChannelSelect.value = state.radioChannel;
+                }
+                if (state.tuneinChannel) {
+                    if (!tuneinChannels[state.tuneinChannel]) {
+                        state.tuneinChannel = 'ti_cnbc';
+                    }
+                    dom.tuneinChannelSelect.value = state.tuneinChannel;
                 }
 
                 if (state.selectedPreset) {
