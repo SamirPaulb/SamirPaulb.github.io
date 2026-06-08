@@ -82,40 +82,31 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
     icon = "fa-solid fa-archive"
 
 [[menus.main]]
-  identifier = "categories"
-  name = "Categories"
-  url = "/categories/"
+  identifier = "daily"
+  name = "Daily"
+  url = "/daily/"
   title = ""
   weight = 2
   [menus.main.params]
-    icon = "fa-solid fa-folder-tree"
-
-[[menus.main]]
-  identifier = "tags"
-  name = "Tags"
-  url = "/tags/"
-  title = ""
-  weight = 3
-  [menus.main.params]
-    icon = "fa-solid fa-tags"
+    icon = "fa-solid fa-newspaper"
 
 [[menus.main]]
   identifier = "about"
   name = "About"
   url = "/about/"
   title = ""
-  weight = 5
+  weight = 3
   [menus.main.params]
     icon = "fa-solid fa-user"
 
 [[menus.main]]
-  identifier = "daily"
-  name = "Daily"
-  url = "/daily/"
+  identifier = "contact"
+  name = "Contact"
+  url = "/contact/"
   title = ""
   weight = 4
   [menus.main.params]
-    icon = "fa-solid fa-newspaper"
+    icon = "fa-solid fa-paper-plane"
 
 # ============================================================================
 # SITE PARAMETERS
