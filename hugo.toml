@@ -106,7 +106,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   title = ""
   weight = 4
   [menus.main.params]
-    icon = "fa-solid fa-paper-plane"
+    icon = "fa-solid fa-envelope"
 
 # ============================================================================
 # SITE PARAMETERS
