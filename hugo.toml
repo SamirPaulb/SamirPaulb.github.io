@@ -737,4 +737,4 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
     applyFilter = false
     name = "fragmentrefs"
     type = "fragments"
-    weight = 80
+    weight = 50
