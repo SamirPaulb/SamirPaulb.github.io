@@ -142,7 +142,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   # whether to enable tooltip replacement for elements with title attribute
   tooltip = true
   # whether to inject FixIt theme meta tag
-  disableThemeInject = false
+  disableThemeInject = true
   # License information
   license = '<a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>'
 
@@ -390,20 +390,16 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
     theme = "minimal"
 
   # ----------------------------------------------------------------------------
-  # Analytics (DISABLED - privacy-first, using custom Vercount instead)
+  # Analytics (handled via custom consent-mode partial below)
   # ----------------------------------------------------------------------------
   [params.analytics]
     enable = false
 
   # ----------------------------------------------------------------------------
-  # Cookie Consent (DISABLED - enable if adding tracking)
+  # Cookie Consent (handled via custom consent-mode partial below)
   # ----------------------------------------------------------------------------
   [params.cookieconsent]
     enable = false
-    [params.cookieconsent.content]
-      message = "This website uses cookies to enhance your experience."
-      dismiss = "Got it!"
-      link = "/privacy/"
 
   # ----------------------------------------------------------------------------
   # Busuanzi / Vercount Page View Counter (Custom Cloudflare Worker)
@@ -460,7 +456,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   # Custom Partials Configuration
   # ----------------------------------------------------------------------------
   [params.customPartials]
-    head = []
+    head = ["custom/consent-manager.html"]
     menuDesktop = []
     menuMobile = []
     profile = []
