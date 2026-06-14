@@ -1,0 +1,310 @@
+{{- /* ==========================================================================
+   Consent Manager (Google Consent Mode v2)
+   ==========================================================================
+   A modular consent management system for privacy-compliant analytics & ads.
+
+   How Google recognizes this:
+   - gtag('consent','default',...) BEFORE gtag.js loads tells Google this site
+     uses Consent Mode. Google's servers read consent state from every event.
+   - GA4 Admin > Consent Settings will show "Consent signals active" once
+     data flows.
+   - Use Google Tag Assistant to verify: https://tagassistant.google.com
+
+   Features:
+   - Google Consent Mode v2 (all 4 params: ad_storage, ad_user_data,
+     ad_personalization, analytics_storage)
+   - Global deny-by-default (banner shown to all visitors, future-proof)
+   - Lazy-loads gtag.js on first user interaction (zero LCP/FCP impact)
+   - ads_data_redaction enabled (redacts ad identifiers when denied)
+   - Floating card popup (bottom-left) — non-intrusive
+   - Remembers choice in localStorage
+   - GDPR/ePrivacy/CCPA compliant worldwide
+   - All CSS/JS namespaced with "sp-consent-" prefix to avoid theme conflicts
+
+   To extend:
+   - Add new tracking scripts in SECTION 2
+   - Modify banner text/buttons in SECTION 3
+   - Adjust styles in SECTION 4
+   ========================================================================== */ -}}
+{{- if not hugo.IsServer -}}
+
+<script>
+(function(){
+  'use strict';
+
+  // ─── SECTION 1: CONFIGURATION & CONSENT DEFAULTS ─────────────────
+  var CONFIG = {
+    ga_id: 'G-BD7LT5VX62',
+    storage_key: 'site_consent',
+    consent_version: '1',          // increment to re-ask after policy change
+    banner_delay: 800              // ms delay before showing popup
+  };
+
+  // ─── Consent State ───────────────────────────────────────────────
+  var state = JSON.parse(localStorage.getItem(CONFIG.storage_key) || 'null');
+  var gtagLoaded = false;
+
+  // Invalidate consent if policy version changed
+  if (state && state.v !== CONFIG.consent_version) {
+    state = null;
+    localStorage.removeItem(CONFIG.storage_key);
+  }
+
+  // ─── Google Consent Mode v2 Defaults ─────────────────────────────
+  // Must be set BEFORE gtag.js loads. Google reads these automatically.
+  window.dataLayer = window.dataLayer || [];
+  function gtag() { dataLayer.push(arguments); }
+  window.gtag = gtag;
+
+  // Global default: deny all until user consents (safest — future-proof)
+  gtag('consent', 'default', {
+    'analytics_storage': 'denied',
+    'ad_storage': 'denied',
+    'ad_user_data': 'denied',
+    'ad_personalization': 'denied'
+  });
+
+  // Redact ad click identifiers when ad_storage is denied
+  gtag('set', 'ads_data_redaction', true);
+
+  // ─── SECTION 2: TRACKING SCRIPTS (Lazy-loaded) ──────────────────
+  // Loads on first user interaction: scroll, click, touch, or keypress.
+  // Zero impact on initial page load (LCP, FCP, CLS unaffected).
+  // ────────────────────────────────────────────────────────────────
+
+  function loadAnalytics() {
+    if (gtagLoaded) return;
+    gtagLoaded = true;
+
+    // Google Analytics 4 / Google Tag
+    var s = document.createElement('script');
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + CONFIG.ga_id;
+    s.async = true;
+    document.head.appendChild(s);
+
+    gtag('js', new Date());
+    gtag('config', CONFIG.ga_id, {
+      'anonymize_ip': true,
+      'send_page_view': true
+    });
+
+    // Apply stored consent (return visitors)
+    if (state && state.analytics === 'granted') {
+      gtag('consent', 'update', {
+        'analytics_storage': 'granted',
+        'ad_storage': 'granted',
+        'ad_user_data': 'granted',
+        'ad_personalization': 'granted'
+      });
+    }
+
+    // ── Add future scripts below this line ──────────────────────────
+    // Example: Google Ads conversion tracking
+    // gtag('config', 'AW-XXXXXXXXX');
+    //
+    // Example: Microsoft Clarity
+    // var c = document.createElement('script');
+    // c.src = 'https://www.clarity.ms/tag/XXXXX';
+    // c.async = true;
+    // document.head.appendChild(c);
+    // ────────────────────────────────────────────────────────────────
+
+    removeInteractionListeners();
+  }
+
+  // Trigger load on any user interaction
+  function addInteractionListeners() {
+    var opts = { once: true, passive: true };
+    document.addEventListener('scroll', loadAnalytics, opts);
+    document.addEventListener('click', loadAnalytics, { once: true });
+    document.addEventListener('touchstart', loadAnalytics, opts);
+    document.addEventListener('keydown', loadAnalytics, { once: true });
+  }
+
+  function removeInteractionListeners() {
+    document.removeEventListener('scroll', loadAnalytics);
+    document.removeEventListener('click', loadAnalytics);
+    document.removeEventListener('touchstart', loadAnalytics);
+    document.removeEventListener('keydown', loadAnalytics);
+  }
+
+  addInteractionListeners();
+
+  // ─── SECTION 3: CONSENT BANNER (Floating Card) ─────────────────
+  // Shows only for visitors who haven't made a choice yet.
+  // Appears as a small floating card in the bottom-left corner.
+  // ────────────────────────────────────────────────────────────────
+
+  if (state) return; // Already have a stored choice — no banner
+
+  function showBanner() {
+    var b = document.createElement('div');
+    b.id = 'sp-consent-popup';
+    b.setAttribute('role', 'dialog');
+    b.setAttribute('aria-label', 'Cookie consent');
+    b.innerHTML = [
+      '<div class="sp-consent-card">',
+      '  <p class="sp-consent-msg">This site uses cookies for <a href="/privacy/">analytics</a>.</p>',
+      '  <div class="sp-consent-actions">',
+      '    <button class="sp-consent-btn sp-consent-accept">Accept</button>',
+      '    <button class="sp-consent-link sp-consent-decline">Decline</button>',
+      '  </div>',
+      '</div>'
+    ].join('');
+    document.body.appendChild(b);
+    requestAnimationFrame(function() { b.classList.add('sp-consent-visible'); });
+
+    // Accept — grant all consent types
+    b.querySelector('.sp-consent-accept').addEventListener('click', function() {
+      saveConsent('granted');
+      loadAnalytics();
+      gtag('consent', 'update', {
+        'analytics_storage': 'granted',
+        'ad_storage': 'granted',
+        'ad_user_data': 'granted',
+        'ad_personalization': 'granted'
+      });
+      closeBanner(b);
+    });
+
+    // Decline — keep all denied
+    b.querySelector('.sp-consent-decline').addEventListener('click', function() {
+      saveConsent('denied');
+      closeBanner(b);
+    });
+  }
+
+  function saveConsent(choice) {
+    state = { analytics: choice, v: CONFIG.consent_version, t: Date.now() };
+    localStorage.setItem(CONFIG.storage_key, JSON.stringify(state));
+  }
+
+  function closeBanner(b) {
+    b.classList.remove('sp-consent-visible');
+    setTimeout(function() { b.remove(); }, 300);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(showBanner, CONFIG.banner_delay);
+    });
+  } else {
+    setTimeout(showBanner, CONFIG.banner_delay);
+  }
+
+})();
+</script>
+
+{{- /* ==============================
+   SECTION 4: BANNER STYLES
+   Floating card, bottom-left.
+   All classes prefixed "sp-consent-" to avoid theme conflicts.
+   ============================== */ -}}
+<style>
+/* Popup container — fixed bottom-left */
+#sp-consent-popup {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  z-index: 99999;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .3s ease, transform .3s ease;
+  pointer-events: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+}
+#sp-consent-popup.sp-consent-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Card */
+.sp-consent-card {
+  width: 240px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .08), 0 1px 3px rgba(0, 0, 0, .04);
+}
+
+/* Dark mode */
+[data-theme="dark"] .sp-consent-card {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .3), 0 1px 3px rgba(0, 0, 0, .15);
+}
+
+/* Message */
+.sp-consent-msg {
+  margin: 0 0 10px;
+  color: #4b5563;
+  font-size: 12px;
+}
+[data-theme="dark"] .sp-consent-msg { color: #9ca3af; }
+.sp-consent-msg a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Actions row */
+.sp-consent-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Accept — solid button */
+.sp-consent-btn {
+  padding: 5px 14px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: opacity .15s ease;
+  line-height: 1.4;
+}
+.sp-consent-btn:hover { opacity: .85; }
+.sp-consent-accept {
+  background: #111827;
+  color: #ffffff;
+}
+[data-theme="dark"] .sp-consent-accept {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+/* Decline — plain text link */
+.sp-consent-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 11px;
+  color: #9ca3af;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color .15s ease;
+}
+.sp-consent-link:hover {
+  color: #6b7280;
+  text-decoration: underline;
+}
+[data-theme="dark"] .sp-consent-link { color: #6b7280; }
+[data-theme="dark"] .sp-consent-link:hover { color: #9ca3af; }
+
+/* Mobile */
+@media (max-width: 400px) {
+  #sp-consent-popup {
+    bottom: 12px;
+    left: 12px;
+  }
+  .sp-consent-card { width: 220px; }
+}
+</style>
+
+{{- end -}}
