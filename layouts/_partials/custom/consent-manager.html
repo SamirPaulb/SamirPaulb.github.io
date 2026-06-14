@@ -237,19 +237,32 @@
   border-color: rgba(255, 255, 255, .08);
   box-shadow: 0 2px 8px rgba(0, 0, 0, .1);
 }
+@media (prefers-color-scheme: dark) {
+  [data-theme-mode="auto"] .sp-consent-card {
+    background: rgba(0, 0, 0, .3);
+    border-color: rgba(255, 255, 255, .08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .1);
+  }
+}
 
-/* Message — text shadow for readability over blurred content */
+/* Message — auto-adjusts to theme */
 .sp-consent-msg {
   margin: 0 0 7px;
-  color: #1f2937;
-  font-size: 11px;
+  color: var(--global-font-color, #1f2937);
+  font-size: 10px;
   line-height: 1.4;
   text-shadow: 0 0 4px rgba(255, 255, 255, .6);
-  max-width: 170px;
+  max-width: 165px;
 }
 [data-theme="dark"] .sp-consent-msg {
-  color: #f3f4f6;
+  color: var(--global-font-color, #f3f4f6);
   text-shadow: 0 0 4px rgba(0, 0, 0, .7);
+}
+@media (prefers-color-scheme: dark) {
+  [data-theme-mode="auto"] .sp-consent-msg {
+    color: var(--global-font-color, #f3f4f6);
+    text-shadow: 0 0 4px rgba(0, 0, 0, .7);
+  }
 }
 .sp-consent-msg a {
   color: inherit;
@@ -268,9 +281,9 @@
 
 /* Accept — blue button */
 .sp-consent-btn {
-  padding: 4px 11px;
+  padding: 3px 10px;
   border-radius: 5px;
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 500;
   cursor: pointer;
   border: none;
@@ -288,13 +301,20 @@
   color: #ffffff;
   box-shadow: 0 1px 3px rgba(59, 130, 246, .3);
 }
+@media (prefers-color-scheme: dark) {
+  [data-theme-mode="auto"] .sp-consent-accept {
+    background: #3b82f6;
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(59, 130, 246, .3);
+  }
+}
 
 /* Decline — plain text, visible in both modes */
 .sp-consent-link {
   background: none;
   border: none;
   padding: 0;
-  font-size: 10.5px;
+  font-size: 9.5px;
   color: #4b5563;
   cursor: pointer;
   text-decoration: none;
@@ -310,6 +330,13 @@
   text-shadow: 0 0 3px rgba(0, 0, 0, .6);
 }
 [data-theme="dark"] .sp-consent-link:hover { color: #ffffff; }
+@media (prefers-color-scheme: dark) {
+  [data-theme-mode="auto"] .sp-consent-link {
+    color: #d1d5db;
+    text-shadow: 0 0 3px rgba(0, 0, 0, .6);
+  }
+  [data-theme-mode="auto"] .sp-consent-link:hover { color: #ffffff; }
+}
 </style>
 
 {{- end -}}
