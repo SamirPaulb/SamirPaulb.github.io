@@ -199,7 +199,7 @@
    SECTION 4: BANNER STYLES
    Floating card, bottom-left.
    All classes prefixed "sp-consent-" to avoid theme conflicts.
-   Uses FixIt's data-theme-mode attribute for theme detection.
+   Dark mode: detected via prefers-color-scheme (OS) + data-theme-mode (manual toggle).
    ============================== */ -}}
 <style>
 /* Popup container — fixed bottom-left */
@@ -220,45 +220,29 @@
   pointer-events: auto;
 }
 
-/* Card — uses light-dark() CSS function for automatic theme detection */
+/* ── LIGHT MODE (default) ── */
 .sp-consent-card {
   display: inline-block;
   padding: 9px 11px;
   border-radius: 8px;
-  background: light-dark(rgba(255,255,255,.3), rgba(0,0,0,.25));
+  background: rgba(255, 255, 255, .4);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid light-dark(rgba(0,0,0,.04), rgba(255,255,255,.06));
-  box-shadow: 0 2px 8px light-dark(rgba(0,0,0,.03), rgba(0,0,0,.12));
-  color-scheme: light dark;
+  border: 1px solid rgba(0, 0, 0, .06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
 }
-
-/* Message */
 .sp-consent-msg {
   margin: 0 0 7px;
-  color: light-dark(#1f2937, #f9fafb);
+  color: #000000;
   font-size: 10px;
+  font-weight: 400;
   line-height: 1.4;
-  text-shadow: 0 0 5px light-dark(rgba(255,255,255,.8), rgba(0,0,0,.8)),
-               0 0 2px light-dark(rgba(255,255,255,.9), rgba(0,0,0,.9));
+  text-shadow: 0 0 6px #ffffff, 0 0 3px #ffffff;
   max-width: 165px;
 }
-.sp-consent-msg a {
-  color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-.sp-consent-msg a:hover { opacity: .7; }
-
-/* Actions row — centered, decline left, accept right */
-.sp-consent-actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
-/* Accept — blue button */
+.sp-consent-msg a { color: #000; text-decoration: underline; text-underline-offset: 2px; }
+.sp-consent-msg a:hover { opacity: .6; }
+.sp-consent-actions { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .sp-consent-btn {
   padding: 3px 10px;
   border-radius: 5px;
@@ -271,27 +255,101 @@
 }
 .sp-consent-btn:hover { opacity: .85; }
 .sp-consent-accept {
-  background: light-dark(#2563eb, #3b82f6);
+  background: #2563eb;
   color: #fff;
-  box-shadow: 0 1px 3px light-dark(rgba(37,99,235,.35), rgba(59,130,246,.4));
+  box-shadow: 0 1px 3px rgba(37, 99, 235, .4);
 }
-
-/* Decline — plain text */
 .sp-consent-link {
   background: none;
   border: none;
   padding: 0;
   font-size: 9.5px;
-  color: light-dark(#374151, #e5e7eb);
+  color: #1f2937;
   cursor: pointer;
   text-decoration: none;
-  text-shadow: 0 0 4px light-dark(rgba(255,255,255,.8), rgba(0,0,0,.8)),
-               0 0 2px light-dark(rgba(255,255,255,.9), rgba(0,0,0,.9));
+  text-shadow: 0 0 5px #ffffff, 0 0 2px #ffffff;
   transition: color .15s ease;
 }
-.sp-consent-link:hover {
-  color: light-dark(#111827, #ffffff);
-  text-decoration: underline;
+.sp-consent-link:hover { color: #000; text-decoration: underline; }
+
+/* ── DARK MODE ──
+   Priority 1: FixIt theme attribute (data-theme-mode='dark')
+   Priority 2: FixIt auto mode + system dark (data-theme-mode='auto' + prefers-color-scheme)
+   Fallback:   Browser prefers-color-scheme (if theme attribute missing)
+── */
+
+/* Theme: explicit dark */
+[data-theme-mode='dark'] .sp-consent-card,
+/* Theme: auto + system dark */
+[data-theme-mode='auto'] .sp-consent-card {
+  background: rgba(0, 0, 0, .3);
+  border-color: rgba(255, 255, 255, .08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
+}
+[data-theme-mode='dark'] .sp-consent-msg,
+[data-theme-mode='auto'] .sp-consent-msg {
+  color: #ffffff;
+  text-shadow: 0 0 6px #000000, 0 0 3px #000000;
+}
+[data-theme-mode='dark'] .sp-consent-msg a,
+[data-theme-mode='auto'] .sp-consent-msg a { color: #fff; }
+[data-theme-mode='dark'] .sp-consent-accept,
+[data-theme-mode='auto'] .sp-consent-accept {
+  background: #3b82f6;
+  box-shadow: 0 1px 4px rgba(59, 130, 246, .5);
+}
+[data-theme-mode='dark'] .sp-consent-link,
+[data-theme-mode='auto'] .sp-consent-link {
+  color: #e5e7eb;
+  text-shadow: 0 0 5px #000000, 0 0 2px #000000;
+}
+[data-theme-mode='dark'] .sp-consent-link:hover,
+[data-theme-mode='auto'] .sp-consent-link:hover { color: #fff; }
+
+/* Theme: auto + system light — revert to light mode */
+@media (prefers-color-scheme: light) {
+  [data-theme-mode='auto'] .sp-consent-card {
+    background: rgba(255, 255, 255, .4);
+    border-color: rgba(0, 0, 0, .06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
+  }
+  [data-theme-mode='auto'] .sp-consent-msg {
+    color: #000000;
+    text-shadow: 0 0 6px #ffffff, 0 0 3px #ffffff;
+  }
+  [data-theme-mode='auto'] .sp-consent-msg a { color: #000; }
+  [data-theme-mode='auto'] .sp-consent-accept {
+    background: #2563eb;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, .4);
+  }
+  [data-theme-mode='auto'] .sp-consent-link {
+    color: #1f2937;
+    text-shadow: 0 0 5px #ffffff, 0 0 2px #ffffff;
+  }
+  [data-theme-mode='auto'] .sp-consent-link:hover { color: #000; }
+}
+
+/* Fallback: if no data-theme-mode attribute exists at all, use browser detection */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme-mode]) .sp-consent-card {
+    background: rgba(0, 0, 0, .3);
+    border-color: rgba(255, 255, 255, .08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
+  }
+  :root:not([data-theme-mode]) .sp-consent-msg {
+    color: #ffffff;
+    text-shadow: 0 0 6px #000000, 0 0 3px #000000;
+  }
+  :root:not([data-theme-mode]) .sp-consent-msg a { color: #fff; }
+  :root:not([data-theme-mode]) .sp-consent-accept {
+    background: #3b82f6;
+    box-shadow: 0 1px 4px rgba(59, 130, 246, .5);
+  }
+  :root:not([data-theme-mode]) .sp-consent-link {
+    color: #e5e7eb;
+    text-shadow: 0 0 5px #000000, 0 0 2px #000000;
+  }
+  :root:not([data-theme-mode]) .sp-consent-link:hover { color: #fff; }
 }
 </style>
 
