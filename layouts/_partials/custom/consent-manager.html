@@ -147,7 +147,7 @@
     b.setAttribute('aria-label', 'Cookie consent');
     b.innerHTML = [
       '<div class="sp-consent-card">',
-      '  <p class="sp-consent-msg">This site uses cookies to enhance your experience. <a href="/privacy/">Learn more</a></p>',
+      '  <p class="sp-consent-msg">This site uses cookies to enhance your experience. <a class="sp-consent-learn" href="/privacy/">Learn more</a></p>',
       '  <div class="sp-consent-actions">',
       '    <button class="sp-consent-link sp-consent-decline">Decline</button>',
       '    <button class="sp-consent-btn sp-consent-accept">Accept</button>',
@@ -243,13 +243,13 @@
   text-shadow: 0 0 6px #ffffff, 0 0 3px #ffffff;
   max-width: 165px;
 }
-.sp-consent-msg a { color: #000; text-decoration: underline; text-underline-offset: 2px; }
-.sp-consent-msg a:hover { opacity: .6; }
+.sp-consent-learn { color: #000; text-decoration: underline; text-underline-offset: 2px; font-size: 9px; }
+.sp-consent-learn:hover { opacity: .6; }
 .sp-consent-actions { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .sp-consent-btn {
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: 5px;
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 500;
   cursor: pointer;
   border: none;
@@ -266,7 +266,7 @@
   background: none;
   border: none;
   padding: 0;
-  font-size: 9.5px;
+  font-size: 9px;
   color: #1f2937;
   cursor: pointer;
   text-decoration: none;
@@ -294,8 +294,8 @@
   color: #ffffff;
   text-shadow: 0 0 6px #000000, 0 0 3px #000000;
 }
-[data-theme-mode='dark'] .sp-consent-msg a,
-[data-theme-mode='auto'] .sp-consent-msg a { color: #fff; }
+[data-theme-mode='dark'] .sp-consent-learn,
+[data-theme-mode='auto'] .sp-consent-learn { color: #fff; }
 [data-theme-mode='dark'] .sp-consent-accept,
 [data-theme-mode='auto'] .sp-consent-accept {
   background: #3b82f6;
@@ -320,7 +320,7 @@
     color: #000000;
     text-shadow: 0 0 6px #ffffff, 0 0 3px #ffffff;
   }
-  [data-theme-mode='auto'] .sp-consent-msg a { color: #000; }
+  [data-theme-mode='auto'] .sp-consent-learn { color: #000; }
   [data-theme-mode='auto'] .sp-consent-accept {
     background: #2563eb;
     box-shadow: 0 1px 3px rgba(37, 99, 235, .4);
@@ -343,7 +343,7 @@
     color: #ffffff;
     text-shadow: 0 0 6px #000000, 0 0 3px #000000;
   }
-  :root:not([data-theme-mode]) .sp-consent-msg a { color: #fff; }
+  :root:not([data-theme-mode]) .sp-consent-learn { color: #fff; }
   :root:not([data-theme-mode]) .sp-consent-accept {
     background: #3b82f6;
     box-shadow: 0 1px 4px rgba(59, 130, 246, .5);
