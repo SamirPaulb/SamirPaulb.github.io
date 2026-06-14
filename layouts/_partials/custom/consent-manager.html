@@ -144,10 +144,10 @@
     b.setAttribute('aria-label', 'Cookie consent');
     b.innerHTML = [
       '<div class="sp-consent-card">',
-      '  <p class="sp-consent-msg">This site uses cookies for <a href="/privacy/">analytics</a>.</p>',
+      '  <p class="sp-consent-msg">This site uses cookies to enhance your experience. <a href="/privacy/">Learn more</a></p>',
       '  <div class="sp-consent-actions">',
-      '    <button class="sp-consent-btn sp-consent-accept">Accept</button>',
       '    <button class="sp-consent-link sp-consent-decline">Decline</button>',
+      '    <button class="sp-consent-btn sp-consent-accept">Accept</button>',
       '  </div>',
       '</div>'
     ].join('');
@@ -221,53 +221,58 @@
   pointer-events: auto;
 }
 
-/* Card */
+/* Card — compact, transparent glass */
 .sp-consent-card {
-  width: 240px;
-  padding: 12px 14px;
-  border-radius: 10px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, .08), 0 1px 3px rgba(0, 0, 0, .04);
+  max-width: 200px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 0, 0, .04);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .04);
 }
 
 /* Dark mode */
 [data-theme="dark"] .sp-consent-card {
-  background: #1f2937;
-  border-color: #374151;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, .3), 0 1px 3px rgba(0, 0, 0, .15);
+  background: rgba(31, 41, 55, .55);
+  border-color: rgba(255, 255, 255, .06);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .15);
 }
 
 /* Message */
 .sp-consent-msg {
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   color: #4b5563;
-  font-size: 12px;
+  font-size: 11px;
+  line-height: 1.4;
 }
-[data-theme="dark"] .sp-consent-msg { color: #9ca3af; }
+[data-theme="dark"] .sp-consent-msg { color: #d1d5db; }
 .sp-consent-msg a {
   color: inherit;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+.sp-consent-msg a:hover { opacity: .7; }
 
-/* Actions row */
+/* Actions row — centered, decline left, accept right */
 .sp-consent-actions {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
 }
 
 /* Accept — solid button */
 .sp-consent-btn {
-  padding: 5px 14px;
-  border-radius: 6px;
-  font-size: 11.5px;
+  padding: 4px 12px;
+  border-radius: 5px;
+  font-size: 11px;
   font-weight: 500;
   cursor: pointer;
   border: none;
   transition: opacity .15s ease;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 .sp-consent-btn:hover { opacity: .85; }
 .sp-consent-accept {
@@ -279,12 +284,12 @@
   color: #111827;
 }
 
-/* Decline — plain text link */
+/* Decline — plain text */
 .sp-consent-link {
   background: none;
   border: none;
   padding: 0;
-  font-size: 11px;
+  font-size: 10.5px;
   color: #9ca3af;
   cursor: pointer;
   text-decoration: none;
@@ -295,16 +300,7 @@
   text-decoration: underline;
 }
 [data-theme="dark"] .sp-consent-link { color: #6b7280; }
-[data-theme="dark"] .sp-consent-link:hover { color: #9ca3af; }
-
-/* Mobile */
-@media (max-width: 400px) {
-  #sp-consent-popup {
-    bottom: 12px;
-    left: 12px;
-  }
-  .sp-consent-card { width: 220px; }
-}
+[data-theme="dark"] .sp-consent-link:hover { color: #d1d5db; }
 </style>
 
 {{- end -}}
