@@ -83,12 +83,9 @@
     document.head.appendChild(s);
 
     gtag('js', new Date());
-    gtag('config', CONFIG.ga_id, {
-      'anonymize_ip': true,
-      'send_page_view': true
-    });
 
-    // Apply stored consent (return visitors)
+    // Apply stored consent BEFORE config — ensures page_view fires with
+    // consent already granted (Google processes dataLayer queue in order)
     if (state && state.analytics === 'granted') {
       gtag('consent', 'update', {
         'analytics_storage': 'granted',
@@ -97,6 +94,12 @@
         'ad_personalization': 'granted'
       });
     }
+
+    // Config AFTER consent update — page_view fires with correct consent state
+    gtag('config', CONFIG.ga_id, {
+      'anonymize_ip': true,
+      'send_page_view': true
+    });
 
     // ── Add future scripts below this line ──────────────────────────
     // Example: Google Ads conversion tracking
