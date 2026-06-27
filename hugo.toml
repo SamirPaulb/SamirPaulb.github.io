@@ -560,7 +560,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
       # Giscus comment config (GitHub Discussions-based)
       [params.page.comment.giscus]
         enable = true
-        repo = "SamirPaulb/website-comments"
+        repo = "SamirPaulb/comments"
         repoId = "R_kgDOQLe9bw"
         category = ""
         categoryId = "DIC_kwDOQLe9b84CxN4R"

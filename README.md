@@ -57,6 +57,7 @@ git config --remove-section submodule.themes/FixIt 2>/dev/null
 git config --remove-section submodule.content 2>/dev/null
 rm -f .gitmodules
 git rm --cached .gitmodules || true
+touch .gitmodules
 
 git submodule add https://github.com/SamirPaulb/FixIt.git themes/FixIt
 git submodule add git@github.com:SamirPaulb/content.git content
