@@ -559,7 +559,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
       enable = true
       # Giscus comment config (GitHub Discussions-based)
       [params.page.comment.giscus]
-        enable = true
+        enable = false
         repo = "SamirPaulb/comments"
         repoId = "R_kgDOQLe9bw"
         category = ""
@@ -574,6 +574,32 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
         lightTheme = "light"
         darkTheme = "dark"
         lazyLoad = true
+
+      # Waline comment config
+      [params.page.comment.waline]
+        enable = true
+        serverURL = "https://comment-core.vercel.app"
+        comment = true
+        pageview = false
+        login = "disable"
+        meta = [
+          "nick",
+          "mail"
+        ]
+        requiredMeta = [
+          "nick",
+          "mail"
+        ]
+        wordLimit = 500
+        imageUploader = false
+        highlighter = false
+        texRenderer = false
+        search = false
+        reaction = false
+        emoji = [
+          "//unpkg.com/@waline/emojis@1.1.0/weibo"
+        ]
+        turnstileKey = "0x4AAAAAAB_ij-DURoZrsVaD"
 
     # Page SEO config
     [params.page.seo]
