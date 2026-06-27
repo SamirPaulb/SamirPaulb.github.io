@@ -590,7 +590,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
           "nick",
           "mail"
         ]
-        wordLimit = 500
+        wordLimit = 250
         imageUploader = false
         highlighter = false
         texRenderer = false
