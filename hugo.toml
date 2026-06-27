@@ -559,7 +559,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
       enable = true
       # Giscus comment config (GitHub Discussions-based)
       [params.page.comment.giscus]
-        enable = false
+        enable = true
         repo = "SamirPaulb/comments"
         repoId = "R_kgDOQLe9bw"
         category = ""
@@ -577,7 +577,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
 
       # Waline comment config
       [params.page.comment.waline]
-        enable = true
+        enable = false
         serverURL = "https://comment-core.vercel.app"
         comment = true
         pageview = false
