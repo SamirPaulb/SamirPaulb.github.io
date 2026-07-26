@@ -345,11 +345,11 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
     weight = 2
 
   [params.social.Twitter]
-    id = "SamirPaulb"
+    id = "iSamirPaul"
     weight = 3
 
   [params.social.Instagram]
-    id = "SamirPaulb"
+    id = "iSamirPaul"
     weight = 4
 
   # ----------------------------------------------------------------------------
