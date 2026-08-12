@@ -344,14 +344,6 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
     id = "SamirPaulb"
     weight = 2
 
-  [params.social.Twitter]
-    id = "iSamirPaul"
-    weight = 3
-
-  [params.social.Instagram]
-    id = "iSamirPaul"
-    weight = 4
-
   # ----------------------------------------------------------------------------
   # TypeIt Animation Configuration
   # ----------------------------------------------------------------------------
