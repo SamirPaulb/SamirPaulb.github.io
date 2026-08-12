@@ -1,5 +1,5 @@
 theme = "FixIt"
-title = "Samir Paul"
+title = "Samir's Blog"
 baseURL = "https://samirpaulb.github.io/"
 locale = "en"
 languageName = "English"
@@ -118,7 +118,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   # site description
   description = "A place to share learnings, ideas, short notes, guides, and reflections from projects and everyday life, focused on clarity and usefulness. Lessons learned and experiences are distilled into actionable takeaways for curious readers."
   # site keywords
-  keywords = ["Samir Paul", "Personal Blog", "Software Engineering", "Computer Science", "System Design", "Learnings", "Data Structures Algorithms", "Networking", "Artificial Intelligence", "Problem-solving", "Coding Interview Prep", "AI/ML", "Experience", "Travel"]
+  keywords = ["Samir", "Personal Blog", "Software Engineering", "Computer Science", "System Design", "Learnings", "Data Structures Algorithms", "Networking", "Artificial Intelligence", "Problem-solving", "Coding Interview Prep", "AI/ML", "Experience", "Travel"]
   # site default theme ("light", "dark", "auto")
   defaultTheme = "auto"
   # which hash function used for SRI, when empty, no SRI is used
@@ -150,7 +150,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   # Author Configuration
   # ----------------------------------------------------------------------------
   [params.author]
-    name = "Samir Paul"
+    name = "Samir"
     email = "netproxy@duck.com"
     link = "/about/"
     avatar = "/avatar.webp"
@@ -167,7 +167,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   # App Icon Configuration (PWA)
   # ----------------------------------------------------------------------------
   [params.app]
-    title = "Samir Paul"
+    title = "Samir"
     noFavicon = false
     svgFavicon = ""
     iconColor = "#5bbad5"
@@ -605,7 +605,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
     [params.page.seo]
       images = []
       [params.page.seo.publisher]
-        name = "Samir Paul"
+        name = "Samir"
         logoUrl = "/logo.png"
 
 
