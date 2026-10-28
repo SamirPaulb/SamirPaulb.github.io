@@ -327,7 +327,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
     [params.home.posts]
       enable = true
       paginate = 7
-      imagePreview = false
+      image_preview = false
 
   # ----------------------------------------------------------------------------
   # Social Media Links (Author Profile)
