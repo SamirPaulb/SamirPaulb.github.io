@@ -211,7 +211,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
     [params.search.algolia]
       index = ""
       appID = ""
-      searchKey = ""
+      search_key = ""
     [params.search.fuse]
       isCaseSensitive = false
       minMatchCharLength = 2
@@ -239,7 +239,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
     max_shown_lines = 30
     copyable = true
     line_nos_toggler = true
-    lineWrapToggler = false
+    line_wrap_toggler = false
 
   # ----------------------------------------------------------------------------
   # Header Configuration
@@ -266,12 +266,6 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
     show_home = true
 
   # ----------------------------------------------------------------------------
-  # Navigation Configuration
-  # ----------------------------------------------------------------------------
-  [params.navigation]
-    inSection = false
-
-  # ----------------------------------------------------------------------------
   # Footer Configuration
   # ----------------------------------------------------------------------------
   [params.footer]
@@ -283,8 +277,8 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
     license = '<a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>'
     [params.footer.powered]
       enable = false
-      hugoLogo = false
-      themeLogo = false
+      hugo_logo = false
+      theme_logo = false
     [params.footer.site_time]
       enable = false
       animate = true
@@ -297,27 +291,27 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   # ----------------------------------------------------------------------------
   [params.archives]
     paginate = 20
-    dateFormat = "01-02"
+    date_format = "01-02"
 
   # ----------------------------------------------------------------------------
   # Section (All Posts) Page Configuration
   # ----------------------------------------------------------------------------
   [params.section]
     paginate = 20
-    dateFormat = "02-Jan-2006"
+    date_format = "02-Jan-2006"
     [params.section.feed]
       limit = -1
-      fullText = false
+      full_text = false
 
   # ----------------------------------------------------------------------------
   # List (Category or Tag) Page Configuration
   # ----------------------------------------------------------------------------
   [params.list]
     paginate = 20
-    dateFormat = "02-Jan-2006"
+    date_format = "02-Jan-2006"
     [params.list.feed]
       limit = -1
-      fullText = false
+      full_text = false
 
   # ----------------------------------------------------------------------------
   # Recently Updated Configuration
@@ -327,7 +321,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
     section = true
     list = true
     days = 30
-    maxCount = 10
+    max_count = 10
 
   # ----------------------------------------------------------------------------
   # Home Page Configuration
@@ -335,9 +329,9 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   [params.home]
     [params.home.profile]
       enable = true
-      gravatarEmail = ""
+      gravatar_email = ""
       avatar_url = "/avatar.webp"
-      avatarMenu = ""
+      avatar_menu = ""
       title = ""
       subtitle = "Welcome! This is my little hypertext garden — make yourself at home."
       typeit = true
