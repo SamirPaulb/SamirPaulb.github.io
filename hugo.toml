@@ -114,17 +114,17 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
 
 [params]
   # FixIt theme version
-  version = "0.4.X"
+  version = "1.0.X"
   # site description
   description = "A place to share learnings, ideas, short notes, guides, and reflections from projects and everyday life, focused on clarity and usefulness. Lessons learned and experiences are distilled into actionable takeaways for curious readers."
   # site keywords
   keywords = ["Samir", "Personal Blog", "Software Engineering", "Computer Science", "System Design", "Learnings", "Data Structures Algorithms", "Networking", "Artificial Intelligence", "Problem-solving", "Coding Interview Prep", "AI/ML", "Experience", "Travel"]
   # site default theme ("light", "dark", "auto")
-  defaultTheme = "auto"
+  default_theme = "auto"
   # which hash function used for SRI, when empty, no SRI is used
   fingerprint = ""
   # date format
-  dateFormat = "02-Jan-2006"
+  date_format = "02-Jan-2006"
   # website images for Open Graph and Twitter Cards
   images = ["/screenshot.png"]
   # enable PWA support
@@ -134,15 +134,15 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   # whether to capitalize titles
   capitalizeTitles = false
   # whether to add site title to the title of every page
-  withSiteTitle = true
+  with_site_title = true
   # title delimiter when the site title is be added to the title of every page
-  titleDelimiter = "-"
+  title_delimiter = "-"
   # whether to add site subtitle to the title of index page
   indexWithSubtitle = false
   # whether to enable tooltip replacement for elements with title attribute
   tooltip = true
   # whether to inject FixIt theme meta tag
-  disableThemeInject = true
+  disable_theme_inject = true
   # License information
   license = '<a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>'
 
@@ -158,7 +158,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   # ----------------------------------------------------------------------------
   # Git Info Configuration
   # ----------------------------------------------------------------------------
-  [params.gitInfo]
+  [params.git_info]
     repo = ""
     branch = "main"
     dir = "content"
@@ -183,11 +183,11 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
     enable = true
     # type of search engine ("algolia", "fuse", "cse", "post-chat")
     type = "fuse"
-    contentLength = 4000
+    content_length = 4000
     placeholder = "Search titles or contents"
-    maxResultLength = 10
-    snippetLength = 30
-    highlightTag = "em"
+    max_result_length = 10
+    snippet_length = 30
+    highlight_tag = "em"
     absoluteURL = false
     [params.search.algolia]
       index = ""
@@ -208,7 +208,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   # Image Optimization Configuration
   # ----------------------------------------------------------------------------
   [params.image]
-    cacheRemote = true
+    cache_remote = true
     optimise = true
 
   # ----------------------------------------------------------------------------
@@ -217,17 +217,17 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   [params.codeblock]
     wrapper = true
     mode = "classic"
-    maxShownLines = 30
+    max_shown_lines = 30
     copyable = true
-    lineNosToggler = true
+    line_nos_toggler = true
     lineWrapToggler = false
 
   # ----------------------------------------------------------------------------
   # Header Configuration
   # ----------------------------------------------------------------------------
   [params.header]
-    desktopMode = "sticky"
-    mobileMode = "auto"
+    desktop_mode = "sticky"
+    mobile_mode = "auto"
     [params.header.title]
       logo = ""
       name = "~samir"
@@ -244,7 +244,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   [params.breadcrumb]
     enable = true
     sticky = false
-    showHome = true
+    show_home = true
 
   # ----------------------------------------------------------------------------
   # Navigation Configuration
@@ -266,7 +266,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
       enable = false
       hugoLogo = false
       themeLogo = false
-    [params.footer.siteTime]
+    [params.footer.site_time]
       enable = false
       animate = true
       icon = "fa-solid fa-heartbeat"
@@ -303,7 +303,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   # ----------------------------------------------------------------------------
   # Recently Updated Configuration
   # ----------------------------------------------------------------------------
-  [params.recentlyUpdated]
+  [params.recently_updated]
     archives = true
     section = true
     list = true
@@ -317,7 +317,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
     [params.home.profile]
       enable = true
       gravatarEmail = ""
-      avatarURL = "/avatar.webp"
+      avatar_url = "/avatar.webp"
       avatarMenu = ""
       title = ""
       subtitle = "Welcome! This is my little hypertext garden — make yourself at home."
@@ -398,23 +398,23 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   # ----------------------------------------------------------------------------
   [params.busuanzi]
     enable = true
-    source = "https://web.samirpaul.workers.dev/views/js"
-    siteViews = true
-    pageViews = true
+    source = "https://web.spq.workers.dev/views/js"
+    site_views = true
+    page_views = true
 
   # ----------------------------------------------------------------------------
   # Back to Top
   # ----------------------------------------------------------------------------
-  [params.backToTop]
+  [params.back_to_top]
     enable = true
     scrollpercent = true
 
   # ----------------------------------------------------------------------------
   # Reading Progress Bar
   # ----------------------------------------------------------------------------
-  [params.readingProgress]
+  [params.reading_progress]
     enable = true
-    start = "left"
+    start = "start"
     position = "top"
     reversed = false
     light = ""
@@ -424,7 +424,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   # ----------------------------------------------------------------------------
   # Tag Cloud
   # ----------------------------------------------------------------------------
-  [params.tagcloud]
+  [params.tag_cloud]
     enable = true
     min = 14
     max = 32
@@ -434,7 +434,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   # ----------------------------------------------------------------------------
   # GitHub Corner
   # ----------------------------------------------------------------------------
-  [params.githubCorner]
+  [params.github_corner]
     enable = false
 
   # ----------------------------------------------------------------------------
@@ -447,7 +447,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   # ----------------------------------------------------------------------------
   # Custom Partials Configuration
   # ----------------------------------------------------------------------------
-  [params.customPartials]
+  [params.custom_partials]
     head = ["custom/consent-manager.html"]
     menuDesktop = []
     menuMobile = []
@@ -701,6 +701,7 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   tag = "tags"
   series = "series"
   collection = "collections"
+  author = "authors"
 
 
 # ============================================================================
@@ -708,7 +709,10 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
 # ============================================================================
 
 [imaging]
-  quality = 75
+  [imaging.jpeg]
+    quality = 75
+  [imaging.webp]
+    quality = 75
 
 
 # ============================================================================

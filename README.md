@@ -25,7 +25,7 @@ Daily Digest runs separately in its own repo — JS on `/daily/` fetches HTML fr
 
 ## Requirements
 
-- Hugo extended v0.156.0+
+- Hugo extended v0.166.0+
 - Dart Sass 1.85.x
 
 ## Commands
