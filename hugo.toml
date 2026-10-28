@@ -129,22 +129,41 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   images = ["/screenshot.png"]
   # enable PWA support
   enablePWA = true
-  # whether to add external Icon for external links automatically
-  externalIcon = false
   # whether to capitalize titles
-  capitalizeTitles = false
+  capitalize_titles = false
   # whether to add site title to the title of every page
   with_site_title = true
   # title delimiter when the site title is be added to the title of every page
   title_delimiter = "-"
   # whether to add site subtitle to the title of index page
-  indexWithSubtitle = false
+  index_with_subtitle = false
   # whether to enable tooltip replacement for elements with title attribute
   tooltip = true
   # whether to inject FixIt theme meta tag
   disable_theme_inject = true
   # License information
   license = '<a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>'
+
+  # Page-level Defaults (Global Defaults for Content Pages)
+  page_style = "wide"
+  author_avatar = true
+  hidden_from_home_page = false
+  hidden_from_search = false
+  hidden_from_related = false
+  hidden_from_feed = false
+  twemoji = false
+  lightgallery = true
+  ruby = true
+  fraction = true
+  fontawesome = true
+  auto_bookmark = false
+  show_lastmod = true
+  word_count = true
+  reading_time = true
+  end_flag = ""
+  instant_page = true
+  collection_list = false
+  collection_navigation = false
 
   # ----------------------------------------------------------------------------
   # Author Configuration
@@ -372,6 +391,9 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   [params.seo]
     image = "/og-image.png"
     thumbnailUrl = "/screenshot.png"
+    [params.seo.publisher]
+      name = "Samir"
+      logo_url = "/logo.png"
 
   # ----------------------------------------------------------------------------
   # Pace - Page loading progress bar
@@ -461,144 +483,83 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
     postFooterAfter = []
 
   # ----------------------------------------------------------------------------
-  # Page Configuration (Default Settings for All Pages)
+  # Link configuration
   # ----------------------------------------------------------------------------
-  [params.page]
-    authorAvatar = true
-    hiddenFromHomePage = false
-    hiddenFromSearch = false
-    hiddenFromRelated = false
-    hiddenFromFeed = false
-    twemoji = false
-    lightgallery = true
-    ruby = true
-    fraction = true
-    fontawesome = true
-    linkToMarkdown = false
-    linkToSource = false
-    linkToEdit = false
-    linkToReport = false
-    linkToVscode = false
-    pageStyle = "wide"
-    autoBookmark = false
-    showLastmod = true
-    wordCount = true
-    readingTime = true
-    endFlag = ""
-    instantPage = true
-    collectionList = false
-    collectionNavigation = false
-    license = '<a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>'
+  [params.link]
+    external_icon = false
 
-    # Display a message at the beginning of an article to warn the reader that its content might be expired
-    [params.page.expirationReminder]
+  # Post footer link configuration
+  [params.post_link]
+    markdown = false
+    source = false
+    edit = false
+    report = false
+    editor = ""
+
+  # Table configuration (FixIt v1.0.0 interactive sorting)
+  [params.table]
+    sort = true
+
+  # Display a message at the beginning of an article to warn that its content might be expired
+  [params.expiration_reminder]
+    enable = true
+    reminder = 180
+    warning = 365
+    close_comment = false
+
+  # Table of the contents config
+  [params.toc]
+    enable = true
+    keep_static = false
+    auto = true
+    position = "end"
+
+  # Mathematical formulas configuration
+  [params.math]
+    enable = false
+    type = "katex"
+    [params.math.katex]
+      copy_tex = true
+      throw_on_error = false
+      error_color = "#ff4949"
+
+  # Related content config
+  [params.related]
+    enable = true
+    count = 5
+    position = ["aside", "footer"]
+
+  # Social share links in post page
+  [params.share]
+    enable = true
+    Twitter = true
+    Facebook = true
+    Linkedin = true
+    Reddit = true
+    Whatsapp = true
+    Pinterest = true
+    HackerNews = true
+
+  # Comment config
+  [params.comment]
+    enable = true
+    # Giscus comment config (GitHub Discussions-based)
+    [params.comment.giscus]
       enable = true
-      reminder = 180
-      warning = 365
-      closeComment = false
-
-    # Table of the contents config
-    [params.page.toc]
-      enable = true
-      keepStatic = false
-      auto = true
-      position = "right"
-
-    # Mathematical formulas configuration
-    [params.page.math]
-      enable = false
-      type = "katex"
-      [params.page.math.katex]
-        copyTex = true
-        throwOnError = false
-        errorColor = "#ff4949"
-
-    # Related content config
-    [params.page.related]
-      enable = true
-      count = 5
-
-    # Social share links in post page
-    [params.page.share]
-      enable = true
-      Twitter = true
-      Facebook = true
-      Linkedin = true
-      Reddit = true
-      Whatsapp = true
-      Pinterest = true
-      HackerNews = true
-      Line = false
-      Weibo = false
-      Tumblr = false
-      VK = false
-      Buffer = false
-      Xing = false
-      Instapaper = false
-      Pocket = false
-      Flipboard = false
-      Myspace = false
-      Blogger = false
-      Baidu = false
-      Odnoklassniki = false
-      Evernote = false
-      Skype = false
-      Trello = false
-      Mix = false
-
-    # Comment config
-    [params.page.comment]
-      enable = true
-      # Giscus comment config (GitHub Discussions-based)
-      [params.page.comment.giscus]
-        enable = true
-        repo = "SamirPaulb/comments"
-        repoId = "R_kgDOQLe9bw"
-        category = "comments"
-        categoryId = "DIC_kwDOQLe9b84CxN4R"
-        mapping = "pathname"
-        origin = "https://giscus.app"
-        strict = "0"
-        reactionsEnabled = "1"
-        emitMetadata = "1"
-        inputPosition = "top"
-        lang = "en"
-        lightTheme = "light"
-        darkTheme = "dark"
-        lazyLoad = true
-
-      # Waline comment config
-      [params.page.comment.waline]
-        enable = false
-        serverURL = "https://comment-core.vercel.app"
-        comment = true
-        pageview = false
-        login = "disable"
-        meta = [
-          "nick",
-          "mail"
-        ]
-        requiredMeta = [
-          "nick",
-          "mail"
-        ]
-        wordLimit = 250
-        imageUploader = false
-        highlighter = false
-        texRenderer = false
-        search = false
-        reaction = false
-        emoji = [
-          "//unpkg.com/@waline/emojis@1.1.0/weibo"
-        ]
-        turnstileKey = "0x4AAAAAAB_ij-DURoZrsVaD"
-
-    # Page SEO config
-    [params.page.seo]
-      images = []
-      [params.page.seo.publisher]
-        name = "Samir"
-        logoUrl = "/logo.png"
+      repo = "SamirPaulb/comments"
+      repo_id = "R_kgDOQLe9bw"
+      category = "comments"
+      category_id = "DIC_kwDOQLe9b84CxN4R"
+      mapping = "pathname"
+      origin = "https://giscus.app"
+      strict = "0"
+      reactions_enabled = "1"
+      emit_metadata = "1"
+      input_position = "top"
+      lang = "en"
+      light_theme = "light"
+      dark_theme = "dark"
+      lazy_load = true
 
 
 # ============================================================================
