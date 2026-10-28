@@ -389,8 +389,8 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   # Site SEO Configuration (Schema.org)
   # ----------------------------------------------------------------------------
   [params.seo]
-    image = "/og-image.png"
-    thumbnailUrl = "/screenshot.png"
+    cover = "/og-image.png"
+    thumbnail_url = "/screenshot.png"
     [params.seo.publisher]
       name = "Samir"
       logo_url = "/logo.png"
@@ -463,8 +463,8 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
   # Feed Configuration (RSS)
   # ----------------------------------------------------------------------------
   [params.feed]
-    limit = 10
-    fullText = true
+    limit = 20
+    full_text = true
 
   # ----------------------------------------------------------------------------
   # Custom Partials Configuration
@@ -660,8 +660,6 @@ lastmod = ["lastmod", ":git", ":fileModTime", ":default"]
 [taxonomies]
   category = "categories"
   tag = "tags"
-  series = "series"
-  collection = "collections"
   author = "authors"
 
 
